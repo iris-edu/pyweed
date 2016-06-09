@@ -12,6 +12,9 @@ from PyQt4 import QtGui,QtCore
 
 
 class EventsDialog(QtGui.QDialog):
+    """
+    This is the event Dialog window, we will call it later in the main loop.
+    """
     def __init__(self, parent=None, windowTitle='Start/End Time'):
         super(EventsDialog, self).__init__(parent)
         
