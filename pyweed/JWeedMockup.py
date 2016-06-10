@@ -121,7 +121,7 @@ class BrowserWindow(QtGui.QMainWindow):
         stationsDialogAction= QtGui.QAction('Station Search Settings',self)
         stationsDialogAction.triggered.connect(self.openStationsDialog)
 
-        #set up the menu bar and add the actions and menus
+        # set up the menu bar and add the actions and menus
         menubar = self.menuBar()
         menubar.setNativeMenuBar(False)
         fileMenu = menubar.addMenu('events')
@@ -130,29 +130,46 @@ class BrowserWindow(QtGui.QMainWindow):
         fileMenu.addAction(stationsDialogAction)
       
         self.eventsDialogWindow = EventsDialog(self, 'Event Start/End Time')
-        self.eventsDialogWindow.buttonBox.accepted.connect(self.printDate)
+        self.eventsDialogWindow.endTimeBox.dateTimeChanged.connect(self.saveQueryState)
+        self.eventsDialogWindow.startTimeBox.dateTimeChanged.connect(self.saveQueryState)
         
         self.stationsDialogWindow = StationsDialog(self, 'Station Start/End Time')
-        self.stationsDialogWindow.buttonBox.accepted.connect(self.printDate)
-
-
-
+        self.stationsDialogWindow.startTimeBox.dateTimeChanged.connect(self.saveQueryState)
+        self.stationsDialogWindow.endTimeBox.dateTimeChanged.connect(self.saveQueryState)
+        
+        #set up all the initial settings for both the event dialog box and the staiton dialog box
+        self.eventsDialogWindow.startTime = QtCore.QDateTime(2011,4,22,16,33,15)# for some reason this box wont let me set the date and time orriginally
+        self.eventsDialogWindow.endTime = QtCore.QDateTime.currentDateTime()#sets the current date and time
+        self.eventsDialogWindow.endTimeBox.setDateTime(self.eventsDialogWindow.endTime)
+        self.eventsDialogWindow.startTimeBox.setDateTime(self.eventsDialogWindow.startTime)
+        
+        self.stationsDialogWindow.startTime = QtCore.QDateTime(2011,4,22,16,33,15)# for some reason this box wont let me set the date and time orriginally
+        self.stationsDialogWindow.endTime = QtCore.QDateTime.currentDateTime()#sets the current date and time
+        self.stationsDialogWindow.endTimeBox.setDateTime(self.stationsDialogWindow.endTime)
+        self.stationsDialogWindow.startTimeBox.setDateTime(self.stationsDialogWindow.startTime)
+        # set our window title and show our window when it is called
         self.setWindowTitle('Main window')    
         self.show()
    
     @QtCore.pyqtSlot()
     def openEventsDialog(self):
-       self.eventsDialogWindow.exec_()
+        self.eventsDialogWindow.endTimeBox.setDateTime(self.eventsDialogWindow.endTime)
+        self.eventsDialogWindow.startTimeBox.setDateTime(self.eventsDialogWindow.startTime)        
+        self.eventsDialogWindow.exec_()
 
     @QtCore.pyqtSlot()
     def openStationsDialog(self):
-       self.stationsDialogWindow.exec_()
+        self.stationsDialogWindow.exec_()
     
     @QtCore.pyqtSlot()
-    def printDate(self):
+    def saveQueryState(self):
         self.eventsDialogWindow.startTime = self.eventsDialogWindow.startTimeBox.dateTime()
-        self.eventsDialogWindow.endTime = self.eventsDialogWindow.endTimeBox.dateTime()        
-        print(self.eventsDialogWindow.endTime)
+        self.eventsDialogWindow.endTime = self.eventsDialogWindow.endTimeBox.dateTime()
+        self.stationsDialogWindow.startTime = self.stationsDialogWindow.startTimeBox.dateTime()
+        self.stationsDialogWindow.endTime = self.stationsDialogWindow.endTimeBox.dateTime()                
+        
+  #  def showEventState(self):
+        
         
         
         
