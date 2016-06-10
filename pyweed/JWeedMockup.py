@@ -142,11 +142,11 @@ class BrowserWindow(QtGui.QMainWindow):
    
     @QtCore.pyqtSlot()
     def openEventsDialog(self):
-       self.eventsDialogWindow.exec_()
+        self.eventsDialogWindow.exec_()
 
     @QtCore.pyqtSlot()
     def openStationsDialog(self):
-       self.stationsDialogWindow.exec_()
+        self.stationsDialogWindow.exec_()
     
     @QtCore.pyqtSlot()
     def printDate(self):
