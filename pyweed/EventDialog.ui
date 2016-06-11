@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>320</width>
+    <height>520</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>320</width>
+    <height>520</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="timeGroupBox">
+     <property name="title">
+      <string>Event Time Interval</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="1" column="1">
+       <widget class="QDateTimeEdit" name="startDateTimeEdit"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="startTimeLabel">
+        <property name="text">
+         <string>Start Time</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDateTimeEdit" name="endDateTimeEdit"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="endTimeLabel">
+        <property name="text">
+         <string>End Time</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="magDepthGroupBox">
+     <property name="title">
+      <string>Magnitude and Depth</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="6" column="2">
+       <widget class="QLineEdit" name="maximumDepthLineEdit"/>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="minimumDepthLineEdit"/>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="depthBoxLabel">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="maximumMagnitudeLineEdit"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="minimumMagnitudLineEdit"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="magnitudeBoxLabel">
+        <property name="text">
+         <string>Magnitude</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="minimumBoxLabel">
+        <property name="text">
+         <string>Minimum</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="maximumBoxLabel">
+        <property name="text">
+         <string>Maximum</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="catalogTypeGroupBox">
+     <property name="title">
+      <string>Catalog and Type</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="0">
+       <widget class="QComboBox" name="cataloComboBox">
+        <item>
+         <property name="text">
+          <string>ANF</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>GCMT</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>NEIC PDE</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>ISC</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QComboBox" name="typeComboBox">
+        <item>
+         <property name="text">
+          <string>MB</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>ML</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>MS</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>MW</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="locationGroupBox">
+     <property name="title">
+      <string>Location Box</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="2" column="0">
+       <widget class="QLineEdit" name="eastValue"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="westValue"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="centerLabel">
+        <property name="text">
+         <string>Location</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="northValue"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="southValue"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="closeButton">
+     <property name="text">
+      <string>Close Window</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
