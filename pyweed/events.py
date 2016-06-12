@@ -10,22 +10,25 @@ Container for events.
 
 from __future__ import (absolute_import, division, print_function)
 
+import urllib
+
 import numpy as np
 import pandas as pd
 
+from obspy import UTCDateTime
 
 class Events(object):
     """
     Container for events.
     """
-    def __init__(self, logger=None):
+    def __init__(self):
         """
-        Initializes the Events container.
+        Initialization.
         """
         # TODO:  Better strucutre/objects for storing history?
-        parameters_history = []
-        url_history = []
-        df_history = []
+        self.parameters_history = []
+        self.url_history = []
+        self.df_history = []
         
     def get_parameters(self, index=0):
         return(self.parameters_history[index])
@@ -35,27 +38,35 @@ class Events(object):
     
     def get_df(self, index=0):
         return(self.df_history[index])
-    
-    def build_url(self, parameters):
-        # TODO:  Much more attention to detail when building the url. Probably loop over parameters and only add when "is not None"
-        # TODO:  We should support requests from other FDSN service providers as well. Do they all support "format=text"?
-        params = (parameters['starttime'], parameters['endtime'], parameters['minmag'])
-        url = 'http://service.iris.edu/fdsnws/event/1/query?starttime=%s&endtime=%s&minmag=%f&format=text' % params
-        return(url)
 
-    def query_events(self,
-                     starttime=None, endtime=None,
-                     minmag=0, maxmag=None, magtype=None,
-                     mindepth=None, maxdepth=None):
+    def query(self,
+              starttime=None, endtime=None,
+              minmag=0, maxmag=None, magtype=None,
+              mindepth=None, maxdepth=None):
         """
         """
-        # TODO:  Better structure/objects for adding things to the history?
-        # TODO:  How many of the options defined for this web service should we support? All?
-        parameters = {'starttime':starttime,
-                      'endtime':endtime,
-                      'minmag':minmag}
+        # Sanity check
+        if (starttime is None) or (endtime is None):
+            raise('starttime or endtime is missing')
         
-        url = build_url(parameters)
+        # Guarantee that all parameters are properly formatted strings        
+        # Required parameters
+        parameters = {'starttime':UTCDateTime(starttime).format_iris_web_service(),
+                      'endtime':UTCDateTime(endtime).format_iris_web_service(),
+                      'minmag':'%.1f' % float(minmag),
+                      'format':'text'}        
+        # Optional parameters
+        if maxmag:
+            parameters['maxmag'] = '%.1f' % float(maxmag)
+        if magtype:
+            parameters['magtype'] = str(magtype)
+        if mindepth:
+            parameters['mindepth'] = '%.4f' % float(mindepth)
+        if maxdepth:
+            parameters['maxdepth'] = '%.4f' % float(maxdepth)
+            
+        # Create events webservice URL
+        url = build_url(parameters=parameters)
         
         # Check if we have already gotten this url
         if url in self.url_history:
@@ -73,6 +84,37 @@ class Events(object):
                 # TODO:  What type of exception should we trap? We should probably log it.
                 raise
         
+        
+# ------------------------------------------------------------------------------
+# Helper functions
+# ------------------------------------------------------------------------------
+
+# Similar to obspy.clients.fdsn.client.py
+def build_url(base_url="http://service.iris.edu",
+              service="event",
+              major_version=1,
+              resource_type="query",
+              parameters={}):
+    """
+    Build a FDSN webservice url to request events.
+
+    >>> print(build_url("http://service.iris.edu", "event", 1, \
+                        "query", {'starttime':'2015-01-01','endtime':'2015-01-03','minmag':'4.00','format':'text'}))
+    http://service.iris.edu/fdsnws/event/1/query?endtime=2015-01-03&starttime=2015-01-01&minmag=4.00&format=text
+    """
+
+    # Construct base_url from FDSN provider, service, verstion.
+    url = "/".join((base_url, "fdsnws", service,
+                    str(major_version), resource_type))
+
+    # Add parameters
+    url = "?".join((url, urllib.parse.urlencode(parameters)))
+    return url
+
+
+# ------------------------------------------------------------------------------
+# Main
+# ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     import doctest
