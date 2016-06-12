@@ -1,3 +1,7 @@
+# python files
+*.pyc
+*/*.pyc
+
 # wingIDE files
 *.wpr
 *.wpu
