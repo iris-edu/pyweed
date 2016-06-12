@@ -5,21 +5,23 @@ Created on Tue Jun  7 13:51:59 2016
 @author: RowanCallahan
 """
 
+from __future__ import (absolute_import, division, print_function)
 
 import sys
-from PyQt4 import QtGui,QtCore
+
+from PyQt4 import QtCore, QtGui
 
 import practiceEventDialog
 
+from events import Events
+
+
 class EventsDialog(QtGui.QDialog, practiceEventDialog.Ui_Dialog):
-    """
-    This is the event Dialog window, we will call it later in the main loop.
-    """
+    """Dialog window for events options."""
     def __init__(self, parent=None, windowTitle='Start/End Time'):
         super(self.__class__, self).__init__()
         self.setupUi(self)
-        
-        
+
         # setup the date selectors
         
         self.endDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
@@ -32,7 +34,9 @@ class EventsDialog(QtGui.QDialog, practiceEventDialog.Ui_Dialog):
 
         self.setWindowTitle(windowTitle)
 
+
 class StationsDialog(QtGui.QDialog):
+    """Dialog window for stations options."""
     def __init__(self, parent=None, windowTitle='Start/End Time'):
         super(StationsDialog, self).__init__(parent)
         
@@ -57,10 +61,10 @@ class StationsDialog(QtGui.QDialog):
         self.setWindowTitle(windowTitle)
 
 
-class BrowserWindow(QtGui.QMainWindow):
+class MainWindow(QtGui.QMainWindow):
     
     def __init__(self):
-        super(BrowserWindow, self).__init__()
+        super(MainWindow, self).__init__()
         
         self.initUI()
         
@@ -171,9 +175,6 @@ class BrowserWindow(QtGui.QMainWindow):
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
-
-    main = BrowserWindow()
-    main.show()
-
+    GUI = MainWindow()
     sys.exit(app.exec_())
     
