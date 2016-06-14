@@ -13,7 +13,7 @@ from PyQt4 import QtCore, QtGui
 
 import practiceEventDialog
 
-from events import Events
+#from events import Events
 
 
 class EventsDialog(QtGui.QDialog, practiceEventDialog.Ui_Dialog):
