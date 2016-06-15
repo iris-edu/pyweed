@@ -39,31 +39,33 @@ class Events(object):
     def get_df(self, index=0):
         return(self.df_history[index])
 
-    def query(self,
-              starttime=None, endtime=None,
-              minmag=0, maxmag=None, magtype=None,
-              mindepth=None, maxdepth=None):
+#    def query(self,
+#              starttime=None, endtime=None,
+#              minmag=0, maxmag=None, magtype=None,
+#              mindepth=None, maxdepth=None):
+    def query(self, optionsDict=None):
         """
         """
         # Sanity check
-        if (starttime is None) or (endtime is None):
+        if not optionsDict.has_key('starttime') or not optionsDict.has_key('endtime'):
             raise('starttime or endtime is missing')
         
         # Guarantee that all parameters are properly formatted strings        
         # Required parameters
-        parameters = {'starttime':UTCDateTime(starttime).format_iris_web_service(),
-                      'endtime':UTCDateTime(endtime).format_iris_web_service(),
-                      'minmag':'%.1f' % float(minmag),
+        
+        parameters = {'starttime':UTCDateTime(optionsDict['starttime']).format_iris_web_service(),
+                      'endtime':UTCDateTime(optionsDict['endtime']).format_iris_web_service(),
+                      'minmag':'%.1f' % float(optionsDict['minmag']),
                       'format':'text'}        
         # Optional parameters
-        if maxmag:
-            parameters['maxmag'] = '%.1f' % float(maxmag)
-        if magtype:
-            parameters['magtype'] = str(magtype)
-        if mindepth:
-            parameters['mindepth'] = '%.4f' % float(mindepth)
-        if maxdepth:
-            parameters['maxdepth'] = '%.4f' % float(maxdepth)
+        if optionsDict.has_key('maxmag'):
+            parameters['maxmag'] = '%.1f' % float(optionsDict['maxmag'])
+        if optionsDict.has_key('magtype'):
+            parameters['magtype'] = str(optionsDict['magtype'])
+        if optionsDict.has_key('mindepth'):
+            parameters['mindepth'] = '%.4f' % float(optionsDict['mindepth'])
+        if optionsDict.has_key('maxdepth'):
+            parameters['maxdepth'] = '%.4f' % float(optionsDict['maxdepth'])
             
         # Create events webservice URL
         url = build_url(parameters=parameters)
@@ -71,7 +73,7 @@ class Events(object):
         # Check if we have already gotten this url
         if url in self.url_history:
             index = self.url_history.index(url)
-            df = df_history[index]
+            df = self.df_history[index]
             
         else:  
             try:

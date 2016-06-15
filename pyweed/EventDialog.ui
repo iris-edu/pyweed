@@ -56,10 +56,18 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="6" column="2">
-       <widget class="QLineEdit" name="maximumDepthLineEdit"/>
+       <widget class="QLineEdit" name="maximumDepthLineEdit">
+        <property name="text">
+         <string>6371.0</string>
+        </property>
+       </widget>
       </item>
       <item row="6" column="1">
-       <widget class="QLineEdit" name="minimumDepthLineEdit"/>
+       <widget class="QLineEdit" name="minimumDepthLineEdit">
+        <property name="text">
+         <string>0.0</string>
+        </property>
+       </widget>
       </item>
       <item row="6" column="0">
        <widget class="QLabel" name="depthBoxLabel">
@@ -69,10 +77,18 @@
        </widget>
       </item>
       <item row="2" column="2">
-       <widget class="QLineEdit" name="maximumMagnitudeLineEdit"/>
+       <widget class="QLineEdit" name="maximumMagnitudeLineEdit">
+        <property name="text">
+         <string>10.0</string>
+        </property>
+       </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="minimumMagnitudLineEdit"/>
+       <widget class="QLineEdit" name="minimumMagnitudLineEdit">
+        <property name="text">
+         <string>0.0</string>
+        </property>
+       </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="magnitudeBoxLabel">
@@ -108,6 +124,11 @@
        <widget class="QComboBox" name="cataloComboBox">
         <item>
          <property name="text">
+          <string>All Catalogs</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>ANF</string>
          </property>
         </item>
@@ -130,6 +151,11 @@
       </item>
       <item row="2" column="0">
        <widget class="QComboBox" name="typeComboBox">
+        <item>
+         <property name="text">
+          <string>All Types</string>
+         </property>
+        </item>
         <item>
          <property name="text">
           <string>MB</string>
