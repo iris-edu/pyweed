@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'EventDialog.ui'
+# Form implementation generated from reading ui file 'eventDialog.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -85,9 +85,11 @@ class Ui_Dialog(object):
         self.cataloComboBox.addItem(_fromUtf8(""))
         self.cataloComboBox.addItem(_fromUtf8(""))
         self.cataloComboBox.addItem(_fromUtf8(""))
+        self.cataloComboBox.addItem(_fromUtf8(""))
         self.gridLayout_2.addWidget(self.cataloComboBox, 1, 0, 1, 1)
         self.typeComboBox = QtGui.QComboBox(self.catalogTypeGroupBox)
         self.typeComboBox.setObjectName(_fromUtf8("typeComboBox"))
+        self.typeComboBox.addItem(_fromUtf8(""))
         self.typeComboBox.addItem(_fromUtf8(""))
         self.typeComboBox.addItem(_fromUtf8(""))
         self.typeComboBox.addItem(_fromUtf8(""))
@@ -127,19 +129,25 @@ class Ui_Dialog(object):
         self.startTimeLabel.setText(_translate("Dialog", "Start Time", None))
         self.endTimeLabel.setText(_translate("Dialog", "End Time", None))
         self.magDepthGroupBox.setTitle(_translate("Dialog", "Magnitude and Depth", None))
+        self.maximumDepthLineEdit.setText(_translate("Dialog", "6371.0", None))
+        self.minimumDepthLineEdit.setText(_translate("Dialog", "0.0", None))
         self.depthBoxLabel.setText(_translate("Dialog", "Depth", None))
+        self.maximumMagnitudeLineEdit.setText(_translate("Dialog", "10.0", None))
+        self.minimumMagnitudLineEdit.setText(_translate("Dialog", "0.0", None))
         self.magnitudeBoxLabel.setText(_translate("Dialog", "Magnitude", None))
         self.minimumBoxLabel.setText(_translate("Dialog", "Minimum", None))
         self.maximumBoxLabel.setText(_translate("Dialog", "Maximum", None))
         self.catalogTypeGroupBox.setTitle(_translate("Dialog", "Catalog and Type", None))
-        self.cataloComboBox.setItemText(0, _translate("Dialog", "ANF", None))
-        self.cataloComboBox.setItemText(1, _translate("Dialog", "GCMT", None))
-        self.cataloComboBox.setItemText(2, _translate("Dialog", "NEIC PDE", None))
-        self.cataloComboBox.setItemText(3, _translate("Dialog", "ISC", None))
-        self.typeComboBox.setItemText(0, _translate("Dialog", "MB", None))
-        self.typeComboBox.setItemText(1, _translate("Dialog", "ML", None))
-        self.typeComboBox.setItemText(2, _translate("Dialog", "MS", None))
-        self.typeComboBox.setItemText(3, _translate("Dialog", "MW", None))
+        self.cataloComboBox.setItemText(0, _translate("Dialog", "All Catalogs", None))
+        self.cataloComboBox.setItemText(1, _translate("Dialog", "ANF", None))
+        self.cataloComboBox.setItemText(2, _translate("Dialog", "GCMT", None))
+        self.cataloComboBox.setItemText(3, _translate("Dialog", "NEIC PDE", None))
+        self.cataloComboBox.setItemText(4, _translate("Dialog", "ISC", None))
+        self.typeComboBox.setItemText(0, _translate("Dialog", "All Types", None))
+        self.typeComboBox.setItemText(1, _translate("Dialog", "MB", None))
+        self.typeComboBox.setItemText(2, _translate("Dialog", "ML", None))
+        self.typeComboBox.setItemText(3, _translate("Dialog", "MS", None))
+        self.typeComboBox.setItemText(4, _translate("Dialog", "MW", None))
         self.locationGroupBox.setTitle(_translate("Dialog", "Location Box", None))
         self.centerLabel.setText(_translate("Dialog", "Location", None))
         self.closeButton.setText(_translate("Dialog", "Close Window", None))
