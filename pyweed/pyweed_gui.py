@@ -16,6 +16,7 @@ import EventOptionsDialog
 import MainWindow
 
 from events import Events
+from utils import MyDoubleValidator
 from pyweed_style import stylesheet
 
 
@@ -32,9 +33,25 @@ class EventOptionsDialog(QtGui.QDialog, EventOptionsDialog.Ui_EventOptionsDialog
         self.starttimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
         self.endtimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
         
-        # Set default values for other items
+        # Set validators for input fields
+        self.minmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.minmagLineEdit))        
+        self.maxmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.maxmagLineEdit))        
+        self.mindepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.mindepthLineEdit))        
+        self.maxdepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.maxdepthLineEdit))        
+        self.minlonLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.minlonLineEdit))        
+        self.maxlonLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.maxlonLineEdit))        
+        self.minlatLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.minlatLineEdit))        
+        self.maxlatLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.maxlatLineEdit))        
+        
+        # Set default values for input fields
         self.minmagLineEdit.setText('4.0')
-        # TODO:  set default values for all event options
+        self.maxmagLineEdit.setText('10.0')
+        self.mindepthLineEdit.setText('0.0')
+        self.maxdepthLineEdit.setText('6371.0')
+        self.minlonLineEdit.setText('-180.0')
+        self.maxlonLineEdit.setText('180.0')
+        self.minlatLineEdit.setText('-90.0')
+        self.maxlatLineEdit.setText('90.0')
         
         # connect the close button to the close slot
         self.closeButton.clicked.connect(self.close)
