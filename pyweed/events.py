@@ -39,34 +39,14 @@ class Events(object):
     def get_df(self, index=0):
         return(self.df_history[index])
 
-#    def query(self,
-#              starttime=None, endtime=None,
-#              minmag=0, maxmag=None, magtype=None,
-#              mindepth=None, maxdepth=None):
-    def query(self, optionsDict=None):
+    def query(self, parameters=None):
         """
+        Make a webservice request for events using the passed in options
         """
         # Sanity check
-        if not optionsDict.has_key('starttime') or not optionsDict.has_key('endtime'):
+        if not parameters.has_key('starttime') or not parameters.has_key('endtime'):
             raise('starttime or endtime is missing')
-        
-        # Guarantee that all parameters are properly formatted strings        
-        # Required parameters
-        
-        parameters = {'starttime':UTCDateTime(optionsDict['starttime']).format_iris_web_service(),
-                      'endtime':UTCDateTime(optionsDict['endtime']).format_iris_web_service(),
-                      'minmag':'%.1f' % float(optionsDict['minmag']),
-                      'format':'text'}        
-        # Optional parameters
-        if optionsDict.has_key('maxmag'):
-            parameters['maxmag'] = '%.1f' % float(optionsDict['maxmag'])
-        if optionsDict.has_key('magtype'):
-            parameters['magtype'] = str(optionsDict['magtype'])
-        if optionsDict.has_key('mindepth'):
-            parameters['mindepth'] = '%.4f' % float(optionsDict['mindepth'])
-        if optionsDict.has_key('maxdepth'):
-            parameters['maxdepth'] = '%.4f' % float(optionsDict['maxdepth'])
-            
+                    
         # Create events webservice URL
         url = build_url(parameters=parameters)
         
@@ -77,14 +57,18 @@ class Events(object):
             
         else:  
             try:
-                df = pd.read_csv(url, sep='|')       
+                # Get events dataframe and clean up column names
+                df = pd.read_csv(url, sep='|')
+                df.columns = df.columns.str.strip()
                 # Push items onto the stack (so the most recent is always in position 0)
-                self.parameters_history.insert(0,parameters)
-                self.url_history.insert(0,url)
-                self.df_history.insert(0,df)
+                self.parameters_history.insert(0, parameters)
+                self.url_history.insert(0, url)
+                self.df_history.insert(0, df)
             except:
                 # TODO:  What type of exception should we trap? We should probably log it.
                 raise
+            
+        return(df)
         
         
 # ------------------------------------------------------------------------------
@@ -108,9 +92,13 @@ def build_url(base_url="http://service.iris.edu",
     # Construct base_url from FDSN provider, service, verstion.
     url = "/".join((base_url, "fdsnws", service,
                     str(major_version), resource_type))
+    
+    # Aded a parameter for text formatting
+    parameters['format'] = 'text'
 
     # Add parameters
     url = "?".join((url, urllib.parse.urlencode(parameters)))
+    
     return url
 
 

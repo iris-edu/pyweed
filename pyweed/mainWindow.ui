@@ -30,6 +30,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QLabel" name="mapLabel">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
           <property name="text">
            <string>Map Goes Here</string>
           </property>
@@ -58,17 +61,27 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="1" column="0">
-            <widget class="QPushButton" name="eventOptions">
+            <widget class="QPushButton" name="eventOptionsButton">
              <property name="text">
               <string>Event Options</string>
              </property>
             </widget>
            </item>
            <item row="0" column="0" colspan="2">
-            <widget class="QTableWidget" name="eventTable"/>
+            <widget class="QTableWidget" name="eventsTable">
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="showGrid">
+              <bool>false</bool>
+             </property>
+             <property name="gridStyle">
+              <enum>Qt::SolidLine</enum>
+             </property>
+            </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QPushButton" name="getEvent">
+            <widget class="QPushButton" name="getEventsButton">
              <property name="text">
               <string>Get Events</string>
              </property>
@@ -87,7 +100,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
            <item row="1" column="1">
-            <widget class="QPushButton" name="getStation">
+            <widget class="QPushButton" name="getStationsButton">
              <property name="styleSheet">
               <string notr="true"/>
              </property>
@@ -97,14 +110,18 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QPushButton" name="stationsOptions">
+            <widget class="QPushButton" name="stationOptionsButton">
              <property name="text">
               <string>Station Options</string>
              </property>
             </widget>
            </item>
            <item row="0" column="0" colspan="2">
-            <widget class="QTableWidget" name="stationsTable"/>
+            <widget class="QTableWidget" name="stationsTable">
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
