@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>EventOptionsDialog</class>
+ <widget class="QDialog" name="EventOptionsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -22,27 +22,33 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="timeGroupBox">
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
      <property name="title">
       <string>Event Time Interval</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
+      <property name="fieldGrowthPolicy">
+       <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+      </property>
       <item row="1" column="1">
-       <widget class="QDateTimeEdit" name="startDateTimeEdit"/>
+       <widget class="QDateTimeEdit" name="endtimeDateTimeEdit"/>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="startTimeLabel">
+       <widget class="QLabel" name="endtimeLabel">
         <property name="text">
-         <string>Start Time</string>
+         <string>End Time</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QDateTimeEdit" name="endDateTimeEdit"/>
+       <widget class="QDateTimeEdit" name="starttimeDateTimeEdit"/>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="endTimeLabel">
+       <widget class="QLabel" name="starttimeLabel">
         <property name="text">
-         <string>End Time</string>
+         <string>Start Time</string>
         </property>
        </widget>
       </item>
@@ -56,58 +62,58 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="6" column="2">
-       <widget class="QLineEdit" name="maximumDepthLineEdit">
+       <widget class="QLineEdit" name="maxdepthLineEdit">
         <property name="text">
          <string>6371.0</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="minimumDepthLineEdit">
-        <property name="text">
-         <string>0.0</string>
-        </property>
-       </widget>
-      </item>
       <item row="6" column="0">
-       <widget class="QLabel" name="depthBoxLabel">
+       <widget class="QLabel" name="depthLabel">
         <property name="text">
          <string>Depth</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="maximumMagnitudeLineEdit">
-        <property name="text">
-         <string>10.0</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="minimumMagnitudLineEdit">
+       <widget class="QLineEdit" name="minmagLineEdit">
         <property name="text">
          <string>0.0</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="magnitudeBoxLabel">
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="mindepthLineEdit">
         <property name="text">
-         <string>Magnitude</string>
+         <string>0.0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="maximumLabel">
+        <property name="text">
+         <string>Maximum</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLabel" name="minimumBoxLabel">
+       <widget class="QLabel" name="minimumLabel">
         <property name="text">
          <string>Minimum</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="maximumBoxLabel">
+      <item row="2" column="0">
+       <widget class="QLabel" name="magnitudeLabel">
         <property name="text">
-         <string>Maximum</string>
+         <string>Magnitude</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="maxmagLineEdit">
+        <property name="text">
+         <string>10.0</string>
         </property>
        </widget>
       </item>
@@ -121,7 +127,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="1" column="0">
-       <widget class="QComboBox" name="cataloComboBox">
+       <widget class="QComboBox" name="catalogComboBox">
         <item>
          <property name="text">
           <string>All Catalogs</string>
@@ -188,10 +194,10 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="2" column="0">
-       <widget class="QLineEdit" name="eastValue"/>
+       <widget class="QLineEdit" name="minlonLineEdit"/>
       </item>
       <item row="2" column="2">
-       <widget class="QLineEdit" name="westValue"/>
+       <widget class="QLineEdit" name="maxlonLineEdit"/>
       </item>
       <item row="2" column="1" alignment="Qt::AlignHCenter">
        <widget class="QLabel" name="centerLabel">
@@ -201,10 +207,10 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="northValue"/>
+       <widget class="QLineEdit" name="maxlatLineEdit"/>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="southValue"/>
+       <widget class="QLineEdit" name="minlatLineEdit"/>
       </item>
      </layout>
     </widget>

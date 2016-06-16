@@ -8,37 +8,72 @@ Created on Tue Jun  7 13:51:59 2016
 from __future__ import (absolute_import, division, print_function)
 
 import sys
+import string
 
 from PyQt4 import QtCore, QtGui
 
-import practiceEventDialog
+import EventOptionsDialog
+import MainWindow
 
-#from events import Events
+from events import Events
+from pyweed_style import stylesheet
 
 
-class EventsDialog(QtGui.QDialog, practiceEventDialog.Ui_Dialog):
-    """Dialog window for events options."""
+class EventOptionsDialog(QtGui.QDialog, EventOptionsDialog.Ui_EventOptionsDialog):
+    """Dialog window for event options used in creating a webservice query."""
     def __init__(self, parent=None, windowTitle='Start/End Time'):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setWindowTitle(windowTitle)
 
-        # setup the date selectors
+        # Initialize the date selectors
+        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        self.starttimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
+        self.endtimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
         
-        self.endDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.startDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        # Set default values for other items
+        self.minmagLineEdit.setText('4.0')
+        # TODO:  set default values for all event options
         
-        self.startTime = self.startDateTimeEdit.dateTime()
-        self.endTime = self.endDateTimeEdit.dateTime()
+        # connect the close button to the close slot
         self.closeButton.clicked.connect(self.close)
 
 
-        self.setWindowTitle(windowTitle)
+    @QtCore.pyqtSlot()    
+    def getOptions(self):
+        """
+        Return a dictionary containing everything specified in the EventOptionsDialog.
+        All dictionary values are properly formatted for use in building an event service URL.
+        """
+        options = {}        
+        
+        options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
+        options['endtime'] = str(self.endtimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
+        options['minmag'] = str(self.minmagLineEdit.text())
+        options['maxmag'] = str(self.maxmagLineEdit.text())
+        options['mindepth'] = str(self.mindepthLineEdit.text())
+        options['maxdepth'] = str(self.maxdepthLineEdit.text())
+        if str(self.catalogComboBox.currentText()) != 'All Catalogs':
+            options['catalog'] = str(self.type.currentText())
+        if str(self.typeComboBox.currentText()) != 'All Types':
+            options['type'] = str(self.type.currentText())            
+        if str(self.minlatLineEdit.text()) != '':
+            options['minlat'] = str(self.minlatLineEdit.text())            
+        if str(self.maxlatLineEdit.text()) != '':
+            options['maxlat'] = str(self.maxlatLineEdit.text())            
+        if str(self.minlonLineEdit.text()) != '':
+            options['minlon'] = str(self.minlonLineEdit.text())            
+        if str(self.maxlonLineEdit.text()) != '':
+            options['maxlon'] = str(self.maxlonLineEdit.text())
+            
+        return options
 
 
-class StationsDialog(QtGui.QDialog):
+class StationOptionsDialog(QtGui.QDialog):
     """Dialog window for stations options."""
     def __init__(self, parent=None, windowTitle='Start/End Time'):
-        super(StationsDialog, self).__init__(parent)
+        super(StationOptionsDialog, self).__init__(parent)
         
         # create the ok/cancel button box
         self.buttonBox = QtGui.QDialogButtonBox(self)
@@ -50,8 +85,8 @@ class StationsDialog(QtGui.QDialog):
         self.startDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
         self.endDateTimeEdit = QtGui.QDateTimeEdit(self)
         self.endDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.startTime = self.startDateTimeEdit.dateTime()
-        self.endTime = self.endDateTimeEdit.dateTime()
+        self.starttime = self.startDateTimeEdit.dateTime()
+        self.endtime = self.endDateTimeEdit.dateTime()
 
         # add the widgets to a vertical layour
         self.verticalLayout = QtGui.QVBoxLayout(self)
@@ -61,113 +96,61 @@ class StationsDialog(QtGui.QDialog):
         self.setWindowTitle(windowTitle)
 
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     
-    def __init__(self):
-        super(MainWindow, self).__init__()
-        
-        self.initUI()
-        
-        
-    def initUI(self):               
-        
-        # central widget, main window is a complicated class that allows toolbars and other nice goodies but first we need to make sure we have a sandbox that we can put all our widgets and other stuff intowithout it being unalbe to write into
-        self.centralWidget= QtGui.QWidget()
-        self.setCentralWidget(self.centralWidget)
+    def __init__(self,parent=None):
 
-        # set the top and bottom frames that will contain the map on top and both the information logs on bottom        
+        super(self.__class__, self).__init__()
+        self.setupUi(self)
         
-        self.mainMapFrame = QtGui.QFrame(self)
-        self.informationLogFrame = QtGui.QFrame(self)
-        self.verticalOverallBox = QtGui.QVBoxLayout()
-        # format and position the widgets to the main window
-        eventStateButton = QtGui.QPushButton("Show Event State")
-        stationStateButton = QtGui.QPushButton("Show Station State")
-        statePrintButtonsBox = QtGui.QHBoxLayout()
-        statePrintButtonsBox.addWidget(eventStateButton)
-        statePrintButtonsBox.addWidget(stationStateButton)
+        self.eventOptionsDialog = EventOptionsDialog(self, 'Event Start/End Time')        
+        self.stationOptionsDialog = StationOptionsDialog(self, 'Station Start/End Time')
+        self.eventsHandler = Events()        
+        self.eventsTable.setSortingEnabled(True)
         
-        #
-        eventStateList = QtGui.QListWidget()
-        stationStateList = QtGui.QListWidget()
-        statePrintBox = QtGui.QHBoxLayout()
-        statePrintBox.addWidget(eventStateList)
-        statePrintBox.addWidget(stationStateList)
+        # connect the buttons so that they open the dialog
+        self.eventOptionsButton.pressed.connect(self.eventOptionsDialog.show)
+        self.stationOptionsButton.pressed.connect(self.openStationOptionsDialog)
+        self.getEventsButton.pressed.connect(self.queryEvents)
         
-        
-        verticalInformationBox = QtGui.QVBoxLayout()
-        verticalInformationBox.addLayout(statePrintBox)
-        verticalInformationBox.addLayout(statePrintButtonsBox)
-        self.informationLogFrame.setLayout(verticalInformationBox)
-        
-        #make the two halves splittable
-        mapInformationSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        mapInformationSplitter.addWidget(self.mainMapFrame)
-        mapInformationSplitter.addWidget(self.informationLogFrame)
-        self.verticalOverallBox.addWidget(mapInformationSplitter)
-        
-        self.centralWidget.setLayout(self.verticalOverallBox)
-     
-        # create the options for the file menu bar
-        exitAction = QtGui.QAction('Exit', self)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(self.close)
-        
-        eventDialogAction = QtGui.QAction('Event Search Settings',self)
-        eventDialogAction.triggered.connect(self.openEventsDialog)
-        stationsDialogAction= QtGui.QAction('Station Search Settings',self)
-        stationsDialogAction.triggered.connect(self.openStationsDialog)
-
-        # set up the menu bar and add the actions and menus
-        menubar = self.menuBar()
-        menubar.setNativeMenuBar(False)
-        fileMenu = menubar.addMenu('events')
-        fileMenu.addAction(exitAction)
-        fileMenu.addAction(eventDialogAction)
-        fileMenu.addAction(stationsDialogAction)
-      
-        self.eventsDialogWindow = EventsDialog(self, 'Event Start/End Time')
-        self.eventsDialogWindow.endDateTimeEdit.dateTimeChanged.connect(self.saveQueryState)
-        self.eventsDialogWindow.startDateTimeEdit.dateTimeChanged.connect(self.saveQueryState)
-        
-        self.stationsDialogWindow = StationsDialog(self, 'Station Start/End Time')
-        self.stationsDialogWindow.startDateTimeEdit.dateTimeChanged.connect(self.saveQueryState)
-        self.stationsDialogWindow.endDateTimeEdit.dateTimeChanged.connect(self.saveQueryState)
-        
-        #set up all the initial settings for both the event dialog box and the staiton dialog box
-        self.eventsDialogWindow.startTime = QtCore.QDateTime(2011,4,22,16,33,15)# for some reason this box wont let me set the date and time orriginally
-        self.eventsDialogWindow.endTime = QtCore.QDateTime.currentDateTime()#sets the current date and time
-        self.eventsDialogWindow.endDateTimeEdit.setDateTime(self.eventsDialogWindow.endTime)
-        self.eventsDialogWindow.startDateTimeEdit.setDateTime(self.eventsDialogWindow.startTime)
-        
-        self.stationsDialogWindow.startTime = QtCore.QDateTime(2011,4,22,16,33,15)# for some reason this box wont let me set the date and time orriginally
-        self.stationsDialogWindow.endTime = QtCore.QDateTime.currentDateTime()#sets the current date and time
-        self.stationsDialogWindow.endDateTimeEdit.setDateTime(self.stationsDialogWindow.endTime)
-        self.stationsDialogWindow.startDateTimeEdit.setDateTime(self.stationsDialogWindow.startTime)
-        # set our window title and show our window when it is called
         self.setWindowTitle('Main window')    
         self.show()
    
     @QtCore.pyqtSlot()
-    def openEventsDialog(self):
-        self.eventsDialogWindow.endDateTimeEdit.setDateTime(self.eventsDialogWindow.endTime)
-        self.eventsDialogWindow.startDateTimeEdit.setDateTime(self.eventsDialogWindow.startTime)        
-        self.eventsDialogWindow.exec_()
+    def queryEvents(self):
+        # Get events and subset to desired columns
+        parameters = self.eventOptionsDialog.getOptions()
+        # TODO:  handle errors when querying events
+        eventsDF = self.eventsHandler.query(parameters=parameters)
+        eventsDF = eventsDF[['Time','Latitude','Longitude','Depth/km','MagType','Magnitude']]
+        
+        self.eventsTable.setRowCount(eventsDF.shape[0])
+        self.eventsTable.setColumnCount(eventsDF.shape[1])
+        self.eventsTable.setHorizontalHeaderLabels(eventsDF.columns.tolist())
+        self.eventsTable.verticalHeader().hide()
+        
+        for i in range(eventsDF.shape[0]):
+            for j in range(eventsDF.shape[1]):
+                # Guarantee that all elements are convenrted to strings
+                self.eventsTable.setItem(i, j, QtGui.QTableWidgetItem(str(eventsDF.iat[i,j])))
+
+        # Tighten up the table
+        self.eventsTable.resizeColumnsToContents()
+        self.eventsTable.resizeRowsToContents()
+        
+        # TODO:  Remove console dump
+        print(eventsDF)
+
+            
+   
+    @QtCore.pyqtSlot()
+    def openEventOptionsDialog(self):        
+        self.eventOptionsDialog.exec_()
 
     @QtCore.pyqtSlot()
-    def openStationsDialog(self):
-        self.stationsDialogWindow.exec_()
-    
-    @QtCore.pyqtSlot()
-    def saveQueryState(self):
-        self.eventsDialogWindow.startTime = self.eventsDialogWindow.startDateTimeEdit.dateTime()
-        self.eventsDialogWindow.endTime = self.eventsDialogWindow.endDateTimeEdit.dateTime()
-        self.stationsDialogWindow.startTime = self.stationsDialogWindow.startDateTimeEdit.dateTime()
-        self.stationsDialogWindow.endTime = self.stationsDialogWindow.endDateTimeEdit.dateTime()                
-        
-  #  def showEventState(self):
-        
+    def openStationOptionsDialog(self):
+        self.stationOptionsDialog.show()
+
         
         
         
@@ -175,6 +158,7 @@ class MainWindow(QtGui.QMainWindow):
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
+    app.setStyleSheet(stylesheet)
     GUI = MainWindow()
     sys.exit(app.exec_())
     
