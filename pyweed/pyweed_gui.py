@@ -13,7 +13,7 @@ import string
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-import EventOptionsDialog
+import EventQueryDialog
 import StationOptionsDialog
 import MainWindow
 
@@ -23,7 +23,7 @@ from utils import MyDoubleValidator
 from pyweed_style import stylesheet
 
 
-class EventOptionsDialog(QtGui.QDialog, EventOptionsDialog.Ui_EventOptionsDialog):
+class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
     """Dialog window for event options used in creating a webservice query."""
     def __init__(self, parent=None):
         super(self.__class__, self).__init__()
@@ -41,29 +41,29 @@ class EventOptionsDialog(QtGui.QDialog, EventOptionsDialog.Ui_EventOptionsDialog
         self.maxmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.maxmagLineEdit))        
         self.mindepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.mindepthLineEdit))        
         self.maxdepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.maxdepthLineEdit))        
-        self.minlonLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.minlonLineEdit))        
-        self.maxlonLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.maxlonLineEdit))        
-        self.minlatLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.minlatLineEdit))        
-        self.maxlatLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.maxlatLineEdit))        
+        self.locationRangeWestLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeWestLineEdit))        
+        self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))        
+        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))        
+        self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))        
         
         # Set default values for input fields
         self.minmagLineEdit.setText('4.0')
         self.maxmagLineEdit.setText('10.0')
         self.mindepthLineEdit.setText('0.0')
         self.maxdepthLineEdit.setText('6371.0')
-        self.minlonLineEdit.setText('-180.0')
-        self.maxlonLineEdit.setText('180.0')
-        self.minlatLineEdit.setText('-90.0')
-        self.maxlatLineEdit.setText('90.0')
+        self.locationRangeWestLineEdit.setText('-180.0')
+        self.locationRangeEastLineEdit.setText('180.0')
+        self.locationRangeSouthLineEdit.setText('-90.0')
+        self.locationRangeNorthLineEdit.setText('90.0')
         
         # connect the close button to the close slot
-        self.closeButton.clicked.connect(self.close)
+        #self.closeButton.clicked.connect(self.close)
 
 
     @QtCore.pyqtSlot()    
     def getOptions(self):
         """
-        Return a dictionary containing everything specified in the EventOptionsDialog.
+        Return a dictionary containing everything specified in the EventQueryDialog.
         All dictionary values are properly formatted for use in building an event service URL.
         """
         options = {}        
@@ -77,18 +77,19 @@ class EventOptionsDialog(QtGui.QDialog, EventOptionsDialog.Ui_EventOptionsDialog
         options['maxdepth'] = str(self.maxdepthLineEdit.text())
         
         # catalog, type, and lat-lon ranges are optional
-        if str(self.catalogComboBox.currentText()) != 'All Catalogs':
-            options['catalog'] = str(self.type.currentText())
-        if str(self.typeComboBox.currentText()) != 'All Types':
-            options['type'] = str(self.type.currentText())            
-        if str(self.minlatLineEdit.text()) != '':
-            options['minlat'] = str(self.minlatLineEdit.text())            
-        if str(self.maxlatLineEdit.text()) != '':
-            options['maxlat'] = str(self.maxlatLineEdit.text())            
-        if str(self.minlonLineEdit.text()) != '':
-            options['minlon'] = str(self.minlonLineEdit.text())            
-        if str(self.maxlonLineEdit.text()) != '':
-            options['maxlon'] = str(self.maxlonLineEdit.text())
+        #if str(self.catalogComboBox.currentText()) != 'All Catalogs':
+            #options['catalog'] = str(self.type.currentText())
+        if str(self.magtypeComboBox.currentText()) != 'All Types':
+            options['magtype'] = str(self.magtypeComboBox.currentText()) 
+        if self.locationRangeRadioButton.isChecked():         
+            if str(self.locationRangeWestLineEdit.text()) != '':
+                options['minlon'] = str(self.locationRangeWestLineEdit.text())            
+            if str(self.locationRangeEastLineEdit.text()) != '':
+                options['maxlon'] = str(self.locationRangeEastLineEdit.text())            
+            if str(self.locationRangeSouthLineEdit.text()) != '':
+                options['minlat'] = str(self.locationRangeSouthLineEdit.text())            
+            if str(self.locationRangeNorthLineEdit.text()) != '':
+                options['maxlat'] = str(self.locationRangeNorthLineEdit.text())
             
         return options
 
@@ -107,20 +108,20 @@ class StationOptionsDialog(QtGui.QDialog, StationOptionsDialog.Ui_StationOptions
         self.endtimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
         
         # Set validators for input fields
-        self.minlonLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.minlonLineEdit))        
-        self.maxlonLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.maxlonLineEdit))        
-        self.minlatLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.minlatLineEdit))        
-        self.maxlatLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.maxlatLineEdit))        
+        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeSouthLineEdit))        
+        self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))        
+        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))        
+        self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))        
         
         # Set default values for input fields
         self.networkLineEdit.setText('_GSN')
         self.stationLineEdit.setText('*')
         self.locationLineEdit.setText('*')
         self.channelLineEdit.setText('?HZ')
-        self.minlonLineEdit.setText('-180.0')
-        self.maxlonLineEdit.setText('180.0')
-        self.minlatLineEdit.setText('-90.0')
-        self.maxlatLineEdit.setText('90.0')
+        self.locationRangeWestLineEdit.setText('-180.0')
+        self.locationRangeEastLineEdit.setText('180.0')
+        self.locationRangeSouthLineEdit.setText('-90.0')
+        self.locationRangeNorthLineEdit.setText('90.0')
 
         # connect the close button to the close slot
         self.closeButton.clicked.connect(self.close)
@@ -129,7 +130,7 @@ class StationOptionsDialog(QtGui.QDialog, StationOptionsDialog.Ui_StationOptions
     @QtCore.pyqtSlot()    
     def getOptions(self):
         """
-        Return a dictionary containing everything specified in the EventOptionsDialog.
+        Return a dictionary containing everything specified in the EventQueryDialog.
         All dictionary values are properly formatted for use in building an event service URL.
         """
         options = {}        
@@ -147,14 +148,15 @@ class StationOptionsDialog(QtGui.QDialog, StationOptionsDialog.Ui_StationOptions
             options['location'] = str(self.locationLineEdit.text())            
         if str(self.locationLineEdit.text()) != '':
             options['channel'] = str(self.channelLineEdit.text())            
-        if str(self.channelLineEdit.text()) != '':
-            options['minlat'] = str(self.minlatLineEdit.text())            
-        if str(self.maxlatLineEdit.text()) != '':
-            options['maxlat'] = str(self.maxlatLineEdit.text())            
-        if str(self.minlonLineEdit.text()) != '':
-            options['minlon'] = str(self.minlonLineEdit.text())            
-        if str(self.maxlonLineEdit.text()) != '':
-            options['maxlon'] = str(self.maxlonLineEdit.text())
+        if self.locationRangeRadioButton.isChecked():         
+            if str(self.locationRangeWestLineEdit.text()) != '':
+                options['minlon'] = str(self.locationRangeWestLineEdit.text())            
+            if str(self.locationRangeEastLineEdit.text()) != '':
+                options['maxlon'] = str(self.locationRangeEastLineEdit.text())            
+            if str(self.locationRangeSouthLineEdit.text()) != '':
+                options['minlat'] = str(self.locationRangeSouthLineEdit.text())            
+            if str(self.locationRangeNorthLineEdit.text()) != '':
+                options['maxlat'] = str(self.locationRangeNorthLineEdit.text())
             
         return options
 
@@ -167,7 +169,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.setupUi(self)
         
         # Events
-        self.eventOptionsDialog = EventOptionsDialog(self)        
+        self.eventQueryDialog = EventQueryDialog(self)        
         self.eventsHandler = Events()        
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -179,7 +181,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Connect the buttons so that they open the dialog
-        self.eventOptionsButton.pressed.connect(self.eventOptionsDialog.show)
+        self.eventOptionsButton.pressed.connect(self.eventQueryDialog.show)
         self.stationOptionsButton.pressed.connect(self.stationOptionsDialog.show)
         self.getEventsButton.pressed.connect(self.queryEvents)
         self.getStationsButton.pressed.connect(self.queryStations)
@@ -190,7 +192,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     @QtCore.pyqtSlot()
     def queryEvents(self):
         # Get events and subset to desired columns
-        parameters = self.eventOptionsDialog.getOptions()
+        parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
         eventsDF = self.eventsHandler.query(parameters=parameters)
         eventsDF = eventsDF[['Time','Latitude','Longitude','Depth/km','MagType','Magnitude']]

@@ -117,10 +117,10 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="2" column="0">
-       <widget class="QLineEdit" name="minlonLineEdit"/>
+       <widget class="QLineEdit" name="locationRangeWestLineEdit"/>
       </item>
       <item row="2" column="2">
-       <widget class="QLineEdit" name="maxlonLineEdit"/>
+       <widget class="QLineEdit" name="locationRangeEastLineEdit"/>
       </item>
       <item row="2" column="1" alignment="Qt::AlignHCenter">
        <widget class="QLabel" name="centerLabel">
@@ -130,10 +130,10 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="minlatLineEdit"/>
+       <widget class="QLineEdit" name="locationRangeSouthLineEdit"/>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="maxlatLineEdit"/>
+       <widget class="QLineEdit" name="locationRangeNorthLineEdit"/>
       </item>
      </layout>
     </widget>
