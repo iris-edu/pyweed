@@ -1,3 +1,4 @@
+#!/Users/jonathan/miniconda2/bin/python
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jun  7 13:51:59 2016
