@@ -1,8 +1,9 @@
-#!/Users/jonathan/miniconda2/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 
 """Testing function."""
+
 
 from __future__ import (absolute_import, division, print_function)
 
@@ -14,6 +15,7 @@ import datetime
 
 # pyweed modules
 from events import Events
+from stations import Stations
 
 __version__ = "0.0.1"
 
@@ -35,17 +37,32 @@ def main():
     args = parser.parse_args(sys.argv[1:])
     
     
-    # Test code
+    # Test event query -----------------
     
-    events = Events()
+    parameters = {}        
+    parameters['starttime'] = args.starttime
+    parameters['endtime'] = args.endtime
+    parameters['minmag'] = args.minmag
+    parameters['maxmag'] = '10'
+        
+    eventsHandler = Events()
+    eventsDF = eventsHandler.query(parameters=parameters)
+    print(eventsDF)
     
-    events.query(starttime=args.starttime,
-                 endtime=args.endtime,
-                 minmag=args.minmag)
+    # Test station query ---------------
     
-    df = events.get_df()
+    parameters = {}
+    parameters['starttime'] = args.starttime
+    parameters['endtime'] = args.endtime
+    parameters['network'] = 'IU,UW'
+    parameters['station'] = 'A*'
+    parameters['location'] = '00'
+    parameters['channel'] = '?HZ'
     
-    print(df)
+    stationsHandler = Stations()
+    stationsDF = stationsHandler.query(parameters=parameters)
+    print(stationsDF)
+    
     
     debug_point = 1
 
