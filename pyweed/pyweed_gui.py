@@ -1,9 +1,11 @@
-#!/Users/jonathan/miniconda2/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun  7 13:51:59 2016
-
-@author: RowanCallahan
+:copyright:
+    Mazama Science
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -11,15 +13,16 @@ from __future__ import (absolute_import, division, print_function)
 import sys
 import string
 
+from events import Events
+from stations import Stations
+
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 import EventQueryDialog
-import StationOptionsDialog
+import StationQueryDialog
 import MainWindow
 
-from events import Events
-from stations import Stations
 from utils import MyDoubleValidator
 from pyweed_style import stylesheet
 
@@ -57,9 +60,6 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.locationRangeSouthLineEdit.setText('-90.0')
         self.locationRangeNorthLineEdit.setText('90.0')
         
-        # connect the close button to the close slot
-        #self.closeButton.clicked.connect(self.close)
-
 
     @QtCore.pyqtSlot()    
     def getOptions(self):
@@ -95,7 +95,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         return options
 
 
-class StationOptionsDialog(QtGui.QDialog, StationOptionsDialog.Ui_StationOptionsDialog):
+class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog):
     """Dialog window for station options used in creating a webservice query."""
     def __init__(self, parent=None, windowTitle='Start/End Time'):
         super(self.__class__, self).__init__()
@@ -123,9 +123,6 @@ class StationOptionsDialog(QtGui.QDialog, StationOptionsDialog.Ui_StationOptions
         self.locationRangeEastLineEdit.setText('180.0')
         self.locationRangeSouthLineEdit.setText('-90.0')
         self.locationRangeNorthLineEdit.setText('90.0')
-
-        # connect the close button to the close slot
-        self.closeButton.clicked.connect(self.close)
 
 
     @QtCore.pyqtSlot()    
@@ -176,14 +173,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Stations
-        self.stationOptionsDialog = StationOptionsDialog(self)
+        self.stationQueryDialog = StationQueryDialog(self)
         self.stationsHandler = Stations()        
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Connect the buttons so that they open the dialog
         self.eventOptionsButton.pressed.connect(self.eventQueryDialog.show)
-        self.stationOptionsButton.pressed.connect(self.stationOptionsDialog.show)
+        self.stationOptionsButton.pressed.connect(self.stationQueryDialog.show)
         self.getEventsButton.pressed.connect(self.queryEvents)
         self.getStationsButton.pressed.connect(self.queryStations)
         
@@ -218,7 +215,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     @QtCore.pyqtSlot()
     def queryStations(self):
         # Get stations and subset to desired columns
-        parameters = self.stationOptionsDialog.getOptions()
+        parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
         stationsDF = self.stationsHandler.query(parameters=parameters)
         stationsDF = stationsDF[['Network','Station','Location','Channel','Latitude','Longitude']]
