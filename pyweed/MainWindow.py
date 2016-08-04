@@ -8,6 +8,10 @@
 
 from PyQt4 import QtCore, QtGui
 
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
+
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -24,6 +28,18 @@ except AttributeError:
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+        
+        # a figure instance to plot on
+        self.figure = plt.figure()
+    
+        # this is the Canvas Widget that displays the `figure`
+        # it takes the `figure` instance as a parameter to __init__
+        self.canvas = FigureCanvas(self.figure)
+    
+        # this is the Navigation widget
+        # it takes the Canvas widget and a parent
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(607, 386)
         self.centralwidget = QtGui.QWidget(MainWindow)
@@ -44,6 +60,10 @@ class Ui_MainWindow(object):
         self.mapLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.mapLabel.setObjectName(_fromUtf8("mapLabel"))
         self.verticalLayout_2.addWidget(self.mapLabel)
+        
+        self.verticalLayout_2.addWidget(self.toolbar)
+        self.verticalLayout_2.addWidget(self.canvas)
+        
         self.eventAndStationFrame = QtGui.QFrame(self.splitter)
         self.eventAndStationFrame.setFrameShape(QtGui.QFrame.NoFrame)
         self.eventAndStationFrame.setFrameShadow(QtGui.QFrame.Raised)

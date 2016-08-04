@@ -26,6 +26,8 @@ import MainWindow
 from utils import MyDoubleValidator
 from pyweed_style import stylesheet
 
+import random # TODO:  remove this -- for testing only
+
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
     """Dialog window for event options used in creating a webservice query."""
@@ -211,6 +213,21 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         
         ## TODO:  Remove console dump
         #print(eventsDF)
+        
+        data = [random.random() for i in range(10)]
+    
+        # create an axis
+        ax = self.figure.add_subplot(111)
+    
+        # discards the old graph
+        ax.hold(False)
+    
+        # plot data
+        ax.plot(data, '*-')
+    
+        # refresh canvas
+        self.canvas.draw()
+        
 
     @QtCore.pyqtSlot()
     def queryStations(self):
