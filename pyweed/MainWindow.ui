@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>607</width>
-    <height>386</height>
+    <height>678</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,15 +29,12 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QLabel" name="mapLabel">
-          <property name="styleSheet">
-           <string notr="true"/>
-          </property>
-          <property name="text">
-           <string>Map Goes Here</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+         <widget class="Qt4MplCanvas" name="map_canvas" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
          </widget>
         </item>
@@ -133,6 +130,14 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Qt4MplCanvas</class>
+   <extends>QWidget</extends>
+   <header>qt4mplcanvas.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

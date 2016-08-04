@@ -8,10 +8,6 @@
 
 from PyQt4 import QtCore, QtGui
 
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
-
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -28,20 +24,8 @@ except AttributeError:
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        
-        # a figure instance to plot on
-        self.figure = plt.figure()
-    
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
-    
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(607, 386)
+        MainWindow.resize(607, 678)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
@@ -55,15 +39,14 @@ class Ui_MainWindow(object):
         self.mapFrame.setObjectName(_fromUtf8("mapFrame"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.mapFrame)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.mapLabel = QtGui.QLabel(self.mapFrame)
-        self.mapLabel.setStyleSheet(_fromUtf8(""))
-        self.mapLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.mapLabel.setObjectName(_fromUtf8("mapLabel"))
-        self.verticalLayout_2.addWidget(self.mapLabel)
-        
-        self.verticalLayout_2.addWidget(self.toolbar)
-        self.verticalLayout_2.addWidget(self.canvas)
-        
+        self.map_canvas = Qt4MplCanvas(self.mapFrame)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.map_canvas.sizePolicy().hasHeightForWidth())
+        self.map_canvas.setSizePolicy(sizePolicy)
+        self.map_canvas.setObjectName(_fromUtf8("map_canvas"))
+        self.verticalLayout_2.addWidget(self.map_canvas)
         self.eventAndStationFrame = QtGui.QFrame(self.splitter)
         self.eventAndStationFrame.setFrameShape(QtGui.QFrame.NoFrame)
         self.eventAndStationFrame.setFrameShadow(QtGui.QFrame.Raised)
@@ -119,9 +102,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
-        self.mapLabel.setText(_translate("MainWindow", "Map Goes Here", None))
         self.eventOptionsButton.setText(_translate("MainWindow", "Event Options", None))
         self.getEventsButton.setText(_translate("MainWindow", "Get Events", None))
         self.getStationsButton.setText(_translate("MainWindow", "Get Stations", None))
         self.stationOptionsButton.setText(_translate("MainWindow", "Station Options", None))
 
+from qt4mplcanvas import Qt4MplCanvas
