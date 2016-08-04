@@ -217,7 +217,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         data = [random.random() for i in range(10)]
     
         # create an axis
-        ax = self.figure.add_subplot(111)
+        ###ax = self.figure.add_subplot(111)
+        ax = self.map_canvas.fig.add_subplot(111)
     
         # discards the old graph
         ax.hold(False)
@@ -226,7 +227,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         ax.plot(data, '*-')
     
         # refresh canvas
-        self.canvas.draw()
+        self.map_canvas.draw()
         
 
     @QtCore.pyqtSlot()
