@@ -13,9 +13,6 @@ from __future__ import (absolute_import, division, print_function)
 import sys
 import string
 
-from events import Events
-from stations import Stations
-
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
@@ -26,7 +23,11 @@ import MainWindow
 from utils import MyDoubleValidator
 from pyweed_style import stylesheet
 
-import random # TODO:  remove this -- for testing only
+from events import Events
+from stations import Stations
+
+###from mpl_toolkits.basemap import Basemap # TODO:  remove this -- for testing only
+from seismap import Seismap
 
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
@@ -39,8 +40,10 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         # Initialize the date selectors
         self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
         self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.starttimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
-        self.endtimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
+        today = QtCore.QDateTime.currentDateTime()
+        monthAgo = today.addMonths(-1)
+        self.starttimeDateTimeEdit.setDateTime(monthAgo)
+        self.endtimeDateTimeEdit.setDateTime(today)
         
         # Set validators for input fields
         self.minmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.minmagLineEdit))        
@@ -107,8 +110,10 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         # Initialize the date selectors
         self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
         self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.starttimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
-        self.endtimeDateTimeEdit.setDateTime(QtCore.QDateTime.currentDateTime())
+        today = QtCore.QDateTime.currentDateTime()
+        monthAgo = today.addMonths(-1)
+        self.starttimeDateTimeEdit.setDateTime(monthAgo)
+        self.endtimeDateTimeEdit.setDateTime(today)
         
         # Set validators for input fields
         self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeSouthLineEdit))        
@@ -168,6 +173,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         super(self.__class__, self).__init__()
         self.setupUi(self)
         
+        # Get the Figure object from the map_canvas
+        self.map_figure = self.map_canvas.fig
+        self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
+        self.map_axes.clear()
+        self.seismap = Seismap(projection='moll', ax=self.map_axes)
+        self.map_figure.canvas.draw()
+        
         # Events
         self.eventQueryDialog = EventQueryDialog(self)        
         self.eventsHandler = Events()        
@@ -194,8 +206,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Get events and subset to desired columns
         parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
-        eventsDF = self.eventsHandler.query(parameters=parameters)
+        eventsDF = self.eventsHandler.get_dataframe(parameters=parameters)
         eventsDF = eventsDF[['Time','Latitude','Longitude','Depth/km','MagType','Magnitude']]
+        
+        # Add events to the events table ---------------------------------------
         
         self.eventsTable.setRowCount(eventsDF.shape[0])
         self.eventsTable.setColumnCount(eventsDF.shape[1])
@@ -211,23 +225,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.resizeColumnsToContents()
         self.eventsTable.resizeRowsToContents()
         
-        ## TODO:  Remove console dump
-        #print(eventsDF)
+        # Add events to the map ------------------------------------------------
         
-        data = [random.random() for i in range(10)]
-    
-        # create an axis
-        ###ax = self.figure.add_subplot(111)
-        ax = self.map_canvas.fig.add_subplot(111)
-    
-        # discards the old graph
-        ax.hold(False)
-    
-        # plot data
-        ax.plot(data, '*-')
-    
-        # refresh canvas
-        self.map_canvas.draw()
+        # TODO:  How to avoid recreating seismap?
+        #self.map_axes.clear()
+        #self.seismap = Seismap(projection='moll', ax=self.map_axes)
+        
+        self.seismap.add_events(eventsDF)
+        self.map_figure.canvas.draw()
+
         
 
     @QtCore.pyqtSlot()
@@ -235,8 +241,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Get stations and subset to desired columns
         parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
-        stationsDF = self.stationsHandler.query(parameters=parameters)
+        stationsDF = self.stationsHandler.get_dataframe(parameters=parameters)
         stationsDF = stationsDF[['Network','Station','Location','Channel','Latitude','Longitude']]
+        
+        # Add stations to the stations table -----------------------------------
         
         self.stationsTable.setRowCount(stationsDF.shape[0])
         self.stationsTable.setColumnCount(stationsDF.shape[1])
@@ -251,10 +259,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Tighten up the table
         self.stationsTable.resizeColumnsToContents()
         self.stationsTable.resizeRowsToContents()
+                   
+        # Add events to the map ------------------------------------------------
         
-        ## TODO:  Remove console dump
-        #print(stationsDF)
-           
+        # TODO:  How to avoid recreating seismap?
+        #self.map_axes.clear()
+        #self.seismap = Seismap(projection='moll', ax=self.map_axes)
+        
+        self.seismap.add_stations(stationsDF)
+        self.map_figure.canvas.draw()
         
         
 if __name__ == "__main__":
