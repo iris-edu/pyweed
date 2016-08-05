@@ -23,21 +23,12 @@ class Stations(object):
         """
         Initialization.
         """
-        # TODO:  Better strucutre/objects for storing history?
-        self.parameters_history = []
         self.url_history = []
-        self.df_history = []
         
-    def get_parameters(self, index=0):
-        return(self.parameters_history[index])
-    
     def get_url(self, index=0):
         return(self.url_history[index])
     
-    def get_df(self, index=0):
-        return(self.df_history[index])
-
-    def query(self, parameters=None):
+    def get_dataframe(self, parameters=None):
         """
         Make a webservice request for stations using the passed in options
         """
@@ -46,34 +37,26 @@ class Stations(object):
             raise('starttime or endtime is missing')
                     
         # Create stations webservice URL
-        url = build_url(parameters=parameters)
+        url = build_url(parameters=parameters, output_format="text")
         
-        # Check if we have already gotten this url
-        if url in self.url_history:
-            index = self.url_history.index(url)
-            df = self.df_history[index]
-            
-        else:  
-            try:
-                # Get stations dataframe and clean up column names
-                df = pd.read_csv(url, sep='|')
-                df.columns = df.columns.str.strip()
-                df.columns = df.columns.str.strip('#')   # take care of column named '#Network'
-                # Awkward conversion of 'Location' column from float to character
-                # NOTE:  Using [:,'colname'] syntax here because of the following warning:
-                # NOTE:  http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
-                df.loc[np.isnan(df['Location']),'Location'] = 999
-                df.loc[:,'Location'] = df.loc[:,'Location'].astype(int)
-                df.loc[:,'Location'] = df.loc[:,'Location'].astype(str)
-                df.loc[df['Location'] == '999','Location'] = '--'          # Could be represented as '' or '--'
-                df.loc[df['Location'] == '0','Location'] = '00'
-                # Push items onto the stack (so the most recent is always in position 0)
-                self.parameters_history.insert(0, parameters)
-                self.url_history.insert(0, url)
-                self.df_history.insert(0, df)
-            except:
-                # TODO:  What type of exception should we trap? We should probably log it.
-                raise
+        try:
+            # Get stations dataframe and clean up column names
+            df = pd.read_csv(url, sep='|')
+            df.columns = df.columns.str.strip()
+            df.columns = df.columns.str.strip('#')   # take care of column named '#Network'
+            # Awkward conversion of 'Location' column from float to character
+            # NOTE:  Using [:,'colname'] syntax here because of the following warning:
+            # NOTE:  http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+            df.loc[np.isnan(df['Location']),'Location'] = 999
+            df.loc[:,'Location'] = df.loc[:,'Location'].astype(int)
+            df.loc[:,'Location'] = df.loc[:,'Location'].astype(str)
+            df.loc[df['Location'] == '999','Location'] = '--'          # Could be represented as '' or '--'
+            df.loc[df['Location'] == '0','Location'] = '00'
+            # Push items onto the stack (so the most recent is always in position 0)
+            self.url_history.insert(0, url)
+        except:
+            # TODO:  What type of exception should we trap? We should probably log it.
+            raise
             
         return(df)
         
@@ -87,12 +70,13 @@ def build_url(base_url="http://service.iris.edu",
               service="station",
               major_version=1,
               resource_type="query",
-              parameters={}):
+              parameters={},
+              output_format="xml"):
     """
     Build a FDSN webservice url to request stations.
 
     >>> print(build_url("http://service.iris.edu", "station", 1, \
-                        "query", {'starttime':'2015-01-01','endtime':'2015-01-03','minmag':'4.00','format':'text'}))
+                        "query", {'starttime':'2015-01-01','endtime':'2015-01-03','minmag':'4.00'}, "text"))
     http://service.iris.edu/fdsnws/station/1/query?endtime=2015-01-03&starttime=2015-01-01&minmag=4.00&format=text
     """
 
@@ -102,8 +86,9 @@ def build_url(base_url="http://service.iris.edu",
     
     # Add parameter for channel-level output
     parameters['level'] = 'channel'
-    # Add parameter for text formatting
-    parameters['format'] = 'text'
+    
+    # Aded a parameter for the output format -- either 'xml' (used to generate an ObsPy inventory) or 'text' (used to generate a pandas dataframe)
+    parameters['format'] = output_format
 
     # Add parameters
     url = "?".join((url, urllib.urlencode(parameters)))
