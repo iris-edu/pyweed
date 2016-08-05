@@ -350,9 +350,9 @@
           </rect>
          </property>
         </widget>
-        <widget class="QPushButton" name="locatoinDrawOnMapPushButton_1">
+        <widget class="QPushButton" name="locationDrawBoxOnMapPushButton">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="geometry">
           <rect>
@@ -369,7 +369,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="locationDostanceFromPointRadioButton">
+       <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -508,7 +508,7 @@
           <string>degrees</string>
          </property>
         </widget>
-        <widget class="QPushButton" name="locationDrawOnMapPushButton_2">
+        <widget class="QPushButton" name="locationDrawBoxOnMapPushButton_2">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -551,12 +551,12 @@
         <zorder>label_8</zorder>
         <zorder>label_9</zorder>
         <zorder>distanceFromPointNorthLineEdit</zorder>
-        <zorder>locationDrawOnMapPushButton_2</zorder>
+        <zorder>locationDrawBoxOnMapPushButton_2</zorder>
         <zorder>label_6</zorder>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="distanceFromStationsRradioButton">
+       <widget class="QRadioButton" name="locationDistanceFromStationsRadioButton">
         <property name="enabled">
          <bool>false</bool>
         </property>

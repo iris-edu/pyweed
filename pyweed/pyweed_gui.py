@@ -36,6 +36,20 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         super(self.__class__, self).__init__()
         self.setupUi(self)
         self.setWindowTitle('Start/End Time')
+        
+        # Get a reference to the MainWindow map
+        self.seismap = parent.seismap
+        self.map_figure = parent.map_figure
+
+        # Create buttonGroups
+        self.timeButtonGroup = QtGui.QButtonGroup()
+        self.timeButtonGroup.addButton(self.timeBetweenRadioButton,1)
+        self.timeButtonGroup.addButton(self.timeDuringStationsRadioButton,2)
+        
+        self.locationButtonGroup = QtGui.QButtonGroup()
+        self.locationButtonGroup.addButton(self.locationRangeRadioButton,1)
+        self.locationButtonGroup.addButton(self.locationDistanceFromPointRadioButton,2)
+        self.locationButtonGroup.addButton(self.locationDistanceFromStationsRadioButton,3)
 
         # Initialize the date selectors
         self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
@@ -65,7 +79,9 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.locationRangeSouthLineEdit.setText('-90.0')
         self.locationRangeNorthLineEdit.setText('90.0')
         
-
+        # Connect the buttons to pyqt slots
+        self.locationDrawBoxOnMapPushButton.pressed.connect(self.drawBoxOnMap)
+        
     @QtCore.pyqtSlot()    
     def getOptions(self):
         """
@@ -99,6 +115,16 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
             
         return options
 
+    @QtCore.pyqtSlot()
+    def drawBoxOnMap(self):
+        # Draw events bounding box on map
+        n = float(self.locationRangeNorthLineEdit.text())
+        e = float(self.locationRangeEastLineEdit.text())
+        s = float(self.locationRangeSouthLineEdit.text())
+        w = float(self.locationRangeWestLineEdit.text())
+        self.seismap.add_events_box(n, e, s, w)
+        self.map_figure.canvas.draw()
+
 
 class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog):
     """Dialog window for station options used in creating a webservice query."""
@@ -106,6 +132,10 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         super(self.__class__, self).__init__()
         self.setupUi(self)
         self.setWindowTitle('Start/End Time')
+
+        # Get a reference to the MainWindow map
+        self.seismap = parent.seismap
+        self.map_figure = parent.map_figure
 
         # Initialize the date selectors
         self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
@@ -131,6 +161,8 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.locationRangeSouthLineEdit.setText('-90.0')
         self.locationRangeNorthLineEdit.setText('90.0')
 
+        # Connect the buttons to pyqt slots
+        self.locationDrawBoxOnMapPushButton.pressed.connect(self.drawBoxOnMap)
 
     @QtCore.pyqtSlot()    
     def getOptions(self):
@@ -165,6 +197,16 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
             
         return options
 
+    @QtCore.pyqtSlot()
+    def drawBoxOnMap(self):
+        # Draw events bounding box on map
+        n = float(self.locationRangeNorthLineEdit.text())
+        e = float(self.locationRangeEastLineEdit.text())
+        s = float(self.locationRangeSouthLineEdit.text())
+        w = float(self.locationRangeWestLineEdit.text())
+        self.seismap.add_stations_box(n, e, s, w)
+        self.map_figure.canvas.draw()
+
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     
@@ -177,7 +219,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
-        self.seismap = Seismap(projection='moll', ax=self.map_axes)
+        self.seismap = Seismap(projection='cyl', ax=self.map_axes) # or 'robin' or 'mill'
         self.map_figure.canvas.draw()
         
         # Events
@@ -226,15 +268,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.resizeRowsToContents()
         
         # Add events to the map ------------------------------------------------
-        
-        # TODO:  How to avoid recreating seismap?
-        #self.map_axes.clear()
-        #self.seismap = Seismap(projection='moll', ax=self.map_axes)
-        
+                
         self.seismap.add_events(eventsDF)
         self.map_figure.canvas.draw()
 
-        
 
     @QtCore.pyqtSlot()
     def queryStations(self):
@@ -261,10 +298,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsTable.resizeRowsToContents()
                    
         # Add events to the map ------------------------------------------------
-        
-        # TODO:  How to avoid recreating seismap?
-        #self.map_axes.clear()
-        #self.seismap = Seismap(projection='moll', ax=self.map_axes)
         
         self.seismap.add_stations(stationsDF)
         self.map_figure.canvas.draw()
