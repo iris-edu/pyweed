@@ -255,28 +255,12 @@
           </rect>
          </property>
         </widget>
-        <widget class="QPushButton" name="locationDrawBoxOnMapPushButton">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="geometry">
-          <rect>
-           <x>250</x>
-           <y>40</y>
-           <width>190</width>
-           <height>32</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Draw on map</string>
-         </property>
-        </widget>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="locationDostanceFromPointRadioButton">
+       <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="text">
          <string>Distance from point</string>
@@ -293,7 +277,7 @@
         </property>
         <widget class="QLineEdit" name="distanceFromPointEastLineEdit">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="geometry">
           <rect>
@@ -339,9 +323,9 @@
           <string>N</string>
          </property>
         </widget>
-        <widget class="QLineEdit" name="distanceFromPointMinradiusLineEdit">
+        <widget class="QLineEdit" name="distanceFromPointMinRadiusLineEdit">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="geometry">
           <rect>
@@ -371,9 +355,9 @@
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
-        <widget class="QLineEdit" name="distanceFromPointMaxradiusLineEdit">
+        <widget class="QLineEdit" name="distanceFromPointMaxRadiusLineEdit">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="geometry">
           <rect>
@@ -386,7 +370,7 @@
         </widget>
         <widget class="QLineEdit" name="distanceFromPointNorthLineEdit">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="geometry">
           <rect>
@@ -413,22 +397,6 @@
           <string>degrees</string>
          </property>
         </widget>
-        <widget class="QPushButton" name="locationDrawPointOnMapPushButton">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="geometry">
-          <rect>
-           <x>250</x>
-           <y>40</y>
-           <width>190</width>
-           <height>32</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Draw on map</string>
-         </property>
-        </widget>
         <widget class="QLabel" name="label_6">
          <property name="enabled">
           <bool>true</bool>
@@ -449,14 +417,13 @@
          </property>
         </widget>
         <zorder>label_10</zorder>
-        <zorder>distanceFromPointMaxradiusLineEdit</zorder>
-        <zorder>distanceFromPointMinradiusLineEdit</zorder>
+        <zorder>distanceFromPointMaxRadiusLineEdit</zorder>
+        <zorder>distanceFromPointMinRadiusLineEdit</zorder>
         <zorder>label_11</zorder>
         <zorder>distanceFromPointEastLineEdit</zorder>
         <zorder>label_8</zorder>
         <zorder>label_9</zorder>
         <zorder>distanceFromPointNorthLineEdit</zorder>
-        <zorder>locationDrawPointOnMapPushButton</zorder>
         <zorder>label_6</zorder>
        </widget>
       </item>
