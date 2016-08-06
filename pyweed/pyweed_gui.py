@@ -10,9 +10,11 @@
 
 from __future__ import (absolute_import, division, print_function)
 
+# Basic packages
 import sys
 import string
 
+# PyQt4 packages
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
@@ -20,13 +22,13 @@ import EventQueryDialog
 import StationQueryDialog
 import MainWindow
 
+# Pyweed PyQt4 enhancements
 from utils import MyDoubleValidator
 from pyweed_style import stylesheet
 
+# Pyweed components
 from events import Events
 from stations import Stations
-
-###from mpl_toolkits.basemap import Basemap # TODO:  remove this -- for testing only
 from seismap import Seismap
 
 
@@ -59,7 +61,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.starttimeDateTimeEdit.setDateTime(monthAgo)
         self.endtimeDateTimeEdit.setDateTime(today)
         
-        # Set validators for input fields
+        # Set validators for input fields # TODO:  What are appropriate valid ranges?
         self.minmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.minmagLineEdit))        
         self.maxmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.maxmagLineEdit))        
         self.mindepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.mindepthLineEdit))        
@@ -67,9 +69,13 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.locationRangeWestLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeWestLineEdit))        
         self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))        
         self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))        
-        self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))        
+        self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))
+        self.distanceFromPointMinRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMinRadiusLineEdit))        
+        self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))        
+        self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
+        self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
         
-        # Set default values for input fields
+        # Set default values for input fields # TODO:  What are appropriate valid defaults?
         self.minmagLineEdit.setText('4.0')
         self.maxmagLineEdit.setText('10.0')
         self.mindepthLineEdit.setText('0.0')
@@ -78,9 +84,10 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.locationRangeEastLineEdit.setText('180.0')
         self.locationRangeSouthLineEdit.setText('-90.0')
         self.locationRangeNorthLineEdit.setText('90.0')
-        
-        # Connect the buttons to pyqt slots
-        self.locationDrawBoxOnMapPushButton.pressed.connect(self.drawBoxOnMap)
+        self.distanceFromPointMinRadiusLineEdit.setText('0.0')
+        self.distanceFromPointMaxRadiusLineEdit.setText('90.0')
+        self.distanceFromPointEastLineEdit.setText('0.0')
+        self.distanceFromPointNorthLineEdit.setText('0.0')
         
     @QtCore.pyqtSlot()    
     def getOptions(self):
@@ -112,18 +119,17 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
                 options['minlat'] = str(self.locationRangeSouthLineEdit.text())            
             if str(self.locationRangeNorthLineEdit.text()) != '':
                 options['maxlat'] = str(self.locationRangeNorthLineEdit.text())
+        if self.locationDistanceFromPointRadioButton.isChecked():         
+            if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
+                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())            
+            if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
+                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())            
+            if str(self.distanceFromPointEastLineEdit.text()) != '':
+                options['lon'] = str(self.distanceFromPointEastLineEdit.text())            
+            if str(self.distanceFromPointNorthLineEdit.text()) != '':
+                options['lat'] = str(self.distanceFromPointNorthLineEdit.text())
             
         return options
-
-    @QtCore.pyqtSlot()
-    def drawBoxOnMap(self):
-        # Draw events bounding box on map
-        n = float(self.locationRangeNorthLineEdit.text())
-        e = float(self.locationRangeEastLineEdit.text())
-        s = float(self.locationRangeSouthLineEdit.text())
-        w = float(self.locationRangeWestLineEdit.text())
-        self.seismap.add_events_box(n, e, s, w)
-        self.map_figure.canvas.draw()
 
 
 class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog):
@@ -145,13 +151,17 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.starttimeDateTimeEdit.setDateTime(monthAgo)
         self.endtimeDateTimeEdit.setDateTime(today)
         
-        # Set validators for input fields
+        # Set validators for input fields # TODO:  What are appropriate valid ranges?
         self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeSouthLineEdit))        
         self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))        
         self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))        
         self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))        
+        self.distanceFromPointMinRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMinRadiusLineEdit))        
+        self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))        
+        self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
+        self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
         
-        # Set default values for input fields
+        # Set default values for input fields # TODO:  What are appropriate valid defaults?
         self.networkLineEdit.setText('_GSN')
         self.stationLineEdit.setText('*')
         self.locationLineEdit.setText('*')
@@ -160,9 +170,10 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.locationRangeEastLineEdit.setText('180.0')
         self.locationRangeSouthLineEdit.setText('-90.0')
         self.locationRangeNorthLineEdit.setText('90.0')
-
-        # Connect the buttons to pyqt slots
-        self.locationDrawBoxOnMapPushButton.pressed.connect(self.drawBoxOnMap)
+        self.distanceFromPointMinRadiusLineEdit.setText('0.0')
+        self.distanceFromPointMaxRadiusLineEdit.setText('90.0')
+        self.distanceFromPointEastLineEdit.setText('0.0')
+        self.distanceFromPointNorthLineEdit.setText('0.0')
 
     @QtCore.pyqtSlot()    
     def getOptions(self):
@@ -194,18 +205,17 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
                 options['minlat'] = str(self.locationRangeSouthLineEdit.text())            
             if str(self.locationRangeNorthLineEdit.text()) != '':
                 options['maxlat'] = str(self.locationRangeNorthLineEdit.text())
+        if self.locationDistanceFromPointRadioButton.isChecked():         
+            if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
+                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())            
+            if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
+                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())            
+            if str(self.distanceFromPointEastLineEdit.text()) != '':
+                options['lon'] = str(self.distanceFromPointEastLineEdit.text())            
+            if str(self.distanceFromPointNorthLineEdit.text()) != '':
+                options['lat'] = str(self.distanceFromPointNorthLineEdit.text())
             
         return options
-
-    @QtCore.pyqtSlot()
-    def drawBoxOnMap(self):
-        # Draw events bounding box on map
-        n = float(self.locationRangeNorthLineEdit.text())
-        e = float(self.locationRangeEastLineEdit.text())
-        s = float(self.locationRangeSouthLineEdit.text())
-        w = float(self.locationRangeWestLineEdit.text())
-        self.seismap.add_stations_box(n, e, s, w)
-        self.map_figure.canvas.draw()
 
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
@@ -219,7 +229,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
-        self.seismap = Seismap(projection='cyl', ax=self.map_axes) # or 'robin' or 'mill'
+        self.seismap = Seismap(projection='robin', ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
         
         # Events
@@ -267,11 +277,23 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.resizeColumnsToContents()
         self.eventsTable.resizeRowsToContents()
         
-        # Add events to the map ------------------------------------------------
+        # Add items to the map -------------------------------------------------
                 
         self.seismap.add_events(eventsDF)
-        self.map_figure.canvas.draw()
-
+        
+        if self.eventQueryDialog.locationRangeRadioButton.isChecked():
+            n = float(self.eventQueryDialog.locationRangeNorthLineEdit.text())
+            e = float(self.eventQueryDialog.locationRangeEastLineEdit.text())
+            s = float(self.eventQueryDialog.locationRangeSouthLineEdit.text())
+            w = float(self.eventQueryDialog.locationRangeWestLineEdit.text())
+            self.seismap.add_events_box(n, e, s, w)
+        elif self.eventQueryDialog.locationDistanceFromPointRadioButton.isChecked():
+            n = float(self.eventQueryDialog.distanceFromPointNorthLineEdit.text())
+            e = float(self.eventQueryDialog.distanceFromPointEastLineEdit.text())
+            minradius = float(self.eventQueryDialog.distanceFromPointMinRadiusLineEdit.text())
+            maxradius = float(self.eventQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
+            self.seismap.add_events_toroid(n, e, minradius, maxradius)
+            
 
     @QtCore.pyqtSlot()
     def queryStations(self):
@@ -297,10 +319,22 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsTable.resizeColumnsToContents()
         self.stationsTable.resizeRowsToContents()
                    
-        # Add events to the map ------------------------------------------------
-        
+        # Add items to the map -------------------------------------------------
+
         self.seismap.add_stations(stationsDF)
-        self.map_figure.canvas.draw()
+        
+        if self.stationQueryDialog.locationRangeRadioButton.isChecked():
+            n = float(self.stationQueryDialog.locationRangeNorthLineEdit.text())
+            e = float(self.stationQueryDialog.locationRangeEastLineEdit.text())
+            s = float(self.stationQueryDialog.locationRangeSouthLineEdit.text())
+            w = float(self.stationQueryDialog.locationRangeWestLineEdit.text())
+            self.seismap.add_stations_box(n, e, s, w)
+        elif self.stationQueryDialog.locationDistanceFromPointRadioButton.isChecked():
+            n = float(self.stationQueryDialog.distanceFromPointNorthLineEdit.text())
+            e = float(self.stationQueryDialog.distanceFromPointEastLineEdit.text())
+            minradius = float(self.stationQueryDialog.distanceFromPointMinRadiusLineEdit.text())
+            maxradius = float(self.stationQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
+            self.seismap.add_stations_toroid(n, e, minradius, maxradius)
         
         
 if __name__ == "__main__":
