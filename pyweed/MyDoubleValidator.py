@@ -7,7 +7,6 @@ from PyQt4.QtGui import QDoubleValidator, QValidator
 from sys import float_info
 
 class MyDoubleValidator(QDoubleValidator):
-    
     '''
     Fix for strange behavior of default QDoubleValidator
     '''

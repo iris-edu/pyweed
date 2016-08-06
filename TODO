@@ -1,0 +1,14 @@
+# List of items to consider
+
+# GUI overall
+
+* use stylesheet
+* proper alignment of labels/input fields
+* replace "Draw ~ on Map" buttons with checkboxes
+* add menubar with "Quit"
+
+# Seismap
+
+* handle branch cut/boundary issues
+
+

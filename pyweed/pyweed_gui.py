@@ -22,9 +22,11 @@ import EventQueryDialog
 import StationQueryDialog
 import MainWindow
 
-# Pyweed PyQt4 enhancements
-from utils import MyDoubleValidator
 from pyweed_style import stylesheet
+
+# Pyweed PyQt4 enhancements
+from MyDoubleValidator import MyDoubleValidator
+from MyNumericTableWidgetItem import MyNumericTableWidgetItem
 
 # Pyweed components
 from events import Events
@@ -260,6 +262,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # TODO:  handle errors when querying events
         eventsDF = self.eventsHandler.get_dataframe(parameters=parameters)
         eventsDF = eventsDF[['Time','Latitude','Longitude','Depth/km','MagType','Magnitude']]
+        numeric_column = [False,True,True,True,False,True]
         
         # Add events to the events table ---------------------------------------
         
@@ -270,8 +273,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         
         for i in range(eventsDF.shape[0]):
             for j in range(eventsDF.shape[1]):
-                # Guarantee that all elements are convenrted to strings
-                self.eventsTable.setItem(i, j, QtGui.QTableWidgetItem(str(eventsDF.iat[i,j])))
+                # Guarantee that all elements are converted to strings for display but apply proper sorting
+                if numeric_column[j]:
+                    self.eventsTable.setItem(i, j, MyNumericTableWidgetItem(str(eventsDF.iat[i,j])))
+                else:
+                    self.eventsTable.setItem(i, j, QtGui.QTableWidgetItem(str(eventsDF.iat[i,j])))
 
         # Tighten up the table
         self.eventsTable.resizeColumnsToContents()
@@ -302,6 +308,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # TODO:  handle errors when querying stations
         stationsDF = self.stationsHandler.get_dataframe(parameters=parameters)
         stationsDF = stationsDF[['Network','Station','Location','Channel','Latitude','Longitude']]
+        numeric_column = [False,False,False,False,True,True]
         
         # Add stations to the stations table -----------------------------------
         
@@ -312,8 +319,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         
         for i in range(stationsDF.shape[0]):
             for j in range(stationsDF.shape[1]):
-                # Guarantee that all elements are convenrted to strings
-                self.stationsTable.setItem(i, j, QtGui.QTableWidgetItem(str(stationsDF.iat[i,j])))
+                # Guarantee that all elements are converted to strings for display but apply proper sorting
+                if numeric_column[j]:
+                    self.stationsTable.setItem(i, j, MyNumericTableWidgetItem(str(stationsDF.iat[i,j])))
+                else:
+                    self.stationsTable.setItem(i, j, QtGui.QTableWidgetItem(str(stationsDF.iat[i,j])))
 
         # Tighten up the table
         self.stationsTable.resizeColumnsToContents()
