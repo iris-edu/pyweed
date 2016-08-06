@@ -91,6 +91,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.distanceFromPointEastLineEdit.setText('0.0')
         self.distanceFromPointNorthLineEdit.setText('0.0')
         
+        
     @QtCore.pyqtSlot()    
     def getOptions(self):
         """
@@ -177,6 +178,7 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.distanceFromPointEastLineEdit.setText('0.0')
         self.distanceFromPointNorthLineEdit.setText('0.0')
 
+
     @QtCore.pyqtSlot()    
     def getOptions(self):
         """
@@ -246,6 +248,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
+        # Connect signals
+        # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
+        # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
+        QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClick)
+        QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClick)
+
         # Connect the buttons so that they open the dialog
         self.eventOptionsButton.pressed.connect(self.eventQueryDialog.show)
         self.stationOptionsButton.pressed.connect(self.stationQueryDialog.show)
@@ -254,6 +262,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         
         self.setWindowTitle('Main window')    
         self.show()
+   
    
     @QtCore.pyqtSlot()
     def queryEvents(self):
@@ -299,7 +308,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             minradius = float(self.eventQueryDialog.distanceFromPointMinRadiusLineEdit.text())
             maxradius = float(self.eventQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_events_toroid(n, e, minradius, maxradius)
-            
+
 
     @QtCore.pyqtSlot()
     def queryStations(self):
@@ -345,6 +354,27 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             minradius = float(self.stationQueryDialog.distanceFromPointMinRadiusLineEdit.text())
             maxradius = float(self.stationQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_stations_toroid(n, e, minradius, maxradius)
+
+
+    @QtCore.pyqtSlot(int, int)
+    def eventsTableClick(self, row, col):
+        # Get events and subset to desired columns
+        lat = float(self.eventsTable.item(row,1).text())
+        lon = float(self.eventsTable.item(row,2).text())
+        debug_point = 1
+        # TODO:  disable table editing
+        # TODO:  add seismap.highlightEvent
+        # TODO:  add seismap.highlightStation
+        # TODO:  need a "which events/stations selected" method
+
+            
+    @QtCore.pyqtSlot(int, int)
+    def stationsTableClick(self, row, col):
+        # Get events and subset to desired columns
+        lat = float(self.eventsTable.item(row,4).text())
+        lon = float(self.eventsTable.item(row,5).text())
+        debug_point = 1
+            
         
         
 if __name__ == "__main__":
