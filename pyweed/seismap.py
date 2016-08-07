@@ -50,16 +50,20 @@ class Seismap(Basemap):
         self.events = []
         self.events_box = []
         self.events_toroid = []
+        self.events_highlighting = []
         self.stations = []
         self.stations_box = []
         self.stations_toroid = []
+        self.stations_highlighting = []
         
         # Consistent use of colors
-        self.event_color = '#FFFF00'    # bright yellow
-        self.event_marker = 'o'         # circle
+        self.event_color = '#FFFF00'              # bright yellow
+        self.event_highlight_color = '#00FF00'    # bright green
+        self.event_marker = 'o'                   # circle
         self.event_markersize = 6
-        self.station_color = '#FF0000'  # bright red
-        self.station_marker = 'v'       # inverted triangle
+        self.station_color = '#FF0000'            # bright red
+        self.station_highlight_color = '#0000FF'  # bright blue
+        self.station_marker = 'v'                 # inverted triangle
         self.station_markersize = 6
         
         # Use Basemap's init, enforcing the values of many parameters that
@@ -105,7 +109,7 @@ class Seismap(Basemap):
         
     def add_events(self, dataframe):
         """
-        Displays event locations
+        Display event locations
 
         See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
@@ -136,9 +140,30 @@ class Seismap(Basemap):
         self.ax.figure.canvas.draw()
         
         
+    def add_events_highlighting(self, lons, lats):
+        """
+        Highlights selected events
+        """
+        
+        # Remove existing 'lines' elements
+        try:
+            while self.events_highlighting:
+                self.events_highlighting.pop(0).remove()
+            self.events_highlighting = []
+        except IndexError:
+            pass
+
+        # Plot in projection coordinates
+        x, y = self(lons, lats)
+        self.events_highlighting.extend( self.plot(x, y, linestyle='None', marker=self.event_marker, markersize=self.event_markersize*1.5,
+                                                   color=self.event_color, markeredgecolor=self.event_highlight_color, alpha=1.0) )
+                        
+        self.ax.figure.canvas.draw()
+        
+        
     def add_events_box(self, n, e, s, w):
         """
-        Displays event box
+        Display event box
 
         See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
@@ -177,7 +202,7 @@ class Seismap(Basemap):
         
     def add_events_toroid(self, n, e, minradius, maxradius):
         """
-        Displays event locations
+        Display event locations
 
         See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
@@ -195,8 +220,8 @@ class Seismap(Basemap):
             pass
         
         # Get locations to plot
-        lons1,lats1 = self.geocircle(e, n, minradius)
-        lons2,lats2 = self.geocircle(e, n, maxradius)
+        lons1,lats1 = self._geocircle(e, n, minradius)
+        lons2,lats2 = self._geocircle(e, n, maxradius)
         
         # Plot in projection coordinates
         x1, y1 = self(lons1, lats1)
@@ -209,7 +234,7 @@ class Seismap(Basemap):
 
     def add_stations(self, dataframe):
         """
-        Displays station locations
+        Display station locations
 
         See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
@@ -233,11 +258,30 @@ class Seismap(Basemap):
         self.ax.figure.canvas.draw()
 
 
+    def add_stations_highlighting(self, lons, lats):
+        """
+        Highlight selected stations
+        """
+        
+        # Remove existing 'lines' elements
+        try:
+            while self.stations_highlighting:
+                self.stations_highlighting.pop(0).remove()
+            self.stations_highlighting = []
+        except IndexError:
+            pass
+
+        # Plot in projection coordinates
+        x, y = self(lons, lats)
+        self.stations_highlighting.extend( self.plot(x, y, linestyle='None', marker=self.station_marker, markersize=self.station_markersize*1.5,
+                                                   color=self.station_color, markeredgecolor=self.station_highlight_color, alpha=1.0) )
+                        
+        self.ax.figure.canvas.draw()
+        
+        
     def add_stations_box(self, n, e, s, w):
         """
-        Displays event box
-
-        See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
+        Display station box outline
         """
         
         # Remove existing 'lines' elements
@@ -274,7 +318,7 @@ class Seismap(Basemap):
         
     def add_stations_toroid(self, n, e, minradius, maxradius):
         """
-        Displays event locations
+        Display station locations
 
         See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
@@ -292,8 +336,8 @@ class Seismap(Basemap):
             pass
 
         # Get locations to plot
-        lons1,lats1 = self.geocircle(e, n, minradius)
-        lons2,lats2 = self.geocircle(e, n, maxradius)
+        lons1,lats1 = self._geocircle(e, n, minradius)
+        lons2,lats2 = self._geocircle(e, n, maxradius)
         
         # Plot in projection coordinates
         x1, y1 = self(lons1, lats1)
@@ -304,7 +348,7 @@ class Seismap(Basemap):
         self.ax.figure.canvas.draw()
 
 
-    def geocircle(self, lon, lat, radius, n=50):
+    def _geocircle(self, lon, lat, radius, n=50):
         """Calculate lons and lats associated with a circle."""
         
         # Calculate circle
@@ -316,7 +360,7 @@ class Seismap(Basemap):
         lats = lats.tolist()
         lats.append(lat)
         
-        # TODO:  geocircle: Handle branch cut at boundaries
+        # TODO:  _geocircle: Handle branch cut at boundaries
         
         coords = (lons,lats)
         

@@ -23,7 +23,13 @@ class Events(object):
         """
         Initialization.
         """
+        # TODO:  Historical stuff should be saved elsewhere so that the Events class 
+        # TODO:  will only have current state.
         self.url_history = []
+        
+        # Current state
+        self.eventsDF = None
+        self.selectedRows = []
         
     def get_url(self, index=0):
         return(self.url_history[index])
@@ -49,7 +55,15 @@ class Events(object):
             # TODO:  What type of exception should we trap? We should probably log it.
             raise
             
+        self.current_eventsDF = df
+        
         return(df)
+
+    def get_selectedRows(self):
+        return(self.selectedRows)
+    
+    def set_selectedRows(self, selectedRows):
+        self.selectedRows = selectedRows
         
         
 # ------------------------------------------------------------------------------

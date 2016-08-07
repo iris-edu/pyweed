@@ -240,19 +240,21 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventQueryDialog = EventQueryDialog(self)        
         self.eventsHandler = Events()        
         self.eventsTable.setSortingEnabled(True)
+        self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Stations
         self.stationQueryDialog = StationQueryDialog(self)
         self.stationsHandler = Stations()        
         self.stationsTable.setSortingEnabled(True)
+        self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Connect signals
         # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
         # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
-        QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClick)
-        QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClick)
+        QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClicked)
+        QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
         # Connect the buttons so that they open the dialog
         self.eventOptionsButton.pressed.connect(self.eventQueryDialog.show)
@@ -357,24 +359,52 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
 
     @QtCore.pyqtSlot(int, int)
-    def eventsTableClick(self, row, col):
-        # Get events and subset to desired columns
-        lat = float(self.eventsTable.item(row,1).text())
-        lon = float(self.eventsTable.item(row,2).text())
-        debug_point = 1
-        # TODO:  disable table editing
-        # TODO:  add seismap.highlightEvent
-        # TODO:  add seismap.highlightStation
-        # TODO:  need a "which events/stations selected" method
-
+    def eventsTableClicked(self, row, col):
+        """
+        Handle a click anywhere in the table.
+        """
+        # Get selected rows
+        rows = []
+        for idx in self.eventsTable.selectionModel().selectedRows():
+            rows.append(idx.row())
+        
+        # Update the eventsHandler with the latest selection information
+        self.eventsHandler.set_selectedRows(rows)
+        
+        # Get lons and lats
+        # TODO:  Automatically detect longitude and latitude columns
+        lons = []
+        lats = []
+        for row in rows:
+            lat = float(self.eventsTable.item(row,1).text())
+            lats.append(lat)
+            lon = float(self.eventsTable.item(row,2).text())
+            lons.append(lon)
             
+        self.seismap.add_events_highlighting(lons, lats)
+        
+        
     @QtCore.pyqtSlot(int, int)
-    def stationsTableClick(self, row, col):
-        # Get events and subset to desired columns
-        lat = float(self.eventsTable.item(row,4).text())
-        lon = float(self.eventsTable.item(row,5).text())
-        debug_point = 1
+    def stationsTableClicked(self, row, col):
+        # Get selected rows
+        rows = []
+        for idx in self.stationsTable.selectionModel().selectedRows():
+            rows.append(idx.row())
+        
+        # Update the eventsHandler with the latest selection information
+        self.stationsHandler.set_selectedRows(rows)
+        
+        # Get lons and lats
+        # TODO:  Automatically detect longitude and latitude columns
+        lons = []
+        lats = []
+        for row in rows:
+            lat = float(self.stationsTable.item(row,4).text())
+            lats.append(lat)
+            lon = float(self.stationsTable.item(row,5).text())
+            lons.append(lon)
             
+        self.seismap.add_stations_highlighting(lons, lats)            
         
         
 if __name__ == "__main__":
