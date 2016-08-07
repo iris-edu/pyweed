@@ -23,7 +23,13 @@ class Stations(object):
         """
         Initialization.
         """
+        # TODO:  Historical stuff should be saved elsewhere so that the Events class 
+        # TODO:  will only have current state.
         self.url_history = []
+        
+        # Current state
+        self.stationsDF = None
+        self.selectedRows = []        
         
     def get_url(self, index=0):
         return(self.url_history[index])
@@ -60,6 +66,11 @@ class Stations(object):
             
         return(df)
         
+    def get_selectedRows(self):
+        return(self.selectedRows)
+    
+    def set_selectedRows(self, selectedRows):
+        self.selectedRows = selectedRows
         
 # ------------------------------------------------------------------------------
 # Helper functions
