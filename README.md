@@ -41,6 +41,7 @@ conda install matplotlib
 conda install basemap
 conda install pil
 conda install pyqt
+conda install obspy
 ```
 
 
