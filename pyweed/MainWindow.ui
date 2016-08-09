@@ -73,7 +73,7 @@
               <bool>false</bool>
              </property>
              <property name="gridStyle">
-              <enum>Qt::SolidLine</enum>
+              <enum>Qt::NoPen</enum>
              </property>
             </widget>
            </item>
@@ -117,6 +117,12 @@
             <widget class="QTableWidget" name="stationsTable">
              <property name="styleSheet">
               <string notr="true"/>
+             </property>
+             <property name="showGrid">
+              <bool>false</bool>
+             </property>
+             <property name="gridStyle">
+              <enum>Qt::NoPen</enum>
              </property>
             </widget>
            </item>
