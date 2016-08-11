@@ -57,14 +57,23 @@ class Seismap(Basemap):
         self.stations_highlighting = []
         
         # Consistent use of colors
-        self.event_color = '#FFFF00'              # bright yellow
-        self.event_highlight_color = '#00FF00'    # bright green
+        self.event_color = '#FFFF00'              # 'yellow1'
+        ###self.event_highlight_color = '#FFFF00'    # 'yellow1'
+        ###self.event_highlight_color = '#EEEE00'    # 'yellow2'
+        ###self.event_highlight_color = '#CDCD00'    # 'yellow3'
+        ###self.event_highlight_color = '#8B8B00'    # 'yellow4'
+        self.event_highlight_color = '#FFA500'    # 'orange1'
         self.event_marker = 'o'                   # circle
         self.event_markersize = 6
-        self.station_color = '#FF0000'            # bright red
-        self.station_highlight_color = '#0000FF'  # bright blue
+        self.event_highlight_markersize = 12
+        self.station_color = '#FF0000'            # 'red1'
+        ###self.station_highlight_color = '#FF0000'  # 'red1'
+        ###self.station_highlight_color = '#EE0000'  # 'red2'
+        self.station_highlight_color = '#CD0000'  # 'red3'
+        ###self.station_highlight_color = '#8B0000'  # 'red4'
         self.station_marker = 'v'                 # inverted triangle
         self.station_markersize = 6
+        self.station_highlight_markersize = 12
         
         # Use Basemap's init, enforcing the values of many parameters that
         # aren't used or whose Basemap defaults would not be altered for all-sky
@@ -155,8 +164,10 @@ class Seismap(Basemap):
 
         # Plot in projection coordinates
         x, y = self(lons, lats)
-        self.events_highlighting.extend( self.plot(x, y, linestyle='None', marker=self.event_marker, markersize=self.event_markersize*1.5,
-                                                   color=self.event_color, markeredgecolor=self.event_highlight_color, alpha=1.0) )
+        self.events_highlighting.extend( self.plot(x, y, linestyle='None',
+                                                   marker=self.event_marker, 
+                                                   markersize=self.event_highlight_markersize,
+                                                   color=self.event_highlight_color) )
                         
         self.ax.figure.canvas.draw()
         
@@ -253,7 +264,11 @@ class Seismap(Basemap):
         except IndexError:
             pass
 
-        self.stations.extend( self.plot(x, y, linestyle='None', marker=self.station_marker, markersize=self.station_markersize, color=self.station_color, markeredgecolor=self.station_color) )
+        self.stations.extend( self.plot(x, y, linestyle='None',
+                                        marker=self.station_marker,
+                                        markersize=self.station_markersize,
+                                        color=self.station_color,
+                                        markeredgecolor=self.station_color) )
 
         self.ax.figure.canvas.draw()
 
@@ -273,8 +288,10 @@ class Seismap(Basemap):
 
         # Plot in projection coordinates
         x, y = self(lons, lats)
-        self.stations_highlighting.extend( self.plot(x, y, linestyle='None', marker=self.station_marker, markersize=self.station_markersize*1.5,
-                                                   color=self.station_color, markeredgecolor=self.station_highlight_color, alpha=1.0) )
+        self.stations_highlighting.extend( self.plot(x, y, linestyle='None',
+                                                     marker=self.station_marker,
+                                                     markersize=self.station_highlight_markersize,
+                                                     color=self.station_highlight_color) )
                         
         self.ax.figure.canvas.draw()
         

@@ -33,6 +33,8 @@ from events import Events
 from stations import Stations
 from seismap import Seismap
 
+__version__ = "0.0.2"
+
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
     """Dialog window for event options used in creating a webservice query."""
@@ -229,6 +231,37 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         super(self.__class__, self).__init__()
         self.setupUi(self)
         
+        # Set MainWindow properties
+        self.setWindowTitle('PYWEED version %s' % (__version__))
+        
+        # Create StatusBar
+        sb = QtGui.QStatusBar()
+        sb.setFixedHeight(18)
+        self.setStatusBar(sb)
+        
+        
+        # Create menuBar
+        # see:  http://doc.qt.io/qt-4.8/qmenubar.html
+        # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
+        # see:  https://pythonprogramming.net/menubar-pyqt-tutorial/
+        # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
+        mainMenu = self.menuBar()
+        mainMenu.setNativeMenuBar(False)
+        fileMenu = mainMenu.addMenu('&File')
+        
+        quitAction = QtGui.QAction("&Quit", self)
+        quitAction.setShortcut("Ctrl+Q")
+        quitAction.triggered.connect(self.closeApplication)        
+        fileMenu.addAction(quitAction)
+        
+        optionsMenu = mainMenu.addMenu('&Options')
+        
+        helpMenu = mainMenu.addMenu('&Help')
+
+        aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
+        aboutPyweedAction.triggered.connect(self.aboutPyweed)        
+        helpMenu.addAction(aboutPyweedAction)
+
         # Get the Figure object from the map_canvas
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
@@ -250,20 +283,22 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
-        # Connect signals
+        # Connect signals associated with table clicks
         # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
         # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
         QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClicked)
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
-        # Connect the buttons so that they open the dialog
+        # Connect the main window buttons
         self.eventOptionsButton.pressed.connect(self.eventQueryDialog.show)
         self.stationOptionsButton.pressed.connect(self.stationQueryDialog.show)
         self.getEventsButton.pressed.connect(self.queryEvents)
         self.getStationsButton.pressed.connect(self.queryStations)
         
-        self.setWindowTitle('Main window')    
-        self.show()
+        # Display MainWindow
+        self.statusBar().showMessage('Ready ...')
+        
+        self.show()        
    
    
     @QtCore.pyqtSlot()
@@ -311,6 +346,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.eventQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_events_toroid(n, e, minradius, maxradius)
 
+        self.statusBar().showMessage('Loaded %d events' % (eventsDF.shape[0]))
+
 
     @QtCore.pyqtSlot()
     def queryStations(self):
@@ -357,6 +394,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.stationQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_stations_toroid(n, e, minradius, maxradius)
 
+        self.statusBar().showMessage('Loaded %d stations' % (stationsDF.shape[0]))
+        
 
     @QtCore.pyqtSlot(int, int)
     def eventsTableClicked(self, row, col):
@@ -407,6 +446,16 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.add_stations_highlighting(lons, lats)            
         
         
+    def aboutPyweed(self):
+        QtGui.QMessageBox.about(self,
+                                self.tr("About PYWEED"),
+                                self.tr("PYWEED version %s" % (__version__)))
+
+    def closeApplication(self):
+        # TODO:  Careful shutdown
+        QtGui.QApplication.quit()
+             
+
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
