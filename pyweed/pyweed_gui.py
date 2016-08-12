@@ -33,6 +33,7 @@ from events import Events
 from stations import Stations
 from seismap import Seismap
 
+__appName__ = "PYWEED"
 __version__ = "0.0.2"
 
 
@@ -232,7 +233,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.setupUi(self)
         
         # Set MainWindow properties
-        self.setWindowTitle('PYWEED version %s' % (__version__))
+        self.appName = __appName__
+        self.version = __version__        
+        self.setWindowTitle('%s version %s' % (self.appName, self.version))
         
         # Create StatusBar
         sb = QtGui.QStatusBar()
@@ -444,12 +447,36 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             lons.append(lon)
             
         self.seismap.add_stations_highlighting(lons, lats)            
-        
+                
         
     def aboutPyweed(self):
-        QtGui.QMessageBox.about(self,
-                                self.tr("About PYWEED"),
-                                self.tr("PYWEED version %s" % (__version__)))
+        """Display About message box."""
+        # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox
+        website = "https://github.com/iris-edu-int/pyweed"
+        ###email = "adam@iris.washington.edu"
+        license_link = "https://github.com/iris-edu-int/pyweed/blob/master/LICENSE"
+        license_name = "MIT"
+        
+        msgBox = QtGui.QMessageBox()
+        msgBox.setWindowTitle(self.tr("About " + self.appName))
+        msgBox.setTextFormat(QtCore.Qt.RichText)
+        ###msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
+        msgBox.setText("<br><br><br>" +
+                       self.appName +
+                       " v" +
+                       self.version +
+                       "<br><br>" +
+                       "Pyweed is a cross-platform GUI application for retrieving event-based seismic data." +
+                       "<br><br>" +
+                       "<a href='{0}'>{0}</a><br><br>".format(website) +
+###                       "<a href='mailto:{0}'>{0}</a><br><br>".format(email) +
+                       "License: <a href='{0}'>{1}</a>".format(license_link, license_name))
+
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.exec_()
+        # NOTE:  For info on " modalSession has been exited prematurely" error on OS X see:
+        # NOTE:    https://forum.qt.io/topic/43618/modal-sessions-with-pyqt4-and-os-x/2
+
 
     def closeApplication(self):
         # TODO:  Careful shutdown
