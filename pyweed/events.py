@@ -28,13 +28,13 @@ class Events(object):
         self.url_history = []
         
         # Current state
-        self.eventsDF = None
-        self.selectedRows = []
+        self.currentDF = None
+        self.selectedIDs = []
         
     def get_url(self, index=0):
         return(self.url_history[index])
     
-    def get_dataframe(self, parameters=None):
+    def loadData(self, parameters=None):
         """
         Make a webservice request for events using the passed in options
         """
@@ -49,24 +49,34 @@ class Events(object):
             # Get events dataframe and clean up column names
             df = pd.read_csv(url, sep='|')
             df.columns = df.columns.str.strip()
+            df.columns = df.columns.str.lstrip('#') # remove '#' from '#EventID'
+            # Rearrange columns
+            df = df[self.get_columnNames()]
+            # Convert EventID to character
+            df['EventID'] = df['EventID'].astype(str)
             # Push items onto the stack (so the most recent is always in position 0)
             self.url_history.insert(0, url)
         except:
             # TODO:  What type of exception should we trap? We should probably log it.
             raise
             
-        self.eventsDF = df
+        self.currentDF = df
         
         return(df)
 
-    def get_selectedRows(self):
-        return(self.selectedRows)
+    def get_columnNames(self):
+        columnNames = ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
+        return(columnNames)
     
-    def set_selectedRows(self, selectedRows):
-        self.selectedRows = selectedRows
+    def get_selectedIDs(self):
+        return(self.selectedIDs)
+    
+    def set_selectedIDs(self, IDs):
+        self.selectedIDs = IDs
         
     def get_selectedDataframe(self):
-        return(self.eventsDF.iloc[self.selectedRows,])
+        df = self.currentDF.loc[self.currentDF['EventID'].isin(self.selectedIDs)]
+        return(df)
         
         
 # ------------------------------------------------------------------------------
