@@ -146,6 +146,14 @@ class Seismap(Basemap):
         ###lons = self.shiftdata(lons)        
         ###self.events = self.plot(lons, lats, latlon=True, linestyle='None', marker=self.event_marker, markersize=self.event_markersize, color=self.event_color, markeredgecolor=self.event_color)
                 
+        # Remove highlghting
+        try:
+            while self.events_highlighting:
+                self.events_highlighting.pop(0).remove()
+            self.events_highlighting = []
+        except IndexError:
+            pass
+
         self.ax.figure.canvas.draw()
         
         
@@ -163,6 +171,7 @@ class Seismap(Basemap):
             pass
 
         # Plot in projection coordinates
+        # TODO:  Use self.scatter() with zorder=99 to keep highlighting on top?
         x, y = self(lons, lats)
         self.events_highlighting.extend( self.plot(x, y, linestyle='None',
                                                    marker=self.event_marker, 
@@ -270,6 +279,14 @@ class Seismap(Basemap):
                                         color=self.station_color,
                                         markeredgecolor=self.station_color) )
 
+        # Remove highlighting
+        try:
+            while self.stations_highlighting:
+                self.stations_highlighting.pop(0).remove()
+            self.stations_highlighting = []
+        except IndexError:
+            pass
+        
         self.ax.figure.canvas.draw()
 
 
@@ -287,6 +304,7 @@ class Seismap(Basemap):
             pass
 
         # Plot in projection coordinates
+        # TODO:  Use self.scatter() with zorder=99 to keep highlighting on top?
         x, y = self(lons, lats)
         self.stations_highlighting.extend( self.plot(x, y, linestyle='None',
                                                      marker=self.station_marker,

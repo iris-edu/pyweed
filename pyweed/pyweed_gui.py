@@ -20,6 +20,7 @@ from PyQt4 import QtGui
 
 import EventQueryDialog
 import StationQueryDialog
+import WaveformDialog
 import MainWindow
 
 from pyweed_style import stylesheet
@@ -42,7 +43,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
     def __init__(self, parent=None):
         super(self.__class__, self).__init__()
         self.setupUi(self)
-        self.setWindowTitle('Start/End Time')
+        self.setWindowTitle('Event Query Options')
         
         # Get a reference to the MainWindow map
         self.seismap = parent.seismap
@@ -143,7 +144,7 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
     def __init__(self, parent=None, windowTitle='Start/End Time'):
         super(self.__class__, self).__init__()
         self.setupUi(self)
-        self.setWindowTitle('Start/End Time')
+        self.setWindowTitle('Station Query Options')
 
         # Get a reference to the MainWindow map
         self.seismap = parent.seismap
@@ -225,6 +226,65 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         return options
 
 
+class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
+    """Dialog window for selection and display of waveforms."""
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__()
+        self.setupUi(self)
+        self.setWindowTitle('Waveforms')
+
+        # Get a reference to the Events and Stations objects
+        self.eventsHandler = parent.eventsHandler
+        self.stationsHandler = parent.stationsHandler
+
+        # Selection table
+        self.selectionTable.setSortingEnabled(True)
+        self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        
+    @QtCore.pyqtSlot()    
+    def loadTable(self):
+        """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
+        eventsDF = self.eventsHandler.get_selectedDataframe()
+        stationsDF = self.stationsHandler.get_selectedDataframe()
+        # TODO:  Create a new dataframe with time, lat, lon, mag, SNCL that is the
+        # TODO: outer product of these and load up the selectionTable
+        debug_point = 1
+        
+        # TODO:  Change from example to actual code
+        
+        eventsDF = eventsDF[['Time','Latitude','Longitude','Depth/km','MagType','Magnitude']]
+        numeric_column = [False,True,True,True,False,True]
+
+        # Add events to the selection table ------------------------------------
+
+        # Clear existing contents
+        # NOTE:  Doing clearSelection() first is important!
+        self.selectionTable.clearSelection()
+        while (self.selectionTable.rowCount() > 0):
+            self.selectionTable.removeRow(0)
+        
+        # Create new table
+        self.selectionTable.setRowCount(eventsDF.shape[0])
+        self.selectionTable.setColumnCount(eventsDF.shape[1])
+        self.selectionTable.setHorizontalHeaderLabels(eventsDF.columns.tolist())
+        self.selectionTable.verticalHeader().hide()
+        
+        # Add new contents
+        for i in range(eventsDF.shape[0]):
+            for j in range(eventsDF.shape[1]):
+                # Guarantee that all elements are converted to strings for display but apply proper sorting
+                if numeric_column[j]:
+                    self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(eventsDF.iat[i,j])))
+                else:
+                    self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(eventsDF.iat[i,j])))
+
+        # Tighten up the table
+        self.selectionTable.resizeColumnsToContents()
+        self.selectionTable.resizeRowsToContents()
+        
+    
+
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     
     def __init__(self,parent=None):
@@ -242,29 +302,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         sb.setFixedHeight(18)
         self.setStatusBar(sb)
         
-        
-        # Create menuBar
-        # see:  http://doc.qt.io/qt-4.8/qmenubar.html
-        # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
-        # see:  https://pythonprogramming.net/menubar-pyqt-tutorial/
-        # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
-        mainMenu = self.menuBar()
-        mainMenu.setNativeMenuBar(False)
-        fileMenu = mainMenu.addMenu('&File')
-        
-        quitAction = QtGui.QAction("&Quit", self)
-        quitAction.setShortcut("Ctrl+Q")
-        quitAction.triggered.connect(self.closeApplication)        
-        fileMenu.addAction(quitAction)
-        
-        optionsMenu = mainMenu.addMenu('&Options')
-        
-        helpMenu = mainMenu.addMenu('&Help')
-
-        aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
-        aboutPyweedAction.triggered.connect(self.aboutPyweed)        
-        helpMenu.addAction(aboutPyweedAction)
-
         # Get the Figure object from the map_canvas
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
@@ -292,11 +329,41 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClicked)
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
+        # Waveforms
+        self.waveformsDialog = WaveformDialog(self)
+        
         # Connect the main window buttons
-        self.eventOptionsButton.pressed.connect(self.eventQueryDialog.show)
-        self.stationOptionsButton.pressed.connect(self.stationQueryDialog.show)
-        self.getEventsButton.pressed.connect(self.queryEvents)
-        self.getStationsButton.pressed.connect(self.queryStations)
+        self.getEventsButton.pressed.connect(self.getEvents)
+        self.getStationsButton.pressed.connect(self.getStations)
+        self.getWaveformsButton.pressed.connect(self.getWaveforms)
+        
+        # Create menuBar
+        # see:  http://doc.qt.io/qt-4.8/qmenubar.html
+        # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
+        # see:  https://pythonprogramming.net/menubar-pyqt-tutorial/
+        # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
+        mainMenu = self.menuBar()
+        mainMenu.setNativeMenuBar(False)
+        fileMenu = mainMenu.addMenu('&File')
+    
+        quitAction = QtGui.QAction("&Quit", self)
+        quitAction.setShortcut("Ctrl+Q")
+        quitAction.triggered.connect(self.closeApplication)        
+        fileMenu.addAction(quitAction)
+    
+        optionsMenu = mainMenu.addMenu('Options')
+        eventOptionsAction = QtGui.QAction("Show Event Options", self)
+        QtCore.QObject.connect(eventOptionsAction, QtCore.SIGNAL('triggered()'), self.eventQueryDialog.show)
+        optionsMenu.addAction(eventOptionsAction)
+        stationOptionsAction = QtGui.QAction("Show Station Options", self)
+        QtCore.QObject.connect(stationOptionsAction, QtCore.SIGNAL('triggered()'), self.stationQueryDialog.show)
+        optionsMenu.addAction(stationOptionsAction)
+    
+        helpMenu = mainMenu.addMenu('Help')
+    
+        aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
+        aboutPyweedAction.triggered.connect(self.aboutPyweed)        
+        helpMenu.addAction(aboutPyweedAction)
         
         # Display MainWindow
         self.statusBar().showMessage('Ready ...')
@@ -305,7 +372,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
    
    
     @QtCore.pyqtSlot()
-    def queryEvents(self):
+    def getEvents(self):
         # Get events and subset to desired columns
         parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
@@ -314,12 +381,20 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         numeric_column = [False,True,True,True,False,True]
         
         # Add events to the events table ---------------------------------------
+
+        # Clear existing contents
+        # NOTE:  Doing clearSelection() first is important!
+        self.eventsTable.clearSelection()
+        while (self.eventsTable.rowCount() > 0):
+            self.eventsTable.removeRow(0)
         
+        # Create new table
         self.eventsTable.setRowCount(eventsDF.shape[0])
         self.eventsTable.setColumnCount(eventsDF.shape[1])
         self.eventsTable.setHorizontalHeaderLabels(eventsDF.columns.tolist())
         self.eventsTable.verticalHeader().hide()
         
+        # Add new contents
         for i in range(eventsDF.shape[0]):
             for j in range(eventsDF.shape[1]):
                 # Guarantee that all elements are converted to strings for display but apply proper sorting
@@ -353,7 +428,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
 
     @QtCore.pyqtSlot()
-    def queryStations(self):
+    def getStations(self):
         # Get stations and subset to desired columns
         parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
@@ -363,6 +438,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         
         # Add stations to the stations table -----------------------------------
         
+        # Clear existing contents
+        # NOTE:  Doing clearSelection() first is important!
+        self.stationsTable.clearSelection()
+        while (self.stationsTable.rowCount() > 0):
+            self.stationsTable.removeRow(0)
+
+        # Create new table
         self.stationsTable.setRowCount(stationsDF.shape[0])
         self.stationsTable.setColumnCount(stationsDF.shape[1])
         self.stationsTable.setHorizontalHeaderLabels(stationsDF.columns.tolist())
@@ -399,6 +481,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.statusBar().showMessage('Loaded %d stations' % (stationsDF.shape[0]))
         
+
+    @QtCore.pyqtSlot()
+    def getWaveforms(self):
+        self.waveformsDialog.show()
+        self.waveformsDialog.loadTable()
+
 
     @QtCore.pyqtSlot(int, int)
     def eventsTableClicked(self, row, col):

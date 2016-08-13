@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>607</width>
-    <height>678</height>
+    <width>850</width>
+    <height>922</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,6 +15,40 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QWidget" name="getButtonsWidget" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="getEventsButton">
+         <property name="text">
+          <string>Get Events</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="getStationsButton">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>Get Stations</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="getWaveformsButton">
+         <property name="text">
+          <string>Get Waveforms</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+      <zorder>getWaveformsButton</zorder>
+      <zorder>splitter</zorder>
+      <zorder>getEventsButton</zorder>
+      <zorder>getStationsButton</zorder>
+     </widget>
+    </item>
     <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
@@ -56,15 +90,8 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="1" column="0">
-            <widget class="QPushButton" name="eventOptionsButton">
-             <property name="text">
-              <string>Event Options</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" colspan="2">
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
             <widget class="QTableWidget" name="eventsTable">
              <property name="styleSheet">
               <string notr="true"/>
@@ -74,13 +101,6 @@
              </property>
              <property name="gridStyle">
               <enum>Qt::NoPen</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QPushButton" name="getEventsButton">
-             <property name="text">
-              <string>Get Events</string>
              </property>
             </widget>
            </item>
@@ -95,25 +115,8 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QGridLayout" name="gridLayout_4">
-           <item row="1" column="1">
-            <widget class="QPushButton" name="getStationsButton">
-             <property name="styleSheet">
-              <string notr="true"/>
-             </property>
-             <property name="text">
-              <string>Get Stations</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="stationOptionsButton">
-             <property name="text">
-              <string>Station Options</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" colspan="2">
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
             <widget class="QTableWidget" name="stationsTable">
              <property name="styleSheet">
               <string notr="true"/>

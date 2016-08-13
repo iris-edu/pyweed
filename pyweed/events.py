@@ -55,7 +55,7 @@ class Events(object):
             # TODO:  What type of exception should we trap? We should probably log it.
             raise
             
-        self.current_eventsDF = df
+        self.eventsDF = df
         
         return(df)
 
@@ -64,6 +64,9 @@ class Events(object):
     
     def set_selectedRows(self, selectedRows):
         self.selectedRows = selectedRows
+        
+    def get_selectedDataframe(self):
+        return(self.eventsDF.iloc[self.selectedRows,])
         
         
 # ------------------------------------------------------------------------------

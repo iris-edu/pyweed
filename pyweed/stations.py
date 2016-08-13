@@ -63,7 +63,9 @@ class Stations(object):
         except:
             # TODO:  What type of exception should we trap? We should probably log it.
             raise
-            
+
+        self.stationsDF = df
+
         return(df)
         
     def get_selectedRows(self):
@@ -71,6 +73,10 @@ class Stations(object):
     
     def set_selectedRows(self, selectedRows):
         self.selectedRows = selectedRows
+        
+    def get_selectedDataframe(self):
+        return(self.stationsDF.iloc[self.selectedRows,])
+    
         
 # ------------------------------------------------------------------------------
 # Helper functions
