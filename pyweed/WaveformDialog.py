@@ -63,6 +63,6 @@ class Ui_WaveformDialog(object):
 
     def retranslateUi(self, WaveformDialog):
         WaveformDialog.setWindowTitle(_translate("WaveformDialog", "Dialog", None))
-        self.selectionLabel.setText(_translate("WaveformDialog", "SNCL-Events", None))
+        self.selectionLabel.setText(_translate("WaveformDialog", "All Event-SNCL Combinations", None))
         self.waveformLabel.setText(_translate("WaveformDialog", "Waveforms", None))
 

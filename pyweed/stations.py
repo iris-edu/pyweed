@@ -28,13 +28,13 @@ class Stations(object):
         self.url_history = []
         
         # Current state
-        self.stationsDF = None
-        self.selectedRows = []        
+        self.currentDF = None
+        self.selectedIDs = []
         
     def get_url(self, index=0):
         return(self.url_history[index])
     
-    def get_dataframe(self, parameters=None):
+    def loadData(self, parameters=None):
         """
         Make a webservice request for stations using the passed in options
         """
@@ -58,24 +58,33 @@ class Stations(object):
             df.loc[:,'Location'] = df.loc[:,'Location'].astype(str)
             df.loc[df['Location'] == '999','Location'] = '--'          # Could be represented as '' or '--'
             df.loc[df['Location'] == '0','Location'] = '00'
+            # Add 'SNCL' column
+            sncls = df.apply(lambda x: '%s.%s.%s.%s' % (x['Network'],x['Station'],x['Location'],x['Channel']), axis=1)
+            df['SNCL'] = sncls.tolist()
+            df = df[self.get_columnNames()]
             # Push items onto the stack (so the most recent is always in position 0)
             self.url_history.insert(0, url)
         except:
             # TODO:  What type of exception should we trap? We should probably log it.
             raise
 
-        self.stationsDF = df
+        self.currentDF = df
 
         return(df)
         
-    def get_selectedRows(self):
-        return(self.selectedRows)
+    def get_columnNames(self):
+        columnNames = ['Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL']
+        return(columnNames)
+
+    def get_selectedIDs(self):
+        return(self.selectedIDs)
     
-    def set_selectedRows(self, selectedRows):
-        self.selectedRows = selectedRows
+    def set_selectedIDs(self, IDs):
+        self.selectedIDs = IDs
         
     def get_selectedDataframe(self):
-        return(self.stationsDF.iloc[self.selectedRows,])
+        df = self.currentDF.loc[self.currentDF['SNCL'].isin(self.selectedIDs)]
+        return(df)
     
         
 # ------------------------------------------------------------------------------

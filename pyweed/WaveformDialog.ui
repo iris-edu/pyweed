@@ -20,7 +20,7 @@
       <item>
        <widget class="QLabel" name="selectionLabel">
         <property name="text">
-         <string>SNCL-Events</string>
+         <string>All Event-SNCL Combinations</string>
         </property>
        </widget>
       </item>

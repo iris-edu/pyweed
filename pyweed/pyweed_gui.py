@@ -14,6 +14,10 @@ from __future__ import (absolute_import, division, print_function)
 import sys
 import string
 
+# Vectors and dataframes
+import numpy as np
+import pandas as pd
+
 # PyQt4 packages
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -245,17 +249,25 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     @QtCore.pyqtSlot()    
     def loadTable(self):
         """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
+        
+        # TODO:  Create a new dataframe with time, lat, lon, mag, SNCL -- one for each waveform
         eventsDF = self.eventsHandler.get_selectedDataframe()
-        stationsDF = self.stationsHandler.get_selectedDataframe()
-        # TODO:  Create a new dataframe with time, lat, lon, mag, SNCL that is the
-        # TODO: outer product of these and load up the selectionTable
-        debug_point = 1
+        eventsDF = eventsDF[['Time','Magnitude','Longitude','Latitude']]
         
-        # TODO:  Change from example to actual code
+        stationsDF = self.stationsHandler.get_selectedDataframe()        
+        sncls = stationsDF['SNCL'].tolist()
         
-        eventsDF = eventsDF[['Time','Latitude','Longitude','Depth/km','MagType','Magnitude']]
-        numeric_column = [False,True,True,True,False,True]
-
+        waveformDFs = []
+        
+        for sncl in sncls:
+            df = eventsDF.copy()
+            df['SNCL'] = sncl
+            waveformDFs.append(df)
+            
+        waveformsDF = pd.concat(waveformDFs)
+        waveformsDF = waveformsDF[['Time','Magnitude','Longitude','Latitude','SNCL']]
+        numeric_column = [          False, True,       True,       True,      False]
+            
         # Add events to the selection table ------------------------------------
 
         # Clear existing contents
@@ -265,19 +277,19 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.selectionTable.removeRow(0)
         
         # Create new table
-        self.selectionTable.setRowCount(eventsDF.shape[0])
-        self.selectionTable.setColumnCount(eventsDF.shape[1])
-        self.selectionTable.setHorizontalHeaderLabels(eventsDF.columns.tolist())
+        self.selectionTable.setRowCount(waveformsDF.shape[0])
+        self.selectionTable.setColumnCount(waveformsDF.shape[1])
+        self.selectionTable.setHorizontalHeaderLabels(waveformsDF.columns.tolist())
         self.selectionTable.verticalHeader().hide()
         
         # Add new contents
-        for i in range(eventsDF.shape[0]):
-            for j in range(eventsDF.shape[1]):
+        for i in range(waveformsDF.shape[0]):
+            for j in range(waveformsDF.shape[1]):
                 # Guarantee that all elements are converted to strings for display but apply proper sorting
                 if numeric_column[j]:
-                    self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(eventsDF.iat[i,j])))
+                    self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(waveformsDF.iat[i,j])))
                 else:
-                    self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(eventsDF.iat[i,j])))
+                    self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
 
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
@@ -376,9 +388,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Get events and subset to desired columns
         parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
-        eventsDF = self.eventsHandler.get_dataframe(parameters=parameters)
-        eventsDF = eventsDF[['Time','Latitude','Longitude','Depth/km','MagType','Magnitude']]
-        numeric_column = [False,True,True,True,False,True]
+        eventsDF = self.eventsHandler.loadData(parameters=parameters)
+        # NOTE:  Here is the list of all column names:
+        # NOTE:         ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
+        hidden_column = [ False,  False,       False,       False,      False,      False,     False,               True,     True,      True,          True,            True,        True]
+        numeric_column = [False,  True,        True,        True,       True,       False,     False,               False,    False,     False,         False,           False,       False]
         
         # Add events to the events table ---------------------------------------
 
@@ -393,6 +407,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.setColumnCount(eventsDF.shape[1])
         self.eventsTable.setHorizontalHeaderLabels(eventsDF.columns.tolist())
         self.eventsTable.verticalHeader().hide()
+        # Hidden columns
+        for i in np.arange(len(hidden_column)):
+            if hidden_column[i]:
+                self.eventsTable.setColumnHidden(i,True)
         
         # Add new contents
         for i in range(eventsDF.shape[0]):
@@ -432,10 +450,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Get stations and subset to desired columns
         parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
-        stationsDF = self.stationsHandler.get_dataframe(parameters=parameters)
-        stationsDF = stationsDF[['Network','Station','Location','Channel','Latitude','Longitude']]
-        numeric_column = [False,False,False,False,True,True]
-        
+        stationsDF = self.stationsHandler.loadData(parameters=parameters)
+        # NOTE:  Here is the list of all column names:
+        # NOTE:         ['Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL']
+        hidden_column = [ False,     False,     False,      False,     False,       False,      True,        True,    True,      True,  True,                True,    True,        True,         True,         True,        True,      True]
+        numeric_column = [False,     False,     False,      False,     True,        True,       True,        True,    True,      True,  False,               True,    True,        False,        True,         False,       False,     False]
+
         # Add stations to the stations table -----------------------------------
         
         # Clear existing contents
@@ -449,7 +469,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsTable.setColumnCount(stationsDF.shape[1])
         self.stationsTable.setHorizontalHeaderLabels(stationsDF.columns.tolist())
         self.stationsTable.verticalHeader().hide()
-        
+        # Hidden columns
+        for i in np.arange(len(hidden_column)):
+            if hidden_column[i]:
+                self.stationsTable.setColumnHidden(i,True)
+
+        # Add new contents
         for i in range(stationsDF.shape[0]):
             for j in range(stationsDF.shape[1]):
                 # Guarantee that all elements are converted to strings for display but apply proper sorting
@@ -498,19 +523,22 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.eventsTable.selectionModel().selectedRows():
             rows.append(idx.row())
         
-        # Update the eventsHandler with the latest selection information
-        self.eventsHandler.set_selectedRows(rows)
-        
-        # Get lons and lats
-        # TODO:  Automatically detect longitude and latitude columns
+        # Get lons, lats and 
+        # TODO:  Automatically detect column indexes
         lons = []
         lats = []
+        eventIDs = []
         for row in rows:
-            lat = float(self.eventsTable.item(row,1).text())
-            lats.append(lat)
             lon = float(self.eventsTable.item(row,2).text())
             lons.append(lon)
+            lat = float(self.eventsTable.item(row,3).text())
+            lats.append(lat)
+            eventID = str(self.eventsTable.item(row,12).text())
+            eventIDs.append(eventID)
             
+        # Update the eventsHandler with the latest selection information
+        self.eventsHandler.set_selectedIDs(eventIDs)
+
         self.seismap.add_events_highlighting(lons, lats)
         
         
@@ -521,19 +549,22 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.stationsTable.selectionModel().selectedRows():
             rows.append(idx.row())
         
-        # Update the eventsHandler with the latest selection information
-        self.stationsHandler.set_selectedRows(rows)
-        
         # Get lons and lats
         # TODO:  Automatically detect longitude and latitude columns
         lons = []
         lats = []
+        stationIDs = []
         for row in rows:
-            lat = float(self.stationsTable.item(row,4).text())
-            lats.append(lat)
-            lon = float(self.stationsTable.item(row,5).text())
+            lon = float(self.stationsTable.item(row,4).text())
             lons.append(lon)
+            lat = float(self.stationsTable.item(row,5).text())
+            lats.append(lat)
+            stationID = str(self.stationsTable.item(row,17).text())
+            stationIDs.append(stationID)
             
+        # Update the stationsHandler with the latest selection information
+        self.stationsHandler.set_selectedIDs(stationIDs)
+
         self.seismap.add_stations_highlighting(lons, lats)            
                 
         
