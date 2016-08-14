@@ -37,6 +37,8 @@ class Ui_WaveformDialog(object):
         self.verticalLayout_2.addWidget(self.selectionLabel)
         self.selectionTable = QtGui.QTableWidget(self.selectionTableGroupBox)
         self.selectionTable.setMinimumSize(QtCore.QSize(500, 100))
+        self.selectionTable.setShowGrid(False)
+        self.selectionTable.setGridStyle(QtCore.Qt.NoPen)
         self.selectionTable.setObjectName(_fromUtf8("selectionTable"))
         self.selectionTable.setColumnCount(0)
         self.selectionTable.setRowCount(0)
