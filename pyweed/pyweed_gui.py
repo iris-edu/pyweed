@@ -34,8 +34,8 @@ from MyDoubleValidator import MyDoubleValidator
 from MyNumericTableWidgetItem import MyNumericTableWidgetItem
 
 # Pyweed components
-from events import Events
-from stations import Stations
+from eventsHandler import EventsHandler
+from stationsHandler import StationsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
@@ -277,10 +277,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
         
         # TODO:  Create a new dataframe with time, lat, lon, mag, SNCL -- one for each waveform
-        eventsDF = self.eventsHandler.get_selectedDataframe()
+        eventsDF = self.eventsHandler.get_selected_dataframe()
         eventsDF = eventsDF[['Time','Magnitude','Longitude','Latitude']]
         
-        stationsDF = self.stationsHandler.get_selectedDataframe()        
+        stationsDF = self.stationsHandler.get_selected_dataframe()        
         sncls = stationsDF['SNCL'].tolist()
         
         waveformDFs = []
@@ -349,14 +349,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         
         # Events
         self.eventQueryDialog = EventQueryDialog(self)        
-        self.eventsHandler = Events()        
+        self.eventsHandler = EventsHandler()        
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Stations
         self.stationQueryDialog = StationQueryDialog(self)
-        self.stationsHandler = Stations()        
+        self.stationsHandler = StationsHandler()        
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -414,7 +414,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Get events and subset to desired columns
         parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
-        eventsDF = self.eventsHandler.loadData(parameters=parameters)
+        eventsDF = self.eventsHandler.load_data(parameters=parameters)
         # NOTE:  Here is the list of all column names:
         # NOTE:         ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
         hidden_column = [ False,  False,       False,       False,      False,      False,     False,               True,     True,      True,          True,            True,        True]
@@ -476,7 +476,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Get stations and subset to desired columns
         parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
-        stationsDF = self.stationsHandler.loadData(parameters=parameters)
+        stationsDF = self.stationsHandler.load_data(parameters=parameters)
         # NOTE:  Here is the list of all column names:
         # NOTE:         ['Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL']
         hidden_column = [ False,     False,     False,      False,     False,       False,      True,        True,    True,      True,  True,                True,    True,        True,         True,         True,        True,      True]
@@ -563,7 +563,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             eventIDs.append(eventID)
             
         # Update the eventsHandler with the latest selection information
-        self.eventsHandler.set_selectedIDs(eventIDs)
+        self.eventsHandler.set_selected_ids(eventIDs)
 
         self.seismap.add_events_highlighting(lons, lats)
         
@@ -589,7 +589,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             stationIDs.append(stationID)
             
         # Update the stationsHandler with the latest selection information
-        self.stationsHandler.set_selectedIDs(stationIDs)
+        self.stationsHandler.set_selected_ids(stationIDs)
 
         self.seismap.add_stations_highlighting(lons, lats)            
                 
