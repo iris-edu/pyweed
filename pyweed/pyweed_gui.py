@@ -36,10 +36,11 @@ from MyNumericTableWidgetItem import MyNumericTableWidgetItem
 # Pyweed components
 from eventsHandler import EventsHandler
 from stationsHandler import StationsHandler
+from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
@@ -263,6 +264,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
+        # Waveforms
+        self.waveformsHandler = WaveformsHandler()
+
         # Get a reference to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
@@ -272,29 +276,42 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         
+        # Connect signals associated with table clicks
+        # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
+        # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
+        QtCore.QObject.connect(self.selectionTable, QtCore.SIGNAL('cellClicked(int, int)'), self.selectionTableClicked)
+        
     @QtCore.pyqtSlot()    
-    def loadTable(self):
+    def loadSelectionTable(self):
         """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
         
-        # TODO:  Create a new dataframe with time, lat, lon, mag, SNCL -- one for each waveform
+        # Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.eventsHandler.get_selected_dataframe()
-        eventsDF = eventsDF[['Time','Magnitude','Longitude','Latitude']]
+        eventsDF = eventsDF[['Time','Magnitude','Depth/km','Longitude','Latitude']]
+        eventsDF.columns = ['Time','Magnitude','Depth','Event_Lon','Event_Lat']
         
-        stationsDF = self.stationsHandler.get_selected_dataframe()        
+        stationsDF = self.stationsHandler.get_selected_dataframe()
+        stationsDF = stationsDF[['SNCL','Longitude','Latitude']]
+        stationsDF.columns = ['SNCL','Station_Lon','Station_Lat']
         sncls = stationsDF['SNCL'].tolist()
         
         waveformDFs = []
         
-        for sncl in sncls:
+        for i in range(stationsDF.shape[0]):
             df = eventsDF.copy()
-            df['SNCL'] = sncl
+            df['SNCL'] = stationsDF.SNCL.iloc[i]
+            df['Station_Lon'] = stationsDF.Station_Lon.iloc[i]
+            df['Station_Lat'] = stationsDF.Station_Lat.iloc[i]
             waveformDFs.append(df)
             
         waveformsDF = pd.concat(waveformDFs)
-        waveformsDF = waveformsDF[['Time','Magnitude','Longitude','Latitude','SNCL']]
-        numeric_column = [          False, True,       True,       True,      False]
+        # NOTE:  Here is the list of all column names:
+        # NOTE:         ['Time', 'Magnitude', 'Depth/km', 'Event_Lon', 'Event_Lat', 'SNCL', 'Station_Lon', 'Station_Lat']
+        hidden_column =  [False,  False,       False,      False,       False,       False,  True,          True]
+        numeric_column = [False,  True,        True,       True,        True,        False,  True,          True]
             
-        # Add events to the selection table ------------------------------------
+
+        # Add event-SNCL combintations to the selection table
 
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -307,6 +324,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setColumnCount(waveformsDF.shape[1])
         self.selectionTable.setHorizontalHeaderLabels(waveformsDF.columns.tolist())
         self.selectionTable.verticalHeader().hide()
+        # Hidden columns
+        for i in np.arange(len(hidden_column)):
+            if hidden_column[i]:
+                self.selectionTable.setColumnHidden(i,True)
         
         # Add new contents
         for i in range(waveformsDF.shape[0]):
@@ -322,6 +343,62 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.resizeRowsToContents()
         
     
+    @QtCore.pyqtSlot(int, int)
+    def selectionTableClicked(self, row, col):
+        # Get selected rows
+        rows = []
+        for idx in self.selectionTable.selectionModel().selectedRows():
+            rows.append(idx.row())
+        
+        # Get ltime and SNCL
+        # TODO:  Automatically detect time and SNCL columns
+        times = []
+        source_depths = []
+        source_lons = []
+        source_lats = []
+        receiver_lons = []
+        receiver_lats = []
+        stationIDs = []
+        # TODO:  Is there a more pandas-like way to extract this info?
+        for row in rows:
+            time = str(self.selectionTable.item(row,0).text())
+            times.append(time)
+            source_depth = float(self.selectionTable.item(row,2).text())
+            source_depths.append(source_depth)
+            source_lon = float(self.selectionTable.item(row,3).text())
+            source_lons.append(source_lon)
+            source_lat = float(self.selectionTable.item(row,4).text())
+            source_lats.append(source_lat)
+            stationID = str(self.selectionTable.item(row,5).text())
+            stationIDs.append(stationID)
+            receiver_lon = float(self.selectionTable.item(row,6).text())
+            receiver_lons.append(receiver_lon)
+            receiver_lat = float(self.selectionTable.item(row,7).text())
+            receiver_lats.append(receiver_lat)
+            
+        # Update the waveformsHandler with the latest selection information
+        self.waveformsHandler.set_selected_ids(stationIDs)
+
+        # TODO:  Additional parameters will specify seconds before/after, ...
+        parameters = {}
+        parameters['times'] = times
+        parameters['source_depths'] = source_depths
+        parameters['source_lons'] = source_lons
+        parameters['source_lats'] = source_lats
+        parameters['stationIDs'] = stationIDs
+        parameters['receiver_lons'] = receiver_lons
+        parameters['receiver_lats'] = receiver_lats
+
+        # TODO:  handle errors when loading waveforms into memory
+        result = self.waveformsHandler.load_data(parameters=parameters)
+
+        # TODO:  display/save waveform loading progress somewhere? 
+        
+        # TODO:  display waveform plots in lower table
+        
+        debugPoint = True
+                
+        
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     
@@ -536,7 +613,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     @QtCore.pyqtSlot()
     def getWaveforms(self):
         self.waveformsDialog.show()
-        self.waveformsDialog.loadTable()
+        self.waveformsDialog.loadSelectionTable()
 
 
     @QtCore.pyqtSlot(int, int)
