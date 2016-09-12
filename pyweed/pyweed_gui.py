@@ -34,13 +34,15 @@ from MyDoubleValidator import MyDoubleValidator
 from MyNumericTableWidgetItem import MyNumericTableWidgetItem
 
 # Pyweed components
+
+from preferences import Preferences
 from eventsHandler import EventsHandler
 from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
@@ -86,11 +88,12 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
         
-        # Set default values for input fields # TODO:  What are appropriate valid defaults?
-        self.minmagLineEdit.setText('5.0')
-        self.maxmagLineEdit.setText('10.0')
-        self.mindepthLineEdit.setText('0.0')
-        self.maxdepthLineEdit.setText('6371.0')
+        # Set default values for input fields
+        prefs = parent.preferences.EventOptions
+        self.minmagLineEdit.setText(prefs.minmag)
+        self.maxmagLineEdit.setText(prefs.maxmag)
+        self.mindepthLineEdit.setText(prefs.mindepth)
+        self.maxdepthLineEdit.setText(prefs.maxdepth)
         self.locationRangeWestLineEdit.setText('-180')
         self.locationRangeEastLineEdit.setText('180')
         self.locationRangeSouthLineEdit.setText('-90')
@@ -186,11 +189,12 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
         
-        # Set default values for input fields # TODO:  What are appropriate valid defaults?
-        self.networkLineEdit.setText('_GSN')
-        self.stationLineEdit.setText('*')
-        self.locationLineEdit.setText('*')
-        self.channelLineEdit.setText('?HZ')
+        # Set default values for input fields
+        prefs = parent.preferences.StationOptions
+        self.networkLineEdit.setText(prefs.network)
+        self.stationLineEdit.setText(prefs.station)
+        self.locationLineEdit.setText(prefs.location)
+        self.channelLineEdit.setText(prefs.channel)
         self.locationRangeWestLineEdit.setText('-180')
         self.locationRangeEastLineEdit.setText('180')
         self.locationRangeSouthLineEdit.setText('-90')
@@ -417,11 +421,23 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         sb.setFixedHeight(18)
         self.setStatusBar(sb)
         
+        # TODO:  logging example   -- http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
+        # TODO:  logging example 2 -- http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
+        
+        # Load configurable preferences from ~/.pyweed/config.ini
+        self.preferences = Preferences()
+        try:
+            self.preferences.load()
+        except Exception as e:
+            ###logger.error("Unable to load configuration preferences -- using defaults.")
+            pass
+        
         # Get the Figure object from the map_canvas
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
-        self.seismap = Seismap(projection='robin', ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
+        prefs = self.preferences.Map
+        self.seismap = Seismap(projection=prefs.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
         
         # Events
