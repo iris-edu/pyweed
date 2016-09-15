@@ -1,3 +1,7 @@
+0.0.5:
+ * all event and stations options are now configurable
+ * map projection is configurable (simple projections only)
+
 0.0.4:
  * added support for configuration files
 

@@ -2,6 +2,8 @@
 
 PyWEED is a cross-platform downloadable app for retrieving event-based seismic data
 
+*(version 0.0.4)*
+
 # Installation
 
 The [Anaconda](https://docs.continuum.io/anaconda/) package manager is by far the 
@@ -21,12 +23,11 @@ This should install the Anaconda enviornemnt in `~/Downloads/miniconda2/`.
 Also, the following will be added to your `~/.bash_profile`:
 
 ```
-
 # added by Miniconda2 4.1.11 installer
 export PATH="/Users/jonathan/miniconda2/bin:$PATH"
 ```
 
-If you now `source ~/.bash_profile` you will get conda and the Anaconda version of python by default.
+If you now `source ~/.bash\_profile` you will get conda and the Anaconda version of python by default.
 The first thing to do is update conda itself:
 
 `conda update conda`
@@ -44,6 +45,20 @@ conda install pyqt
 conda install obspy
 ```
 
+# Configuration
+
+When PyWEED starts up it searches for configuration information in `~/.pyweed/config.ini`.
+
+This human editable configuration information can be used to override the default settings
+associated with the map and the Event and Station Options dialogues. For example, you can
+change the map projection with the following modification to config.ini:
+
+```
+[Map]
+projection = cyl
+```
+
+Please see the (TODO documentation) for a list of all configurable options.
 
 # Developer resources:
 

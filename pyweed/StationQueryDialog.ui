@@ -170,9 +170,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="timeDuringStationsRadioButton">
+       <widget class="QRadioButton" name="timeDuringEventsRadioButton">
         <property name="text">
-         <string>During operation of selected stations</string>
+         <string>Operational during selected events</string>
         </property>
        </widget>
       </item>
@@ -428,7 +428,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="distanceFromEventsRradioButton">
+       <widget class="QRadioButton" name="locationDistanceFromEventsRadioButton">
         <property name="enabled">
          <bool>false</bool>
         </property>

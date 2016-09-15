@@ -40,13 +40,32 @@ class Preferences(object):
 		self.EventOptions.maxmag = "10.0"
 		self.EventOptions.mindepth = "0.0"
 		self.EventOptions.maxdepth = "6731.0"
+		self.EventOptions.locationRangeWest = "-180.0"
+		self.EventOptions.locationRangeEast = "180.0"
+		self.EventOptions.locationRangeSouth = "-90.0"
+		self.EventOptions.locationRangeNorth = "90.0"
+		self.EventOptions.distanceFromPointMinRadius = "0"
+		self.EventOptions.distanceFromPointMaxRadius = "30"
+		self.EventOptions.distanceFromPointEast = "0"
+		self.EventOptions.distanceFromPointNorth = "0"
+		self.EventOptions.selectedTimeButton = 'timeBetweenRadioButton' # or 'timeDuringStationsRadioButton'
+		self.EventOptions.selectedLocationButton = 'locationRangeRadioButton' # or 'locationDistanceFromPointRadioButton' or 'locationDistanceFromStationsRadioButton'
 		
 		self.StationOptions = type("StationOptions", (object,), {})()
 		self.StationOptions.network = "_GSN"
 		self.StationOptions.station = "*"
 		self.StationOptions.location = "*"
 		self.StationOptions.channel = "?HZ"
-	
+		self.StationOptions.locationRangeWest = "-180"
+		self.StationOptions.locationRangeEast = "180"
+		self.StationOptions.locationRangeSouth = "-90"
+		self.StationOptions.locationRangeNorth = "90"
+		self.StationOptions.distanceFromPointMinRadius = "0"
+		self.StationOptions.distanceFromPointMaxRadius = "30"
+		self.StationOptions.distanceFromPointEast = "0"
+		self.StationOptions.distanceFromPointNorth = "0"
+		self.StationOptions.selectedTimeButton = 'timeBetweenRadioButton' # or 'timeDuringEventsRadioButton'
+		self.StationOptions.selectedLocationButton = 'locationRangeRadioButton' # or 'locationDistanceFromPointRadioButton' or 'locationDistanceFromEventsRadioButton'
 	
 	def save(self):
 		"""
@@ -106,12 +125,31 @@ class Preferences(object):
 			self.set_option(config, 'EventOptions', 'maxmag')
 			self.set_option(config, 'EventOptions', 'mindepth')
 			self.set_option(config, 'EventOptions', 'maxdepth')
+			self.set_option(config, 'EventOptions', 'locationRangeWest')
+			self.set_option(config, 'EventOptions', 'locationRangeEast')
+			self.set_option(config, 'EventOptions', 'locationRangeSouth')
+			self.set_option(config, 'EventOptions', 'locationRangeNorth')
+			self.set_option(config, 'EventOptions', 'distanceFromPointMinRadius')
+			self.set_option(config, 'EventOptions', 'distanceFromPointMaxRadius')
+			self.set_option(config, 'EventOptions', 'distanceFromPointEast')
+			self.set_option(config, 'EventOptions', 'distanceFromPointNorth')
+			self.set_option(config, 'EventOptions', 'selectedTimeButton')
+			self.set_option(config, 'EventOptions', 'selectedLocationButton')
 			
 			self.set_option(config, 'StationOptions', 'network')
 			self.set_option(config, 'StationOptions', 'station')
-			self.set_option(config, 'StationOptions', 'locaiton')
+			self.set_option(config, 'StationOptions', 'location')
 			self.set_option(config, 'StationOptions', 'channel')
-			
+			self.set_option(config, 'StationOptions', 'locationRangeWest')
+			self.set_option(config, 'StationOptions', 'locationRangeEast')
+			self.set_option(config, 'StationOptions', 'locationRangeSouth')
+			self.set_option(config, 'StationOptions', 'locationRangeNorth')
+			self.set_option(config, 'StationOptions', 'distanceFromPointMinRadius')
+			self.set_option(config, 'StationOptions', 'distanceFromPointMaxRadius')
+			self.set_option(config, 'StationOptions', 'distanceFromPointEast')
+			self.set_option(config, 'StationOptions', 'distanceFromPointNorth')
+			self.set_option(config, 'StatopmOptions', 'selectedTimeButton')
+			self.set_option(config, 'StationOptions', 'selectedLocationButton')
 
 	def set_option(self, config, sectionName, name):
 		"""Set a property on a named opreference object"""

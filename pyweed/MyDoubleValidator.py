@@ -24,7 +24,7 @@ class MyDoubleValidator(QDoubleValidator):
         
         state, pos = QDoubleValidator.validate(self, input_value, pos)
         
-        if input_value.isEmpty() or input_value == '.':
+        if input_value.isEmpty() or input_value == '.' or input_value == '-':
             return QValidator.Intermediate, pos
         
         if state != QValidator.Acceptable:
