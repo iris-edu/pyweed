@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function)
 # Basic packages
 import sys
 import string
+import logging
 
 # Vectors and dataframes
 import numpy as np
@@ -22,6 +23,7 @@ import pandas as pd
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+import LoggingDialog
 import EventQueryDialog
 import StationQueryDialog
 import WaveformDialog
@@ -32,6 +34,7 @@ from pyweed_style import stylesheet
 # Pyweed PyQt4 enhancements
 from MyDoubleValidator import MyDoubleValidator
 from MyNumericTableWidgetItem import MyNumericTableWidgetItem
+from MyTextEditLoggingHandler import MyTextEditLoggingHandler
 
 # Pyweed components
 
@@ -45,6 +48,22 @@ __appName__ = "PYWEED"
 __version__ = "0.0.5"
 
 
+class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
+    def __init__(self, parent=None, logger=None):
+        super(self.__class__, self).__init__()
+        self.setupUi(self)
+        self.setWindowTitle('Logs')
+
+        # Initialize loggingPlainTextEdit
+        self.loggingPlainTextEdit.setReadOnly(True)
+        
+        # Add a widget logging handler to the logger
+        loggingHandler = MyTextEditLoggingHandler(widget=self.loggingPlainTextEdit)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        loggingHandler.setFormatter(formatter)
+        logger.addHandler(loggingHandler)
+     
+
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
     """Dialog window for event options used in creating a webservice query."""
     def __init__(self, parent=None):
@@ -52,7 +71,8 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.setupUi(self)
         self.setWindowTitle('Event Query Options')
         
-        # Get a reference to the MainWindow map
+        # Get a reference to MainWindow elements
+        self.logger = parent.logger
         self.seismap = parent.seismap
         self.map_figure = parent.map_figure
 
@@ -172,7 +192,8 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.setupUi(self)
         self.setWindowTitle('Station Query Options')
 
-        # Get a reference to the MainWindow map
+        # Get a reference to MainWindow elements
+        self.logger = parent.logger
         self.seismap = parent.seismap
         self.map_figure = parent.map_figure
 
@@ -286,6 +307,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         super(self.__class__, self).__init__()
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
+
+        # Get a reference to MainWindow elements
+        self.logger = parent.logger
 
         # Waveforms
         self.waveformsHandler = WaveformsHandler()
@@ -448,10 +472,20 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         try:
             self.preferences.load()
         except Exception as e:
-            ###logger.error("Unable to load configuration preferences -- using defaults.")
+            print("Unable to load configuration preferences -- using defaults.\n%s" % e)
             pass
         
+        # Logging
+        self.logger = logging.getLogger()
+        try:
+            logLevel = getattr(logging, self.preferences.Logging.level)
+            self.logger.setLevel(logLevel)
+        except Exception as e:
+            self.logger.setLevel(logging.DEBUG)
+        self.loggingDialog = LoggingDialog(self, self.logger)
+        
         # Get the Figure object from the map_canvas
+        self.logger.debug('Setting up main map...')
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
@@ -460,6 +494,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_figure.canvas.draw()
         
         # Events
+        self.logger.debug('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)        
         self.eventsHandler = EventsHandler()        
         self.eventsTable.setSortingEnabled(True)
@@ -467,6 +502,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Stations
+        self.logger.debug('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
         self.stationsHandler = StationsHandler()        
         self.stationsTable.setSortingEnabled(True)
@@ -480,7 +516,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
         # Waveforms
+        self.logger.debug('Setting up wavaeforms dialog...')
         self.waveformsDialog = WaveformDialog(self)
+        
+        self.logger.debug('Setting up main window...')
         
         # Connect the main window buttons
         self.getEventsButton.pressed.connect(self.getEvents)
@@ -494,6 +533,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
         mainMenu = self.menuBar()
         mainMenu.setNativeMenuBar(False)
+
         fileMenu = mainMenu.addMenu('&File')
     
         quitAction = QtGui.QAction("&Quit", self)
@@ -502,6 +542,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         fileMenu.addAction(quitAction)
     
         optionsMenu = mainMenu.addMenu('Options')
+
         eventOptionsAction = QtGui.QAction("Show Event Options", self)
         QtCore.QObject.connect(eventOptionsAction, QtCore.SIGNAL('triggered()'), self.eventQueryDialog.show)
         optionsMenu.addAction(eventOptionsAction)
@@ -514,9 +555,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
         aboutPyweedAction.triggered.connect(self.aboutPyweed)        
         helpMenu.addAction(aboutPyweedAction)
+        helpMenu.addSeparator()
+        loggingDialogAction = QtGui.QAction("Show Logs", self)
+        QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
+        helpMenu.addAction(loggingDialogAction)
         
         # Display MainWindow
-        self.statusBar().showMessage('Ready ...')
+        self.statusBar().showMessage('Ready...')
         
         self.show()        
    
@@ -533,6 +578,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         numeric_column = [False,  True,        True,        True,       True,       False,     False,               False,    False,     False,         False,           False,       False]
         
         # Add events to the events table ---------------------------------------
+
+        self.logger.info('Loading %d events', eventsDF.shape[0])
+        self.statusBar().showMessage('Loading %d events' % (eventsDF.shape[0]))
 
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -580,7 +628,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.eventQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_events_toroid(n, e, minradius, maxradius)
 
-        self.statusBar().showMessage('Loaded %d events' % (eventsDF.shape[0]))
 
 
     @QtCore.pyqtSlot()
@@ -595,6 +642,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         numeric_column = [False,     False,     False,      False,     True,        True,       True,        True,    True,      True,  False,               True,    True,        False,        True,         False,       False,     False]
 
         # Add stations to the stations table -----------------------------------
+        
+        self.logger.info('Loading %d channels', stationsDF.shape[0])
+        self.statusBar().showMessage('Loading %d channels' % (stationsDF.shape[0]))
         
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -642,7 +692,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.stationQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_stations_toroid(n, e, minradius, maxradius)
 
-        self.statusBar().showMessage('Loaded %d stations' % (stationsDF.shape[0]))
         
 
     @QtCore.pyqtSlot()
@@ -660,6 +709,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         rows = []
         for idx in self.eventsTable.selectionModel().selectedRows():
             rows.append(idx.row())
+        
+        self.logger.debug('%d events currently selected', len(rows))
         
         # Get lons, lats and 
         # TODO:  Automatically detect column indexes
@@ -687,6 +738,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.stationsTable.selectionModel().selectedRows():
             rows.append(idx.row())
         
+        self.logger.debug('%d channels currently selected', len(rows))
+
         # Get lons and lats
         # TODO:  Automatically detect longitude and latitude columns
         lons = []
