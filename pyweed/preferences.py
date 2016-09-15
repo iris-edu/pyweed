@@ -14,11 +14,8 @@ from __future__ import (absolute_import, division, print_function)
 
 import os
 import platform
-#import logging
+import logging
 import ConfigParser
-
-# TODO:  Add logging
-#log = logging.getLogger("preferences")
 
 class Preferences(object):
 	"""
@@ -31,6 +28,9 @@ class Preferences(object):
 		
 		# NOTE:  All preferences are saved and read in as strings bucause this is what is
 		# NOTE:  used in Qt dialog initialization.
+		
+		self.Logging = type("Logging", (object,), {})()
+		self.Logging.level = "DEBUG"
 		
 		self.Map = type("Map", (object,), {})()
 		self.Map.projection = "robin"
@@ -73,6 +73,10 @@ class Preferences(object):
 		"""
 		config = ConfigParser.SafeConfigParser()
 		
+		config.add_section("Logging")
+		for key, value in vars(self.Logging).items():
+			config.set("Logging", key, str(value))
+			
 		config.add_section("Map")
 		for key, value in vars(self.Map).items():
 			config.set("Map", key, str(value))
@@ -119,6 +123,8 @@ class Preferences(object):
 			# NOTE:  We need to know the types of expected properties while reading them in.
 			
 			# Read in preferences by section
+			self.set_option(config, 'Logging', 'logLevel')
+			
 			self.set_option(config, 'Map', 'projection')
 			
 			self.set_option(config, 'EventOptions', 'minmag')
@@ -148,7 +154,7 @@ class Preferences(object):
 			self.set_option(config, 'StationOptions', 'distanceFromPointMaxRadius')
 			self.set_option(config, 'StationOptions', 'distanceFromPointEast')
 			self.set_option(config, 'StationOptions', 'distanceFromPointNorth')
-			self.set_option(config, 'StatopmOptions', 'selectedTimeButton')
+			self.set_option(config, 'StationOptions', 'selectedTimeButton')
 			self.set_option(config, 'StationOptions', 'selectedLocationButton')
 
 	def set_option(self, config, sectionName, name):
