@@ -42,7 +42,7 @@ from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
@@ -66,14 +66,6 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.locationButtonGroup.addButton(self.locationDistanceFromPointRadioButton,2)
         self.locationButtonGroup.addButton(self.locationDistanceFromStationsRadioButton,3)
 
-        # Initialize the date selectors
-        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        today = QtCore.QDateTime.currentDateTime()
-        monthAgo = today.addMonths(-1)
-        self.starttimeDateTimeEdit.setDateTime(monthAgo)
-        self.endtimeDateTimeEdit.setDateTime(today)
-        
         # Set validators for input fields # TODO:  What are appropriate valid ranges?
         self.minmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.minmagLineEdit))        
         self.maxmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.maxmagLineEdit))        
@@ -88,21 +80,6 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
         
-        # Set default values for input fields
-        prefs = parent.preferences.EventOptions
-        self.minmagLineEdit.setText(prefs.minmag)
-        self.maxmagLineEdit.setText(prefs.maxmag)
-        self.mindepthLineEdit.setText(prefs.mindepth)
-        self.maxdepthLineEdit.setText(prefs.maxdepth)
-        self.locationRangeWestLineEdit.setText('-180')
-        self.locationRangeEastLineEdit.setText('180')
-        self.locationRangeSouthLineEdit.setText('-90')
-        self.locationRangeNorthLineEdit.setText('90')
-        self.distanceFromPointMinRadiusLineEdit.setText('0')
-        self.distanceFromPointMaxRadiusLineEdit.setText('30')
-        self.distanceFromPointEastLineEdit.setText('0')
-        self.distanceFromPointNorthLineEdit.setText('0')
-        
         # Set tab order
         self.setTabOrder(self.minmagLineEdit, self.maxmagLineEdit)
         self.setTabOrder(self.maxmagLineEdit, self.mindepthLineEdit)        
@@ -115,6 +92,34 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.setTabOrder(self.distanceFromPointMinRadiusLineEdit, self.distanceFromPointMaxRadiusLineEdit)
         self.setTabOrder(self.distanceFromPointMaxRadiusLineEdit, self.distanceFromPointEastLineEdit)
         self.setTabOrder(self.distanceFromPointEastLineEdit, self.distanceFromPointNorthLineEdit)
+
+        # Initialize input fields using preferences
+        prefs = parent.preferences.EventOptions
+        self.minmagLineEdit.setText(prefs.minmag)
+        self.maxmagLineEdit.setText(prefs.maxmag)
+        self.mindepthLineEdit.setText(prefs.mindepth)
+        self.maxdepthLineEdit.setText(prefs.maxdepth)
+        self.locationRangeWestLineEdit.setText(prefs.locationRangeWest)
+        self.locationRangeEastLineEdit.setText(prefs.locationRangeEast)
+        self.locationRangeSouthLineEdit.setText(prefs.locationRangeSouth)
+        self.locationRangeNorthLineEdit.setText(prefs.locationRangeNorth)
+        self.distanceFromPointMinRadiusLineEdit.setText(prefs.distanceFromPointMinRadius)
+        self.distanceFromPointMaxRadiusLineEdit.setText(prefs.distanceFromPointMaxRadius)
+        self.distanceFromPointEastLineEdit.setText(prefs.distanceFromPointEast)
+        self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
+        
+        # Initialize the date selectors # TODO: using preferences
+        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        today = QtCore.QDateTime.currentDateTime()
+        monthAgo = today.addMonths(-1)
+        self.starttimeDateTimeEdit.setDateTime(monthAgo)
+        self.endtimeDateTimeEdit.setDateTime(today)
+        
+        # Intialize time and location type selection using preferences
+        getattr(self, prefs.selectedTimeButton).setChecked(True)
+        getattr(self, prefs.selectedLocationButton).setChecked(True)
+        
 
         
     @QtCore.pyqtSlot()    
@@ -171,14 +176,16 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.seismap = parent.seismap
         self.map_figure = parent.map_figure
 
-        # Initialize the date selectors
-        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        today = QtCore.QDateTime.currentDateTime()
-        monthAgo = today.addMonths(-1)
-        self.starttimeDateTimeEdit.setDateTime(monthAgo)
-        self.endtimeDateTimeEdit.setDateTime(today)
+        # Create buttonGroups
+        self.timeButtonGroup = QtGui.QButtonGroup()
+        self.timeButtonGroup.addButton(self.timeBetweenRadioButton,1)
+        self.timeButtonGroup.addButton(self.timeDuringEventsRadioButton,2)
         
+        self.locationButtonGroup = QtGui.QButtonGroup()
+        self.locationButtonGroup.addButton(self.locationRangeRadioButton,1)
+        self.locationButtonGroup.addButton(self.locationDistanceFromPointRadioButton,2)
+        self.locationButtonGroup.addButton(self.locationDistanceFromEventsRadioButton,3)
+
         # Set validators for input fields # TODO:  What are appropriate valid ranges?
         self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeSouthLineEdit))        
         self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))        
@@ -189,21 +196,6 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
         
-        # Set default values for input fields
-        prefs = parent.preferences.StationOptions
-        self.networkLineEdit.setText(prefs.network)
-        self.stationLineEdit.setText(prefs.station)
-        self.locationLineEdit.setText(prefs.location)
-        self.channelLineEdit.setText(prefs.channel)
-        self.locationRangeWestLineEdit.setText('-180')
-        self.locationRangeEastLineEdit.setText('180')
-        self.locationRangeSouthLineEdit.setText('-90')
-        self.locationRangeNorthLineEdit.setText('90')
-        self.distanceFromPointMinRadiusLineEdit.setText('0')
-        self.distanceFromPointMaxRadiusLineEdit.setText('30')
-        self.distanceFromPointEastLineEdit.setText('0')
-        self.distanceFromPointNorthLineEdit.setText('0')
-
         # Set tab order
         self.setTabOrder(self.networkLineEdit, self.stationLineEdit)
         self.setTabOrder(self.stationLineEdit, self.locationLineEdit)        
@@ -216,6 +208,33 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.setTabOrder(self.distanceFromPointMinRadiusLineEdit, self.distanceFromPointMaxRadiusLineEdit)
         self.setTabOrder(self.distanceFromPointMaxRadiusLineEdit, self.distanceFromPointEastLineEdit)
         self.setTabOrder(self.distanceFromPointEastLineEdit, self.distanceFromPointNorthLineEdit)
+
+        # Initialize input fields using preferences
+        prefs = parent.preferences.StationOptions
+        self.networkLineEdit.setText(prefs.network)
+        self.stationLineEdit.setText(prefs.station)
+        self.locationLineEdit.setText(prefs.location)
+        self.channelLineEdit.setText(prefs.channel)
+        self.locationRangeWestLineEdit.setText(prefs.locationRangeWest)
+        self.locationRangeEastLineEdit.setText(prefs.locationRangeEast)
+        self.locationRangeSouthLineEdit.setText(prefs.locationRangeSouth)
+        self.locationRangeNorthLineEdit.setText(prefs.locationRangeNorth)
+        self.distanceFromPointMinRadiusLineEdit.setText(prefs.distanceFromPointMinRadius)
+        self.distanceFromPointMaxRadiusLineEdit.setText(prefs.distanceFromPointMaxRadius)
+        self.distanceFromPointEastLineEdit.setText(prefs.distanceFromPointEast)
+        self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
+
+        # Initialize the date selectors # TODO: using preferences
+        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        today = QtCore.QDateTime.currentDateTime()
+        monthAgo = today.addMonths(-1)
+        self.starttimeDateTimeEdit.setDateTime(monthAgo)
+        self.endtimeDateTimeEdit.setDateTime(today)
+
+        # TODO:  Intialize time and location type selection using preferences
+        getattr(self, prefs.selectedTimeButton).setChecked(True)
+        getattr(self, prefs.selectedLocationButton).setChecked(True)
 
 
     @QtCore.pyqtSlot()    
