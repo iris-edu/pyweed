@@ -23,10 +23,12 @@ class WaveformsHandler(object):
     """
     Container for waveforms.
     """
-    def __init__(self):
+    def __init__(self, logger):
         """
         Initialization.
         """
+        self.logger = logger
+        
         # TODO:  Historical stuff should be saved elsewhere so that the Events class 
         # TODO:  will only have current state.
         self.url_history = []
@@ -57,9 +59,11 @@ class WaveformsHandler(object):
         receiver_lat = parameters['receiver_lats'][i]
         
         try:
+            self.logger.debug('Calculating travel times...')
             model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
             tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
         except Exception as e:
+            self.logger.debug('%s', e)
             # TODO:  What type of exception to trap?
             raise
         
@@ -74,12 +78,14 @@ class WaveformsHandler(object):
         endtime = earliest_arrival_time + secs_after
         
         # Get the waveform
-        client = fdsn.Client("IRIS")
+        dataCenter = "IRIS"
+        client = fdsn.Client(dataCenter)
         (network, station, location, channel) = stationID.split('.')
+        self.logger.info('Loading %s from %s', stationID, dataCenter)
         st = client.get_waveforms(network, station, location, channel, starttime, endtime)
         
         # TODO:  Plot it?
-        st.plot()
+        ###st.plot()
         
         # TODO:  return success or failure?
         debug_point = True

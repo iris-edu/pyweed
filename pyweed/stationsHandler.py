@@ -19,10 +19,12 @@ class StationsHandler(object):
     """
     Container for stations.
     """
-    def __init__(self):
+    def __init__(self, logger):
         """
         Initialization.
         """
+        self.logger = logger
+        
         # TODO:  Historical stuff should be saved elsewhere so that the Events class 
         # TODO:  will only have current state.
         self.url_history = []
@@ -46,6 +48,7 @@ class StationsHandler(object):
         url = build_url(parameters=parameters, output_format="text")
         
         try:
+            self.logger.debug('Loading channels from: %s', url)
             # Get stations dataframe and clean up column names
             df = pd.read_csv(url, sep='|')
             df.columns = df.columns.str.strip()
@@ -64,8 +67,9 @@ class StationsHandler(object):
             df = df[self.get_column_names()]
             # Push items onto the stack (so the most recent is always in position 0)
             self.url_history.insert(0, url)
-        except:
+        except Exception as e:
             # TODO:  What type of exception should we trap? We should probably log it.
+            self.logger.error('%s', e)
             raise
 
         self.currentDF = df
