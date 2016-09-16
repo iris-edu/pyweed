@@ -71,7 +71,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.setupUi(self)
         self.setWindowTitle('Event Query Options')
         
-        # Get a reference to MainWindow elements
+        # Get references to MainWindow elements
         self.logger = parent.logger
         self.seismap = parent.seismap
         self.map_figure = parent.map_figure
@@ -192,7 +192,7 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.setupUi(self)
         self.setWindowTitle('Station Query Options')
 
-        # Get a reference to MainWindow elements
+        # Get references to MainWindow elements
         self.logger = parent.logger
         self.seismap = parent.seismap
         self.map_figure = parent.map_figure
@@ -308,13 +308,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
-        # Get a reference to MainWindow elements
+        # Get references to MainWindow elements
         self.logger = parent.logger
 
         # Waveforms
-        self.waveformsHandler = WaveformsHandler()
+        self.waveformsHandler = WaveformsHandler(self.logger)
 
-        # Get a reference to the Events and Stations objects
+        # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
 
@@ -496,7 +496,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Events
         self.logger.debug('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)        
-        self.eventsHandler = EventsHandler()        
+        self.eventsHandler = EventsHandler(self.logger)        
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -504,7 +504,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Stations
         self.logger.debug('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
-        self.stationsHandler = StationsHandler()        
+        self.stationsHandler = StationsHandler(self.logger)        
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
