@@ -309,8 +309,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
-        # Get references to MainWindow elements
+        # Get references to MainWindow elements and methods
         self.logger = parent.logger
+        self.statusBar = parent.statusBar
+        
+        self.logger.debug('Initializing waveform dialog...')
 
         # Waveforms
         self.waveformsHandler = WaveformsHandler(self.logger)
@@ -335,16 +338,23 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
+
+        self.logger.debug('Finished initializing waveform dialog')
         
         
     @QtCore.pyqtSlot()    
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
         """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
         
+        self.logger.debug('Loading waveform choices...')
+        self.statusBar().showMessage('Loading waveform choices...')
+        
         ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.eventsHandler.get_selected_dataframe()
         stationsDF = self.stationsHandler.get_selected_dataframe()
         waveformsDF = self.waveformsHandler.create_waveformsDF(eventsDF, stationsDF)
+        
+        self.logger.debug('Finished building dataframe for %d waveforms', waveformsDF.shape[0])
                         
         # Add event-SNCL combintations to the selection table
         self.loadSelectionTable(waveformsDF)
@@ -376,6 +386,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         for station in stationsDF.Station.unique().tolist():
             self.stationComboBox.addItem(station)
 
+        self.logger.debug('Finished loading waveform choices')
+
 
     @QtCore.pyqtSlot()    
     def loadSelectionTable(self, waveformsDF):
@@ -383,10 +395,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         Add event-SNCL combintations to the selection table
         """
 
+        self.logger.debug('Loading waveform selection table...')
+        
         # NOTE:  Here is the list of all column names:
-        # NOTE:         ['Time', 'Magnitude', 'Depth/km', 'Event_Lon', 'Event_Lat', 'SNCL', 'Network', 'Station', Station_Lon', 'Station_Lat', 'Distance']
-        hidden_column =  [False,  False,       False,      False,       False,       False,  True,      True,     True,          True,          False]
-        numeric_column = [False,  True,        True,       True,        True,        False,  False,     False,    True,          True,          True]
+        # NOTE:         ['Time', 'Magnitude', 'Depth/km', 'Event_Lon', 'Event_Lat', 'EventID', SNCL', 'Network', 'Station', Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Distance', 'Downloaded]
+        hidden_column =  [False,  False,       False,      False,       False,       True,     False,  True,      True,     True,          True,          True,         True,                False,      False]
+        numeric_column = [False,  True,        True,       True,        True,        False,    False,  False,     False,    True,          True,          False,        False,               True,       False]
 
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -416,20 +430,27 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
+        
+        self.logger.debug('Finished loading waveform selection table')
 
         
     @QtCore.pyqtSlot(int)
     def loadFilteredSelectionTable(self):
+        """
+        Filter waveformsDF based on filter selections and then reload the selectionTable.
+        """
         waveformsDF = self.waveformsHandler.currentDF
         time = self.eventComboBox.currentText()
         network = self.networkComboBox.currentText()
         station = self.stationComboBox.currentText()
+        self.logger.debug('Filtering waveformsDF...')
         if not time.startsWith('All'):
             waveformsDF = waveformsDF[waveformsDF.Time == time]
         if not network.startsWith('All'):
             waveformsDF = waveformsDF[waveformsDF.Network == network]
         if not station.startsWith('All'):
             waveformsDF = waveformsDF[waveformsDF.Station == station]
+        self.logger.debug('Finished filtering waveformsDF')
         self.loadSelectionTable(waveformsDF)
     
     
@@ -459,11 +480,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             source_lons.append(source_lon)
             source_lat = float(self.selectionTable.item(row,4).text())
             source_lats.append(source_lat)
-            stationID = str(self.selectionTable.item(row,5).text())
+            stationID = str(self.selectionTable.item(row,6).text())
             stationIDs.append(stationID)
-            receiver_lon = float(self.selectionTable.item(row,8).text())
+            receiver_lon = float(self.selectionTable.item(row,9).text())
             receiver_lons.append(receiver_lon)
-            receiver_lat = float(self.selectionTable.item(row,9).text())
+            receiver_lat = float(self.selectionTable.item(row,10).text())
             receiver_lats.append(receiver_lat)
             
         # Update the waveformsHandler with the latest selection information
@@ -480,6 +501,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         parameters['receiver_lats'] = receiver_lats
 
         # TODO:  handle errors when loading waveforms into memory
+        self.logger.info('Loading %d waveforms', len(stationIDs))
+        self.statusBar().showMessage('Loading %d waveforms' % len(stationIDs))
+        
         result = self.waveformsHandler.load_data(parameters=parameters)
 
         # TODO:  display/save waveform loading progress somewhere? 
@@ -506,9 +530,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         sb.setFixedHeight(18)
         self.setStatusBar(sb)
         
-        # TODO:  logging example   -- http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
-        # TODO:  logging example 2 -- http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
-        
         # Load configurable preferences from ~/.pyweed/config.ini
         self.preferences = Preferences()
         try:
@@ -517,6 +538,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             print("Unable to load configuration preferences -- using defaults.\n%s" % e)
             pass
         
+        # TODO:  logging example   -- http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
+        # TODO:  logging example 2 -- http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
+
         # Logging
         self.logger = logging.getLogger()
         try:
@@ -603,13 +627,17 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         helpMenu.addAction(loggingDialogAction)
         
         # Display MainWindow
-        self.statusBar().showMessage('Ready...')
-        
         self.show()        
    
    
     @QtCore.pyqtSlot()
     def getEvents(self):
+        """
+        Get events dataframe from IRIS.
+        """
+        self.logger.info('Loading events...')
+        self.statusBar().showMessage('Loading events...')
+        
         # Get events and subset to desired columns
         parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
@@ -621,8 +649,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         
         # Add events to the events table ---------------------------------------
 
-        self.logger.info('Loading %d events', eventsDF.shape[0])
-        self.statusBar().showMessage('Loading %d events' % (eventsDF.shape[0]))
+        self.logger.debug('Received %d events, ', eventsDF.shape[0])
 
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -670,10 +697,18 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.eventQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_events_toroid(n, e, minradius, maxradius)
 
+        self.logger.info('Loaded %d events', eventsDF.shape[0])
+        self.statusBar().showMessage('Loaded %d events' % (eventsDF.shape[0]))
 
 
     @QtCore.pyqtSlot()
     def getStations(self):
+        """
+        Get stations dataframe from IRIS.
+        """
+        self.logger.info('Loading channels...')
+        self.statusBar().showMessage('Loading channels...')
+        
         # Get stations and subset to desired columns
         parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
@@ -685,8 +720,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Add stations to the stations table -----------------------------------
         
-        self.logger.info('Loading %d channels', stationsDF.shape[0])
-        self.statusBar().showMessage('Loading %d channels' % (stationsDF.shape[0]))
+        self.logger.debug('Received %d channels, ', stationsDF.shape[0])
         
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -734,6 +768,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.stationQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_stations_toroid(n, e, minradius, maxradius)
 
+        self.logger.info('Loaded %d channels', stationsDF.shape[0])
+        self.statusBar().showMessage('Loaded %d channels' % (stationsDF.shape[0]))
         
 
     @QtCore.pyqtSlot()
@@ -780,7 +816,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.stationsTable.selectionModel().selectedRows():
             rows.append(idx.row())
         
-        self.logger.debug('%d channels currently selected', len(rows))
+        self.logger.debug('%d stations currently selected', len(rows))
 
         # Get lons and lats
         # TODO:  Automatically detect longitude and latitude columns
@@ -832,6 +868,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     def closeApplication(self):
         # TODO:  Careful shutdown
+        self.logger.info('Closing application...')
         QtGui.QApplication.quit()
              
 

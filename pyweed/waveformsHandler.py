@@ -48,8 +48,8 @@ class WaveformsHandler(object):
         Create a dataframe of event-SNCL combinations
         """
         # Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, receiver_lat, receiver_lon -- one for each waveform
-        eventsDF = eventsDF[['Time','Magnitude','Depth/km','Longitude','Latitude']]
-        eventsDF.columns = ['Time','Magnitude','Depth','Event_Lon','Event_Lat']
+        eventsDF = eventsDF[['Time','Magnitude','Depth/km','Longitude','Latitude','EventID']]
+        eventsDF.columns = ['Time','Magnitude','Depth','Event_Lon','Event_Lat','EventID']
         
         stationsDF = stationsDF[['SNCL','Network','Station','Longitude','Latitude']]
         stationsDF.columns = ['SNCL','Network','Station','Station_Lon','Station_Lat']
@@ -69,13 +69,37 @@ class WaveformsHandler(object):
             
         waveformsDF = pd.concat(waveformDFs)
         
-        # Add event-station distance
-        self.logger.debug('Calculating %d event-station distances...', waveformsDF.shape[0])
+        # Add waveformID, and WaveformStationID
+        waveformsDF['WaveformID'] = waveformsDF.EventID + '_' + waveformsDF.SNCL
+        waveformsDF['WaveformStationID'] = waveformsDF.EventID + '_' + waveformsDF.Network + '.' + waveformsDF.Station
+        
+        # Add event-station distance -------------------------------------------
+        
+        # NOTE:  Save time by only calculating on distance per station rather than per channel
+        self.logger.debug('Calculating %d event-station distances...', len(waveformsDF.WaveformStationID.unique()))
         waveformsDF['Distance'] = np.nan
+        i = 0
+        old_waveformStationID = waveformsDF.WaveformStationID.iloc[i]
+        distance = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
+                                           waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
+                         ndigits=2)
+        waveformsDF.Distance.iloc[i] = distance
+        # Now loop through all waveforms, calculating new distances only when necessary
         for i in range(waveformsDF.shape[0]):
-            waveformsDF.Distance.iloc[i] = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
-                                                                   waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
-                                                 ndigits=2)
+            waveformStationID = waveformsDF.WaveformStationID.iloc[i]
+            if (waveformStationID != old_waveformStationID):
+                old_waveformStationID = waveformStationID
+                distance = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
+                                                   waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
+                                 ndigits=2)            
+            waveformsDF.Distance.iloc[i] = distance
+        
+        self.logger.debug('Finished claculating distances')
+        
+        # All done -------------------------------------------------------------
+        
+        # Add Downloaded
+        waveformsDF['Downloaded'] = False
         
         self.currentDF = waveformsDF
     
@@ -115,7 +139,7 @@ class WaveformsHandler(object):
             # TODO:  Do we need to check the phase?
             earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
             
-            # TODO:  get user chosen window parameters
+            # TODO:  get user chosen window parameters from WaveformOptionsDialog
             secs_before = 60
             secs_after = 600
             starttime = earliest_arrival_time - secs_before
@@ -133,13 +157,13 @@ class WaveformsHandler(object):
             
             # TODO:  Save it to a file
             filename = stationID + '_' + str(source_time) + ".MSEED"
-            self.logger.debug('Saving %s', stationID)
+            self.logger.debug('Saving %s', filename)
             try:
                 st.write(filename, format="MSEED") 
             except Exception as e:
                 self.logger.error('%s', e)
             
-            # TODO:  Keep track of successfully downloaded files
+            # TODO:  Keep track of successfully downloaded files in waveformsDF.Downloaded
             
             # TODO:  Plot it?
             ###st.plot()
