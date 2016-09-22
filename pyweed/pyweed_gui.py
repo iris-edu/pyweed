@@ -23,6 +23,7 @@ import pandas as pd
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+# Pyweed UI components
 import LoggingDialog
 import EventQueryDialog
 import StationQueryDialog
@@ -45,7 +46,7 @@ from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -328,37 +329,64 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
         QtCore.QObject.connect(self.selectionTable, QtCore.SIGNAL('cellClicked(int, int)'), self.selectionTableClicked)
         
+        # Connect signals associated with comboBoxes
+        # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
+        # NOTE:  currentIndexChanged() responds to both user and programmatic changes. Use activated() for user initiated changes
+        self.eventComboBox.activated.connect(self.loadFilteredSelectionTable)
+        self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
+        self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
+        
+        
     @QtCore.pyqtSlot()    
-    def loadSelectionTable(self):
+    def loadWaveformChoices(self, filterColumn=None, filterText=None):
         """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
         
-        # Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, receiver_lat, receiver_lon -- one for each waveform
+        ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.eventsHandler.get_selected_dataframe()
-        eventsDF = eventsDF[['Time','Magnitude','Depth/km','Longitude','Latitude']]
-        eventsDF.columns = ['Time','Magnitude','Depth','Event_Lon','Event_Lat']
-        
         stationsDF = self.stationsHandler.get_selected_dataframe()
-        stationsDF = stationsDF[['SNCL','Longitude','Latitude']]
-        stationsDF.columns = ['SNCL','Station_Lon','Station_Lat']
-        sncls = stationsDF['SNCL'].tolist()
-        
-        waveformDFs = []
-        
-        for i in range(stationsDF.shape[0]):
-            df = eventsDF.copy()
-            df['SNCL'] = stationsDF.SNCL.iloc[i]
-            df['Station_Lon'] = stationsDF.Station_Lon.iloc[i]
-            df['Station_Lat'] = stationsDF.Station_Lat.iloc[i]
-            waveformDFs.append(df)
-            
-        waveformsDF = pd.concat(waveformDFs)
-        # NOTE:  Here is the list of all column names:
-        # NOTE:         ['Time', 'Magnitude', 'Depth/km', 'Event_Lon', 'Event_Lat', 'SNCL', 'Station_Lon', 'Station_Lat']
-        hidden_column =  [False,  False,       False,      False,       False,       False,  True,          True]
-        numeric_column = [False,  True,        True,       True,        True,        False,  True,          True]
-            
-
+        waveformsDF = self.waveformsHandler.create_waveformsDF(eventsDF, stationsDF)
+                        
         # Add event-SNCL combintations to the selection table
+        self.loadSelectionTable(waveformsDF)
+
+        # Add unique events to the eventComboBox -------------------------------
+        
+        for i in range(self.eventComboBox.count()):
+            self.eventComboBox.removeItem(i)
+            
+        self.eventComboBox.addItem('All events')
+        for i in range(eventsDF.shape[0]):
+            self.eventComboBox.addItem(eventsDF.Time.iloc[i])
+        
+        # Add unique networks to the networkComboBox ---------------------------
+        
+        for i in range(self.networkComboBox.count()):
+            self.networkComboBox.removeItem(i)
+            
+        self.networkComboBox.addItem('All networks')
+        for network in stationsDF.Network.unique().tolist():
+            self.networkComboBox.addItem(network)
+
+        # Add unique stations to the stationsComboBox --------------------------
+
+        for i in range(self.stationComboBox.count()):
+            self.stationComboBox.removeItem(i)
+
+        self.stationComboBox.addItem('All stations')
+        for station in stationsDF.Station.unique().tolist():
+            self.stationComboBox.addItem(station)
+
+
+    @QtCore.pyqtSlot()    
+    def loadSelectionTable(self, waveformsDF):
+        """
+        Add event-SNCL combintations to the selection table
+        """
+
+        # NOTE:  Here is the list of all column names:
+        # NOTE:         ['Time', 'Magnitude', 'Depth/km', 'Event_Lon', 'Event_Lat', 'SNCL', 'Network', 'Station', Station_Lon', 'Station_Lat', 'Distance']
+        hidden_column =  [False,  False,       False,      False,       False,       False,  True,      True,     True,          True,          False]
+        numeric_column = [False,  True,        True,       True,        True,        False,  False,     False,    True,          True,          True]
 
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -388,7 +416,22 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
+
         
+    @QtCore.pyqtSlot(int)
+    def loadFilteredSelectionTable(self):
+        waveformsDF = self.waveformsHandler.currentDF
+        time = self.eventComboBox.currentText()
+        network = self.networkComboBox.currentText()
+        station = self.stationComboBox.currentText()
+        if not time.startsWith('All'):
+            waveformsDF = waveformsDF[waveformsDF.Time == time]
+        if not network.startsWith('All'):
+            waveformsDF = waveformsDF[waveformsDF.Network == network]
+        if not station.startsWith('All'):
+            waveformsDF = waveformsDF[waveformsDF.Station == station]
+        self.loadSelectionTable(waveformsDF)
+    
     
     @QtCore.pyqtSlot(int, int)
     def selectionTableClicked(self, row, col):
@@ -418,9 +461,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             source_lats.append(source_lat)
             stationID = str(self.selectionTable.item(row,5).text())
             stationIDs.append(stationID)
-            receiver_lon = float(self.selectionTable.item(row,6).text())
+            receiver_lon = float(self.selectionTable.item(row,8).text())
             receiver_lons.append(receiver_lon)
-            receiver_lat = float(self.selectionTable.item(row,7).text())
+            receiver_lat = float(self.selectionTable.item(row,9).text())
             receiver_lats.append(receiver_lat)
             
         # Update the waveformsHandler with the latest selection information
@@ -445,7 +488,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         debugPoint = True
                 
-        
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     
@@ -697,7 +739,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     @QtCore.pyqtSlot()
     def getWaveforms(self):
         self.waveformsDialog.show()
-        self.waveformsDialog.loadSelectionTable()
+        self.waveformsDialog.loadWaveformChoices()
 
 
     @QtCore.pyqtSlot(int, int)
