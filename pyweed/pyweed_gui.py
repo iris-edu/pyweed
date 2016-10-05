@@ -46,7 +46,7 @@ from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -327,6 +327,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         
+        # Waveform table
+        self.waveformTable.setSortingEnabled(False)
+        self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        
         # Connect signals associated with table clicks
         # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
         # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
@@ -389,6 +394,47 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Finished loading waveform choices')
 
 
+    @QtCore.pyqtSlot()    
+    def loadWaveformTable(self):
+        """
+        Add event-SNCL combintations to the selection table
+        """
+
+        self.logger.debug('Loading waveform preview table...')
+        
+        # Clear existing contents
+        # NOTE:  Doing clearSelection() first is important!
+        self.waveformTable.clearSelection()
+        while (self.waveformTable.rowCount() > 0):
+            self.waveformTable.removeRow(0)
+        
+        # Create new table
+        self.waveformTable.setRowCount(1)
+        self.waveformTable.setColumnCount(2)
+        self.waveformTable.setHorizontalHeaderLabels(['checkbox','waveform'])
+        self.waveformTable.verticalHeader().hide()
+        
+        # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/32458111/pyqt-allign-checkbox-and-put-it-in-every-row
+        # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
+        
+        
+        # Add new contents
+        for i in range(1):
+            # Add a checkbox
+            chkBoxItem = QtGui.QTableWidgetItem()
+            chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            chkBoxItem.setCheckState(QtCore.Qt.Unchecked)       
+            self.waveformTable.setItem(i, 0, chkBoxItem)
+            
+            # Add a plot
+            self.waveformTable.setItem(i, 1, MyNumericTableWidgetItem("2.0"))
+            self.waveformTable.setItem(i, 1, canvasItem)
+        
+        self.logger.debug('Finished loading waveform preview table')
+        
+
+
+        
     @QtCore.pyqtSlot()    
     def loadSelectionTable(self, waveformsDF):
         """
@@ -505,10 +551,47 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.statusBar().showMessage('Loading %d waveforms' % len(stationIDs))
         
         result = self.waveformsHandler.load_data(parameters=parameters)
+        
+        ###self.loadWaveformTable()
 
         # TODO:  display/save waveform loading progress somewhere? 
         
         # TODO:  display waveform plots in lower table
+        
+        self.logger.debug('Loading waveform canvas...')
+    
+        waveform_figure = self.canvas1.fig
+        
+        #t = np.arange(0.0, 2.0, 0.01)
+        #s = np.sin(2*np.pi*t)
+        #plt.plot(t, s)
+        
+        #plt.xlabel('time (s)')
+        #plt.ylabel('voltage (mV)')
+        #plt.title('About as simple as it gets, folks')
+        #plt.grid(True)
+        #plt.savefig("test.png")
+        #plt.show()   
+        
+        ###x = np.arange(0, 10, 0.2)
+        ###y = np.sin(x)
+        ###fig = waveform_figure
+        ###ax = fig.add_subplot(111)
+        ###ax.plot(x, y)
+        #plt.show()   
+        
+        result.plot(fig=waveform_figure)
+
+
+        #waveform_ax = waveform_figure.add_axes([0.0, 0.0, 1.0, 1.0])
+        #waveform_ax.set_axis_off()
+        #waveform_figure.patch.set_alpha(0.0)
+        #waveform_figure.set_facecolor('None')
+
+        #waveform_ax.set_xlim(-105, 105)
+        #waveform_ax.set_ylim(-105, 105)
+        waveform_figure.canvas.draw()
+
         
         debugPoint = True
                 

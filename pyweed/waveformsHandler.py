@@ -171,7 +171,7 @@ class WaveformsHandler(object):
         # TODO:  return success or failure?
         debug_point = True
         
-        return(True)
+        return(st)
     
         
     def get_selected_ids(self):
