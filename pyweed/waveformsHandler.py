@@ -155,7 +155,16 @@ class WaveformsHandler(object):
             except Exception as e:
                 self.logger.error('%s', e)
             
-            # TODO:  Save it to a file
+            # TODO:  Create the png image
+            filename = stationID + '_' + str(source_time) + ".png"
+            self.logger.debug('Saving %s', filename)
+            try:
+                ###st.write(filename, format="MSEED") 
+                st.plot(outfile=filename) # TODO:  Add plot customizations
+            except Exception as e:
+                self.logger.error('%s', e)
+            
+            # Save it to a file
             filename = stationID + '_' + str(source_time) + ".MSEED"
             self.logger.debug('Saving %s', filename)
             try:

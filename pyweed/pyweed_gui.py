@@ -463,11 +463,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     
     @QtCore.pyqtSlot(int, int)
     def selectionTableClicked(self, row, col):
+        
+        self.logger.debug('SelectionTable clicked...')
+        
         # Get selected rows
         rows = []
         for idx in self.selectionTable.selectionModel().selectedRows():
             rows.append(idx.row())
         
+        self.logger.debug('Gathering table data...')
+            
         # Get ltime and SNCL
         # TODO:  Automatically detect time and SNCL columns
         times = []
@@ -497,6 +502,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Update the waveformsHandler with the latest selection information
         self.waveformsHandler.set_selected_ids(stationIDs)
 
+        self.logger.debug('After set_selected_ids...')
+            
         # TODO:  Additional parameters will specify seconds before/after, ...
         parameters = {}
         parameters['times'] = times
@@ -511,12 +518,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.info('Loading %d waveforms', len(stationIDs))
         self.statusBar().showMessage('Loading %d waveforms' % len(stationIDs))
         
-        result = self.waveformsHandler.load_data(parameters=parameters)
+        stream = self.waveformsHandler.load_data(parameters=parameters)
 
-        # Plot waveform in canvas1
-        waveform_figure = self.canvas1.fig        
-        result.plot(fig=waveform_figure)
-        waveform_figure.canvas.draw()
+        #### Plot waveform in canvas1
+        ###waveform_figure = self.canvas1.fig        
+        ###stream.plot(fig=waveform_figure)
+        ###waveform_figure.canvas.draw()
         
         # TODO:  display waveform plots in lower table
 
@@ -530,42 +537,51 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         while (self.waveformTable.rowCount() > 0):
             self.waveformTable.removeRow(0)
         
+        rowCount = 10
+        colCount = 2
+        
         # Create new table
-        self.waveformTable.setRowCount(1)
-        self.waveformTable.setColumnCount(2)
-        self.waveformTable.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Expanding)
+        self.waveformTable.setRowCount(rowCount)
+        self.waveformTable.setColumnCount(colCount)
+        self.waveformTable.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.waveformTable.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.waveformTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+
+        # Table columns and widths
+        self.waveformTable.setHorizontalHeaderLabels(['','Waveforms'])
+        self.waveformTable.setColumnWidth(0,100)
         self.waveformTable.horizontalHeader().setStretchLastSection(True)
-        
-        self.waveformTable.setHorizontalHeaderLabels(['checkbox','waveform'])
-        #self.waveformTable.verticalHeader().hide()
-        #self.waveformTable.columnWidth(0,100)
-        #self.waveformTable.columnWidth(1,600)
-        
-        # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/32458111/pyqt-allign-checkbox-and-put-it-in-every-row
-        # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
+
+        # Table rows and heights
+        self.waveformTable.verticalHeader().hide()
+        ##self.waveformTable.setRowHeight(0,400)
+
         
         
         # Add new contents
-        for i in range(1):
+        for i in range(rowCount):
             # Add a checkbox
+            # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/32458111/pyqt-allign-checkbox-and-put-it-in-every-row
+            # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
             chkBoxItem = QtGui.QTableWidgetItem()
             chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
             chkBoxItem.setCheckState(QtCore.Qt.Unchecked)  
-            self.waveformTable.setRowHeight(i,400)
             self.waveformTable.setItem(i, 0, chkBoxItem)
             
+            # TODO:  Should this be reimplemented by using matplotlib to generate a series of images (on disk?) rather than 
+            # TODO:  working with the more cpu-intensive Qt4MplCanvas? -- Almost certainly!
             # Add a plot
-            canvasItem = MyTableWidgetCanvasWidget(parent=self, stream=result)
+            canvasItem = MyTableWidgetCanvasWidget(parent=self, width=800, height=500, plottable=stream)
             self.waveformTable.setCellWidget(i, 1, canvasItem)
             
         
-        self.logger.debug('Finished loading waveform preview table')
-        
         # ----------------------------------------------------------------------
 
-        # Tighten up the table
-        self.waveformTable.resizeColumnsToContents()
+        #### Tighten up the table
+        ###self.waveformTable.resizeColumnsToContents()
         self.waveformTable.resizeRowsToContents()
+
+        self.logger.debug('Finished loading waveform preview table')
 
         # TODO:  display/save waveform loading progress somewhere? 
         
