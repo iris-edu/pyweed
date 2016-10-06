@@ -19,12 +19,14 @@ class StationsHandler(object):
     """
     Container for stations.
     """
-    def __init__(self, logger):
+    def __init__(self, logger, preferences):
         """
         Initialization.
         """
+        # Always keep a reference to global logger and preferences
         self.logger = logger
-        
+        self.preferences = preferences
+
         # TODO:  Historical stuff should be saved elsewhere so that the Events class 
         # TODO:  will only have current state.
         self.url_history = []

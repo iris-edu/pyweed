@@ -26,23 +26,21 @@ class WaveformsHandler(object):
     """
     Container for waveforms.
     """
-    def __init__(self, logger):
+    def __init__(self, logger, preferences):
         """
         Initialization.
         """
+        # Always keep a reference to global logger and preferences
         self.logger = logger
+        self.preferences = preferences
         
-        # TODO:  Historical stuff should be saved elsewhere so that the Events class 
-        # TODO:  will only have current state.
-        self.url_history = []
+        # Important preferences
+        self.downloadDir = self.preferences.Waveforms.downloadDir
         
         # Current state
         self.currentDF = None
         self.selectedIDs = []
         
-    def get_url(self, index=0):
-        return(self.url_history[index])
-    
     def create_waveformsDF(self, eventsDF, stationsDF):
         """
         Create a dataframe of event-SNCL combinations
@@ -123,7 +121,7 @@ class WaveformsHandler(object):
             stationID = parameters['stationIDs'][i]
             receiver_lon = parameters['receiver_lons'][i]
             receiver_lat = parameters['receiver_lats'][i]
-
+            
             self.logger.info('Loading data for %s-%s...', source_time, stationID)
             
             try:
@@ -155,17 +153,17 @@ class WaveformsHandler(object):
             except Exception as e:
                 self.logger.error('%s', e)
             
-            # TODO:  Create the png image
-            filename = stationID + '_' + str(source_time) + ".png"
+            # Create the png image
+            filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".png"
+            imagePath = filename
             self.logger.debug('Saving %s', filename)
             try:
-                ###st.write(filename, format="MSEED") 
                 st.plot(outfile=filename) # TODO:  Add plot customizations
             except Exception as e:
                 self.logger.error('%s', e)
             
-            # Save it to a file
-            filename = stationID + '_' + str(source_time) + ".MSEED"
+            # Save the miniseed file
+            filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".MSEED"
             self.logger.debug('Saving %s', filename)
             try:
                 st.write(filename, format="MSEED") 
@@ -174,13 +172,11 @@ class WaveformsHandler(object):
             
             # TODO:  Keep track of successfully downloaded files in waveformsDF.Downloaded
             
-            # TODO:  Plot it?
-            ###st.plot()
 
         # TODO:  return success or failure?
         debug_point = True
         
-        return(st)
+        return(imagePath)
     
         
     def get_selected_ids(self):

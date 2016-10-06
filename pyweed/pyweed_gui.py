@@ -11,6 +11,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 # Basic packages
+import os
 import sys
 import string
 import logging
@@ -35,7 +36,7 @@ from pyweed_style import stylesheet
 # Pyweed PyQt4 enhancements
 from MyDoubleValidator import MyDoubleValidator
 from MyNumericTableWidgetItem import MyNumericTableWidgetItem
-from MyTableWidgetCanvasWidget import MyTableWidgetCanvasWidget
+from MyTableWidgetImageWidget import MyTableWidgetImageWidget
 from MyTextEditLoggingHandler import MyTextEditLoggingHandler
 from qt4mplcanvas import Qt4MplCanvas
 
@@ -318,7 +319,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Initializing waveform dialog...')
 
         # Waveforms
-        self.waveformsHandler = WaveformsHandler(self.logger)
+        self.waveformsHandler = WaveformsHandler(self.logger, parent.preferences)
 
         # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
@@ -518,13 +519,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.info('Loading %d waveforms', len(stationIDs))
         self.statusBar().showMessage('Loading %d waveforms' % len(stationIDs))
         
-        stream = self.waveformsHandler.load_data(parameters=parameters)
+        imagePath = self.waveformsHandler.load_data(parameters=parameters)
 
-        #### Plot waveform in canvas1
-        ###waveform_figure = self.canvas1.fig        
-        ###stream.plot(fig=waveform_figure)
-        ###waveform_figure.canvas.draw()
-        
         # TODO:  display waveform plots in lower table
 
         ###self.loadWaveformTable()
@@ -537,8 +533,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         while (self.waveformTable.rowCount() > 0):
             self.waveformTable.removeRow(0)
         
+        colCount = 3
         rowCount = 10
-        colCount = 2
+        ###rowHeight = 250
         
         # Create new table
         self.waveformTable.setRowCount(rowCount)
@@ -547,16 +544,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformTable.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.waveformTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
 
-        # Table columns and widths
-        self.waveformTable.setHorizontalHeaderLabels(['','Waveforms'])
-        self.waveformTable.setColumnWidth(0,100)
-        self.waveformTable.horizontalHeader().setStretchLastSection(True)
-
-        # Table rows and heights
+        # Table headers, columns and widths
         self.waveformTable.verticalHeader().hide()
-        ##self.waveformTable.setRowHeight(0,400)
-
-        
+        self.waveformTable.setHorizontalHeaderLabels(['','testing','Waveforms'])
+        #self.waveformTable.setColumnWidth(0,40)
+        #self.waveformTable.setColumnWidth(1,80)
+        self.waveformTable.horizontalHeader().setStretchLastSection(True)
         
         # Add new contents
         for i in range(rowCount):
@@ -568,28 +561,25 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             chkBoxItem.setCheckState(QtCore.Qt.Unchecked)  
             self.waveformTable.setItem(i, 0, chkBoxItem)
             
-            # TODO:  Should this be reimplemented by using matplotlib to generate a series of images (on disk?) rather than 
-            # TODO:  working with the more cpu-intensive Qt4MplCanvas? -- Almost certainly!
-            # Add a plot
-            canvasItem = MyTableWidgetCanvasWidget(parent=self, width=800, height=500, plottable=stream)
-            self.waveformTable.setCellWidget(i, 1, canvasItem)
+            self.waveformTable.setItem(i, 1, MyNumericTableWidgetItem("testing"))
+            
+            # Add the waveform images
+            if (i > 3): imagePath = imagePath + ".NOT_FOUND"
+            imageItem = MyTableWidgetImageWidget(self, imagePath)
+            self.waveformTable.setCellWidget(i, 2, imageItem)
+            
             
         
         # ----------------------------------------------------------------------
 
-        #### Tighten up the table
-        ###self.waveformTable.resizeColumnsToContents()
+        # Tighten up the table
+        self.waveformTable.resizeColumnsToContents()
         self.waveformTable.resizeRowsToContents()
 
         self.logger.debug('Finished loading waveform preview table')
 
         # TODO:  display/save waveform loading progress somewhere? 
-        
-        
-        self.logger.debug('Loading waveform canvas...')
-    
-
-        
+                
         debugPoint = True
                 
 
@@ -630,6 +620,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.logger.setLevel(logging.DEBUG)
         self.loggingDialog = LoggingDialog(self, self.logger)
         
+        # Make sure the download directory exists
+        self.logger.debug('Checking on download directory...')
+        if not os.path.exists(self.preferences.Waveforms.downloadDir):
+            try:
+                os.makedirs(self.preferences.Waveforms.downloadDir, 0700)
+            except Exception as e:
+                logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
+                SystemExit()       
+        
         # Get the Figure object from the map_canvas
         self.logger.debug('Setting up main map...')
         self.map_figure = self.map_canvas.fig
@@ -642,7 +641,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Events
         self.logger.debug('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)        
-        self.eventsHandler = EventsHandler(self.logger)        
+        self.eventsHandler = EventsHandler(self.logger, self.preferences)        
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -650,7 +649,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Stations
         self.logger.debug('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
-        self.stationsHandler = StationsHandler(self.logger)        
+        self.stationsHandler = StationsHandler(self.logger, self.preferences)        
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
