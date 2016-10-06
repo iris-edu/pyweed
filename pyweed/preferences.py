@@ -29,6 +29,9 @@ class Preferences(object):
 		# NOTE:  All preferences are saved and read in as strings bucause this is what is
 		# NOTE:  used in Qt dialog initialization.
 		
+		self.Waveforms = type("Waveforms", (object,), {})()
+		self.Waveforms.downloadDir = os.path.join(os.path.expanduser("~"), ".pyweed_downloads")
+
 		self.Logging = type("Logging", (object,), {})()
 		self.Logging.level = "DEBUG"
 		
@@ -73,6 +76,10 @@ class Preferences(object):
 		"""
 		config = ConfigParser.SafeConfigParser()
 		
+		config.add_section("Waveforms")
+		for key, value in vars(self.Waveforms).items():
+			config.set("Waveforms", key, str(value))
+			
 		config.add_section("Logging")
 		for key, value in vars(self.Logging).items():
 			config.set("Logging", key, str(value))
@@ -89,13 +96,11 @@ class Preferences(object):
 		for key, value in vars(self.StationOptions).items():
 			config.set("StationOptions", key, str(value))
 						
-		if os.path.exists(user_config_path()) == False:
+		if not os.path.exists(user_config_path()):
 			try:
 				os.makedirs(user_config_path(), 0700)
 			except Exception as e:
-				###log.error("Creation of user configuration directory failed with" +
-				print("Creation of user configuration directory failed with" +
-					  " error: \"%s\'""" % e)
+				print("Creation of user configuration directory failed with" + " error: \"%s\'""" % e)
 				return
 		f = open(os.path.join(user_config_path(), "config.ini"), "w")
 		config.write(f)
@@ -123,6 +128,8 @@ class Preferences(object):
 			# NOTE:  We need to know the types of expected properties while reading them in.
 			
 			# Read in preferences by section
+			self.set_option(config, 'Waveforms', 'downloadDir')
+			
 			self.set_option(config, 'Logging', 'logLevel')
 			
 			self.set_option(config, 'Map', 'projection')
