@@ -99,10 +99,6 @@ class Ui_WaveformDialog(object):
         self.waveformLabel.setMinimumSize(QtCore.QSize(0, 0))
         self.waveformLabel.setObjectName(_fromUtf8("waveformLabel"))
         self.verticalLayout_3.addWidget(self.waveformLabel)
-        self.canvas1 = Qt4MplCanvas(self.waveformGroupBox)
-        self.canvas1.setMinimumSize(QtCore.QSize(0, 200))
-        self.canvas1.setObjectName(_fromUtf8("canvas1"))
-        self.verticalLayout_3.addWidget(self.canvas1)
         self.waveformTable = QtGui.QTableWidget(self.waveformGroupBox)
         self.waveformTable.setMinimumSize(QtCore.QSize(500, 200))
         self.waveformTable.setObjectName(_fromUtf8("waveformTable"))
@@ -123,4 +119,3 @@ class Ui_WaveformDialog(object):
         self.selectionLabel.setText(_translate("WaveformDialog", "All Event-SNCL Combinations", None))
         self.waveformLabel.setText(_translate("WaveformDialog", "Waveforms", None))
 
-from qt4mplcanvas import Qt4MplCanvas
