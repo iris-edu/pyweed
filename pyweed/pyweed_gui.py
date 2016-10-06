@@ -330,11 +330,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         
-        # Waveform table
-        self.waveformTable.setSortingEnabled(False)
-        self.waveformTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        #self.waveformTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        
         # Connect signals associated with table clicks
         # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
         # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
@@ -433,7 +428,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 if numeric_column[j]:
                     self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(waveformsDF.iat[i,j])))
                 else:
-                    self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
+                    if waveformsDF.columns[j] == 'Downloaded':
+                        imagePath = "/happy.png"
+                        imageItem = MyTableWidgetImageWidget(self, imagePath)
+                        self.selectionTable.setCellWidget(i, j, imageItem)
+                    else:
+                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
 
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
@@ -467,114 +467,32 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         self.logger.debug('SelectionTable clicked...')
         
-        # Get selected rows
-        rows = []
-        for idx in self.selectionTable.selectionModel().selectedRows():
-            rows.append(idx.row())
-        
-        self.logger.debug('Gathering table data...')
-            
-        # Get ltime and SNCL
-        # TODO:  Automatically detect time and SNCL columns
-        times = []
-        source_depths = []
-        source_lons = []
-        source_lats = []
-        receiver_lons = []
-        receiver_lats = []
-        stationIDs = []
-        # TODO:  Is there a more pandas-like way to extract this info?
-        for row in rows:
-            time = str(self.selectionTable.item(row,0).text())
-            times.append(time)
-            source_depth = float(self.selectionTable.item(row,2).text())
-            source_depths.append(source_depth)
-            source_lon = float(self.selectionTable.item(row,3).text())
-            source_lons.append(source_lon)
-            source_lat = float(self.selectionTable.item(row,4).text())
-            source_lats.append(source_lat)
-            stationID = str(self.selectionTable.item(row,6).text())
-            stationIDs.append(stationID)
-            receiver_lon = float(self.selectionTable.item(row,9).text())
-            receiver_lons.append(receiver_lon)
-            receiver_lat = float(self.selectionTable.item(row,10).text())
-            receiver_lats.append(receiver_lat)
-            
-        # Update the waveformsHandler with the latest selection information
-        self.waveformsHandler.set_selected_ids(stationIDs)
-
-        self.logger.debug('After set_selected_ids...')
-            
-        # TODO:  Additional parameters will specify seconds before/after, ...
+        # Create parameter dictionary with data from this row
+        time = str(self.selectionTable.item(row,0).text())
+        source_depth = float(self.selectionTable.item(row,2).text())
+        source_lon = float(self.selectionTable.item(row,3).text())
+        source_lat = float(self.selectionTable.item(row,4).text())
+        stationID = str(self.selectionTable.item(row,6).text())
+        receiver_lon = float(self.selectionTable.item(row,9).text())
+        receiver_lat = float(self.selectionTable.item(row,10).text())
+        waveformID = str(self.selectionTable.item(row,11).text())
         parameters = {}
-        parameters['times'] = times
-        parameters['source_depths'] = source_depths
-        parameters['source_lons'] = source_lons
-        parameters['source_lats'] = source_lats
-        parameters['stationIDs'] = stationIDs
-        parameters['receiver_lons'] = receiver_lons
-        parameters['receiver_lats'] = receiver_lats
-
-        # TODO:  handle errors when loading waveforms into memory
-        self.logger.info('Loading %d waveforms', len(stationIDs))
-        self.statusBar().showMessage('Loading %d waveforms' % len(stationIDs))
+        parameters['time'] = time
+        parameters['source_depth'] = source_depth
+        parameters['source_lon'] = source_lon
+        parameters['source_lat'] = source_lat
+        parameters['stationID'] = stationID
+        parameters['receiver_lon'] = receiver_lon
+        parameters['receiver_lat'] = receiver_lat
+        parameters['waveformID'] = waveformID
+        # Download data
+        imagePath = self.waveformsHandler.download_data(parameters=parameters)
+        imageItem = MyTableWidgetImageWidget(self, imagePath)
+        self.selectionTable.setCellWidget(row, 14, imageItem)
         
-        imagePath = self.waveformsHandler.load_data(parameters=parameters)
-
-        # TODO:  display waveform plots in lower table
-
-        ###self.loadWaveformTable()
-        # ----------------------------------------------------------------------
-        self.logger.debug('Loading waveform preview table...')
-        
-        # Clear existing contents
-        # NOTE:  Doing clearSelection() first is important!
-        self.waveformTable.clearSelection()
-        while (self.waveformTable.rowCount() > 0):
-            self.waveformTable.removeRow(0)
-        
-        colCount = 3
-        rowCount = 10
-        ###rowHeight = 250
-        
-        # Create new table
-        self.waveformTable.setRowCount(rowCount)
-        self.waveformTable.setColumnCount(colCount)
-        self.waveformTable.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        self.waveformTable.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.waveformTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-
-        # Table headers, columns and widths
-        self.waveformTable.verticalHeader().hide()
-        self.waveformTable.setHorizontalHeaderLabels(['','testing','Waveforms'])
-        #self.waveformTable.setColumnWidth(0,40)
-        #self.waveformTable.setColumnWidth(1,80)
-        self.waveformTable.horizontalHeader().setStretchLastSection(True)
-        
-        # Add new contents
-        for i in range(rowCount):
-            # Add a checkbox
-            # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/32458111/pyqt-allign-checkbox-and-put-it-in-every-row
-            # NOTE:  Checkboxes in tables -- http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
-            chkBoxItem = QtGui.QTableWidgetItem()
-            chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-            chkBoxItem.setCheckState(QtCore.Qt.Unchecked)  
-            self.waveformTable.setItem(i, 0, chkBoxItem)
-            
-            self.waveformTable.setItem(i, 1, MyNumericTableWidgetItem("testing"))
-            
-            # Add the waveform images
-            if (i > 3): imagePath = imagePath + ".NOT_FOUND"
-            imageItem = MyTableWidgetImageWidget(self, imagePath)
-            self.waveformTable.setCellWidget(i, 2, imageItem)
-            
-            
-        
-        # ----------------------------------------------------------------------
-
         # Tighten up the table
-        self.waveformTable.resizeColumnsToContents()
-        self.waveformTable.resizeRowsToContents()
+        self.selectionTable.resizeColumnsToContents()
+        self.selectionTable.resizeRowsToContents()
 
         self.logger.debug('Finished loading waveform preview table')
 

@@ -104,6 +104,73 @@ class WaveformsHandler(object):
         return(waveformsDF)
     
     
+    def download_data(self, parameters=None):
+        """
+        Make a webservice request for waveforms using the passed in options
+        """
+        # TOOD:  Sanity check parameters
+        
+        # TODO:  Should parameters be called "event_sncls" and passed in as a dataframe?
+        
+        source_time = parameters['time']
+        source_depth = parameters['source_depth']
+        source_lon = parameters['source_lon']
+        source_lat = parameters['source_lat']
+        stationID = parameters['stationID']
+        receiver_lon = parameters['receiver_lon']
+        receiver_lat = parameters['receiver_lat']
+        
+        self.logger.info('Loading data for %s-%s...', source_time, stationID)
+        
+        try:
+            self.logger.debug('Calculating travel times...')
+            model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
+            tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
+        except Exception as e:
+            self.logger.debug('%s', e)
+            # TODO:  What type of exception to trap?
+            raise
+        
+        # TODO:  Are traveltimes always sorted by time?
+        # TODO:  Do we need to check the phase?
+        earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
+        
+        # TODO:  get user chosen window parameters from WaveformOptionsDialog
+        secs_before = 60
+        secs_after = 600
+        starttime = earliest_arrival_time - secs_before
+        endtime = earliest_arrival_time + secs_after
+        
+        # Get the waveform
+        dataCenter = "IRIS"
+        client = fdsn.Client(dataCenter)
+        (network, station, location, channel) = stationID.split('.')
+        self.logger.info('Loading %s from %s', stationID, dataCenter)
+        try:
+            st = client.get_waveforms(network, station, location, channel, starttime, endtime)
+        except Exception as e:
+            self.logger.error('%s', e)
+        
+        # Create the png image
+        filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".png"
+        imagePath = filename
+        self.logger.debug('Saving %s', filename)
+        try:
+            st.plot(outfile=filename) # TODO:  Add plot customizations
+        except Exception as e:
+            self.logger.error('%s', e)
+        
+        # Save the miniseed file
+        filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".MSEED"
+        self.logger.debug('Saving %s', filename)
+        try:
+            st.write(filename, format="MSEED") 
+        except Exception as e:
+            self.logger.error('%s', e)
+        
+        return(imagePath)
+    
+        
     def load_data(self, parameters=None):
         """
         Make a webservice request for waveforms using the passed in options
