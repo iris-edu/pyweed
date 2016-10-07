@@ -401,9 +401,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Loading waveform selection table...')
         
         # NOTE:  Here is the list of all column names:
-        # NOTE:         ['Time', 'Magnitude', 'Depth/km', 'Event_Lon', 'Event_Lat', 'EventID', SNCL', 'Network', 'Station', Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Distance', 'Downloaded]
-        hidden_column =  [False,  False,       False,      False,       False,       True,     False,  True,      True,     True,          True,          True,         True,                False,      False]
-        numeric_column = [False,  True,        True,       True,        True,        False,    False,  False,     False,    True,          True,          False,        False,               True,       False]
+        # NOTE:         ['SNCL', 'Distance', 'Time', 'Magnitude', 'Event_Lon', 'Event_Lat', 'Depth/km', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Waveform', 'Downloaded']
+        hidden_column =  [False,  False,      False,  False,       True,        True,        False,      True,      True,      True,      True,          True,         True,          True,                False,      True]
+        numeric_column = [False,  True,       False,  True,        True,        True,        True,       False,     False,     False,     True,          True,         False,         False,               False,      False]
 
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -415,6 +415,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setRowCount(waveformsDF.shape[0])
         self.selectionTable.setColumnCount(waveformsDF.shape[1])
         self.selectionTable.setHorizontalHeaderLabels(waveformsDF.columns.tolist())
+        self.selectionTable.horizontalHeader().setStretchLastSection(True)
         self.selectionTable.verticalHeader().hide()
         # Hidden columns
         for i in np.arange(len(hidden_column)):
@@ -424,17 +425,23 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Add new contents
         for i in range(waveformsDF.shape[0]):
             for j in range(waveformsDF.shape[1]):
-                # Guarantee that all elements are converted to strings for display but apply proper sorting
                 if numeric_column[j]:
+                    # Guarantee that all elements are converted to strings for display but apply proper sorting
                     self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(waveformsDF.iat[i,j])))
-                else:
-                    if waveformsDF.columns[j] == 'Downloaded':
-                        imagePath = "/happy.png"
+                    
+                elif waveformsDF.columns[j] == 'Waveform':
+                    # Waveform column will either be an image or plain text
+                    if waveformsDF.Downloaded.iloc[i]:
+                        imagePath = waveformsDF.Waveform.iloc[j]
                         imageItem = MyTableWidgetImageWidget(self, imagePath)
                         self.selectionTable.setCellWidget(i, j, imageItem)
                     else:
-                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
+                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem('Click to downlod/preview'))
 
+                else:
+                    # Anything else is converted to normal text
+                    self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
+                    
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()

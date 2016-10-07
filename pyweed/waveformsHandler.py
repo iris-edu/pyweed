@@ -11,6 +11,7 @@ Container for waveforms.
 from __future__ import (absolute_import, division, print_function)
 
 #import urllib
+import os
 
 import numpy as np
 import pandas as pd
@@ -39,23 +40,36 @@ class WaveformsHandler(object):
         
         # Current state
         self.currentDF = None
-        self.selectedIDs = []
         
     def create_waveformsDF(self, eventsDF, stationsDF):
         """
         Create a dataframe of event-SNCL combinations
         """
-        # Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, receiver_lat, receiver_lon -- one for each waveform
+        
+        self.logger.debug('Generating event-station combined dataframe...')
+        
+        #eventsDF.columns
+        #Index([u'Time', u'Magnitude', u'Longitude', u'Latitude', u'Depth/km',
+               #u'MagType', u'EventLocationName', u'Author', u'Catalog', u'Contributor',
+               #u'ContributorID', u'MagAuthor', u'EventID'],
+              #dtype='object')  
+        #stationsDF.columns
+        #Index([u'Network', u'Station', u'Location', u'Channel', u'Longitude',
+               #u'Latitude', u'Elevation', u'Depth', u'Azimuth', u'Dip',
+               #u'SensorDescription', u'Scale', u'ScaleFreq', u'ScaleUnits',
+               #u'SampleRate', u'StartTime', u'EndTime', u'SNCL'],
+              #dtype='object')
+              
+        # Subset eventsDF for pertinent information
         eventsDF = eventsDF[['Time','Magnitude','Depth/km','Longitude','Latitude','EventID']]
         eventsDF.columns = ['Time','Magnitude','Depth','Event_Lon','Event_Lat','EventID']
         
+        #  Subset stationsDF for pertinent information
         stationsDF = stationsDF[['SNCL','Network','Station','Longitude','Latitude']]
         stationsDF.columns = ['SNCL','Network','Station','Station_Lon','Station_Lat']
         
-        self.logger.debug('Generating event-station combined dataframe...')
-
+        # For each unique SNCL, add columns of SNCL info to eventsDF
         waveformDFs = []
-
         for i in range(stationsDF.shape[0]):
             df = eventsDF.copy()
             df['SNCL'] = stationsDF.SNCL.iloc[i]
@@ -65,23 +79,27 @@ class WaveformsHandler(object):
             df['Station_Lat'] = stationsDF.Station_Lat.iloc[i]
             waveformDFs.append(df)
             
+        # Now combine all SNCL-specific eventsDFs
         waveformsDF = pd.concat(waveformDFs)
         
         # Add waveformID, and WaveformStationID
-        waveformsDF['WaveformID'] = waveformsDF.EventID + '_' + waveformsDF.SNCL
-        waveformsDF['WaveformStationID'] = waveformsDF.EventID + '_' + waveformsDF.Network + '.' + waveformsDF.Station
+        waveformsDF['WaveformID'] = waveformsDF.SNCL + '_' + waveformsDF.EventID
+        waveformsDF['WaveformStationID'] = waveformsDF.Network + '.' + waveformsDF.Station + '_' + waveformsDF.EventID
         
-        # Add event-station distance -------------------------------------------
+        # BEGIN event-station distance -----------------------------------------
+        
+        self.logger.debug('Calculating %d event-station distances...', len(waveformsDF.WaveformStationID.unique()))
         
         # NOTE:  Save time by only calculating on distance per station rather than per channel
-        self.logger.debug('Calculating %d event-station distances...', len(waveformsDF.WaveformStationID.unique()))
         waveformsDF['Distance'] = np.nan
         i = 0
         old_waveformStationID = waveformsDF.WaveformStationID.iloc[i]
         distance = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
                                            waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
                          ndigits=2)
+        
         waveformsDF.Distance.iloc[i] = distance
+        
         # Now loop through all waveforms, calculating new distances only when necessary
         for i in range(waveformsDF.shape[0]):
             waveformStationID = waveformsDF.WaveformStationID.iloc[i]
@@ -94,11 +112,24 @@ class WaveformsHandler(object):
         
         self.logger.debug('Finished claculating distances')
         
-        # All done -------------------------------------------------------------
+        # END event-station distance -------------------------------------------
         
-        # Add Downloaded
+        # Add columns to track downloads and display waveforms
+        waveformsDF['Waveform'] = ""
         waveformsDF['Downloaded'] = False
         
+        # Look to see if any have already been downloaded
+        for i in range(waveformsDF.shape[0]):
+            filename = waveformsDF.SNCL.iloc[i] + '_' + waveformsDF.Time.iloc[i] + ".png"
+            imagePath = os.path.join(self.downloadDir, filename)
+            waveformsDF.Waveform.iloc[i] = imagePath
+            if os.path.exists(imagePath):
+                waveformsDF['Downloaded'] = False
+            else:
+                waveformsDF['Downloaded'] = True
+        
+        # Reorganize columns
+
         self.currentDF = waveformsDF
     
         return(waveformsDF)
@@ -244,17 +275,11 @@ class WaveformsHandler(object):
         debug_point = True
         
         return(imagePath)
+
+    def get_column_names(self):
+        columnNames = ['SNCL', 'Distance', 'Time', 'Magnitude', 'Event_Lon', 'Event_Lat', 'Depth/km', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Waveform', 'Downloaded']
+        return(columnNames)
     
-        
-    def get_selected_ids(self):
-        return(self.selectedIDs)
-    
-    def set_selected_ids(self, IDs):
-        self.selectedIDs = IDs
-        
-    #def get_selected_dataframe(self):
-        #df = self.currentDF.loc[self.currentDF['SNCL'].isin(self.selectedIDs)]
-        #return(df)
     
         
 # ------------------------------------------------------------------------------
