@@ -38,6 +38,10 @@ class WaveformsHandler(object):
         # Important preferences
         self.downloadDir = self.preferences.Waveforms.downloadDir
         
+        # TODO:  Include these in preferences
+        self.plot_width = 600
+        self.plot_height = 200
+        
         # Current state
         self.currentDF = None
         
@@ -123,13 +127,12 @@ class WaveformsHandler(object):
             filename = waveformsDF.SNCL.iloc[i] + '_' + waveformsDF.Time.iloc[i] + ".png"
             imagePath = os.path.join(self.downloadDir, filename)
             waveformsDF.Waveform.iloc[i] = imagePath
-            if os.path.exists(imagePath):
-                waveformsDF['Downloaded'] = False
-            else:
-                waveformsDF['Downloaded'] = True
+            waveformsDF.Downloaded.iloc[i] = os.path.exists(imagePath)
         
         # Reorganize columns
-
+        waveformsDF = waveformsDF[self.get_column_names()]
+        
+        # Save a copy internally
         self.currentDF = waveformsDF
     
         return(waveformsDF)
@@ -187,7 +190,8 @@ class WaveformsHandler(object):
         imagePath = filename
         self.logger.debug('Saving %s', filename)
         try:
-            st.plot(outfile=filename) # TODO:  Add plot customizations
+            st.plot(outfile=filename,
+                    size=(self.plot_width,self.plot_height))
         except Exception as e:
             self.logger.error('%s', e)
         
@@ -204,81 +208,55 @@ class WaveformsHandler(object):
         
     def load_data(self, parameters=None):
         """
-        Make a webservice request for waveforms using the passed in options
+        Load a waveform image from cache or download/plot first.
         """
+        
         # TOOD:  Sanity check parameters
         
         # TODO:  Should parameters be called "event_sncls" and passed in as a dataframe?
         
-        # TODO: loop over event-sncl combinations
-        for i in range(len(parameters['times'])):
-            source_time = parameters['times'][i]
-            source_depth = parameters['source_depths'][i]
-            source_lon = parameters['source_lons'][i]
-            source_lat = parameters['source_lats'][i]
-            stationID = parameters['stationIDs'][i]
-            receiver_lon = parameters['receiver_lons'][i]
-            receiver_lat = parameters['receiver_lats'][i]
-            
-            self.logger.info('Loading data for %s-%s...', source_time, stationID)
-            
-            try:
-                self.logger.debug('Calculating travel times...')
-                model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
-                tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
-            except Exception as e:
-                self.logger.debug('%s', e)
-                # TODO:  What type of exception to trap?
-                raise
-            
-            # TODO:  Are traveltimes always sorted by time?
-            # TODO:  Do we need to check the phase?
-            earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
-            
-            # TODO:  get user chosen window parameters from WaveformOptionsDialog
-            secs_before = 60
-            secs_after = 600
-            starttime = earliest_arrival_time - secs_before
-            endtime = earliest_arrival_time + secs_after
-            
-            # Get the waveform
-            dataCenter = "IRIS"
-            client = fdsn.Client(dataCenter)
-            (network, station, location, channel) = stationID.split('.')
-            self.logger.info('Loading %s from %s', stationID, dataCenter)
-            try:
-                st = client.get_waveforms(network, station, location, channel, starttime, endtime)
-            except Exception as e:
-                self.logger.error('%s', e)
-            
-            # Create the png image
-            filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".png"
-            imagePath = filename
-            self.logger.debug('Saving %s', filename)
-            try:
-                st.plot(outfile=filename) # TODO:  Add plot customizations
-            except Exception as e:
-                self.logger.error('%s', e)
-            
-            # Save the miniseed file
-            filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".MSEED"
-            self.logger.debug('Saving %s', filename)
-            try:
-                st.write(filename, format="MSEED") 
-            except Exception as e:
-                self.logger.error('%s', e)
-            
-            # TODO:  Keep track of successfully downloaded files in waveformsDF.Downloaded
-            
+        source_time = parameters['time']
+        source_depth = parameters['source_depth']
+        source_lon = parameters['source_lon']
+        source_lat = parameters['source_lat']
+        stationID = parameters['stationID']  # TODO:  Replace all uses of 'stationID' with 'SNCL'
+        receiver_lon = parameters['receiver_lon']
+        receiver_lat = parameters['receiver_lat']
+        
+        self.logger.info('Loading data for %s-%s...', source_time, stationID)
 
-        # TODO:  return success or failure?
-        debug_point = True
+        # Find the matching row in self.currentDF
+        # NOTE:  The table may show a resorted subset of the full currentDF so we need
+        # NOTE:  to use the parameters to find the matching row of currentDF
+        
+        # TODO:  Is this the best way to find the matching row?
+        SNCL_mask = self.currentDF.SNCL.isin([stationID])
+        event_mask = self.currentDF.Time.isin([source_time])  # TODO:  Use 'EventID' instead of 'Time' to identify events?
+        matching_row_mask = SNCL_mask & event_mask
+        row_index = matching_row_mask.tolist().index(True)
+        
+        if self.currentDF.Downloaded.iloc[row_index]:
+            imagePath = self.currentDF.Waveform.iloc[row_index]
+        
+        else:
+            imagePath = self.download_data(parameters)
+            self.currentDF.Downloaded.iloc[row_index] = True
         
         return(imagePath)
 
+
     def get_column_names(self):
-        columnNames = ['SNCL', 'Distance', 'Time', 'Magnitude', 'Event_Lon', 'Event_Lat', 'Depth/km', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Waveform', 'Downloaded']
+        columnNames = ['SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Downloaded']
         return(columnNames)
+    
+    def get_column_hidden(self):
+        is_hidden =    [False,  False,      False,       False,   False,  False,      True,        True,        True,      True,      True,      True,          True,          True,         True,                True]
+        return(is_hidden)
+    
+    def get_column_numeric(self):
+        is_numeric =   [False,  True,       True,        True,    False,  False,      True,        True,        False,     False,     False,     True,          True,          False,        False,               False]
+        return(is_numeric)
+    
     
     
         
