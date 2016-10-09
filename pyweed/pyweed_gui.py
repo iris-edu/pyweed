@@ -400,10 +400,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Loading waveform selection table...')
         
-        # NOTE:  Here is the list of all column names:
-        # NOTE:         ['SNCL', 'Distance', 'Time', 'Magnitude', 'Event_Lon', 'Event_Lat', 'Depth/km', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Waveform', 'Downloaded']
-        hidden_column =  [False,  False,      False,  False,       True,        True,        False,      True,      True,      True,      True,          True,         True,          True,                False,      True]
-        numeric_column = [False,  True,       False,  True,        True,        True,        True,       False,     False,     False,     True,          True,         False,         False,               False,      False]
+        # Display information associated with the waveformsDF columns
+        # Note:  Display information should be in the GUI code but needs to match
+        # NOTE:  the columns which are created by the waveformsHandler.
+        hidden_column = self.waveformsHandler.get_column_hidden()
+        numeric_column = self.waveformsHandler.get_column_numeric()
 
         # Clear existing contents
         # NOTE:  Doing clearSelection() first is important!
@@ -432,7 +433,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 elif waveformsDF.columns[j] == 'Waveform':
                     # Waveform column will either be an image or plain text
                     if waveformsDF.Downloaded.iloc[i]:
-                        imagePath = waveformsDF.Waveform.iloc[j]
+                        imagePath = waveformsDF.Waveform.iloc[i]
                         imageItem = MyTableWidgetImageWidget(self, imagePath)
                         self.selectionTable.setCellWidget(i, j, imageItem)
                     else:
@@ -474,28 +475,24 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         self.logger.debug('SelectionTable clicked...')
         
+        # Get column names
+        column_names = self.waveformsHandler.get_column_names()
+        
         # Create parameter dictionary with data from this row
-        time = str(self.selectionTable.item(row,0).text())
-        source_depth = float(self.selectionTable.item(row,2).text())
-        source_lon = float(self.selectionTable.item(row,3).text())
-        source_lat = float(self.selectionTable.item(row,4).text())
-        stationID = str(self.selectionTable.item(row,6).text())
-        receiver_lon = float(self.selectionTable.item(row,9).text())
-        receiver_lat = float(self.selectionTable.item(row,10).text())
-        waveformID = str(self.selectionTable.item(row,11).text())
         parameters = {}
-        parameters['time'] = time
-        parameters['source_depth'] = source_depth
-        parameters['source_lon'] = source_lon
-        parameters['source_lat'] = source_lat
-        parameters['stationID'] = stationID
-        parameters['receiver_lon'] = receiver_lon
-        parameters['receiver_lat'] = receiver_lat
-        parameters['waveformID'] = waveformID
+        parameters['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
+        parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
+        parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
+        parameters['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
+        parameters['stationID'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
+        parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
+        parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
+        parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+                
         # Download data
-        imagePath = self.waveformsHandler.download_data(parameters=parameters)
+        imagePath = self.waveformsHandler.load_data(parameters=parameters)
         imageItem = MyTableWidgetImageWidget(self, imagePath)
-        self.selectionTable.setCellWidget(row, 14, imageItem)
+        self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
         
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
