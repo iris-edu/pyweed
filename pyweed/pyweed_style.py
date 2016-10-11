@@ -33,4 +33,12 @@ QTableView::item {
     padding: 2px
 }
 
+
+/* Waveforms table -----------------------------------------------------------*/
+
+QDialog#WaveformDialog QTableView#selectionTable {
+    selection-background-color: white;
+    selection-color: black;
+}
+
 """
