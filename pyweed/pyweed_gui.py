@@ -329,11 +329,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setSortingEnabled(True)
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.selectionTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         
         # Connect signals associated with table clicks
         # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
         # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
         QtCore.QObject.connect(self.selectionTable, QtCore.SIGNAL('cellClicked(int, int)'), self.selectionTableClicked)
+        # Resize contents after sort
+        self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
         
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
@@ -473,7 +476,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     @QtCore.pyqtSlot(int, int)
     def selectionTableClicked(self, row, col):
         
-        self.logger.debug('SelectionTable clicked...')
         
         # Get column names
         column_names = self.waveformsHandler.get_column_names()
@@ -489,8 +491,15 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
         parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
                 
+        # NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
+        self.logger.debug('Getting %s...' % parameters['waveformID'])
+        self.statusLabel.setText(QtCore.QString("Loading %s..." % parameters['waveformID']))
+        self.statusLabel.repaint()
+        
         # Download data
         imagePath = self.waveformsHandler.load_data(parameters=parameters)
+        
+        # TODO:  Test if we got an image back
         imageItem = MyTableWidgetImageWidget(self, imagePath)
         self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
         
@@ -498,7 +507,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
 
-        self.logger.debug('Finished loading waveform preview table')
+        self.logger.debug('Finished loading waveform preview')
+        self.statusLabel.setText('')
+        self.statusLabel.repaint()
 
         # TODO:  display/save waveform loading progress somewhere? 
                 
