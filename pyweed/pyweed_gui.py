@@ -20,6 +20,12 @@ import logging
 import numpy as np
 import pandas as pd
 
+# Multi-threading
+from Queue import Queue
+from threading import Thread
+# Multi-processing
+import multiprocessing
+
 # PyQt4 packages
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -324,7 +330,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
-
+        
         # Selection table
         self.selectionTable.setSortingEnabled(True)
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -338,6 +344,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Resize contents after sort
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
         
+        # Connect the Download button
+        self.downloadPushButton.pressed.connect(self.loadWaveformData)
+        
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
         # NOTE:  currentIndexChanged() responds to both user and programmatic changes. Use activated() for user initiated changes
@@ -347,6 +356,30 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Finished initializing waveform dialog')
         
+        # NOTE:  http://stackoverflow.com/questions/12083034/pyqt-updating-gui-from-a-callback
+        
+        #class MyThread(QtCore.QThread):
+            #updated = QtCore.pyqtSignal(str)
+        
+            #def run( self ):
+                ## do some functionality
+                #for i in range(10000):
+                    #self.updated.emit(str(i))
+        
+        #class Windows(QtGui.QWidget):
+            #def __init__( self, parent = None ):
+                #super(Windows, self).__init__(parent)
+        
+                #self._thread = MyThread(self)
+                #self._thread.updated.connect(self.updateText)
+        
+                ## create a line edit and a button
+        
+                #self._button.clicked.connect(self._thread.start)
+        
+            #def updateText( self, text ):
+                #self.widget.setText(text)        
+
         
     @QtCore.pyqtSlot()    
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
@@ -476,7 +509,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     @QtCore.pyqtSlot(int, int)
     def selectionTableClicked(self, row, col):
         
-        
         # Get column names
         column_names = self.waveformsHandler.get_column_names()
         
@@ -486,13 +518,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
         parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
         parameters['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
-        parameters['stationID'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
+        parameters['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
         parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
         parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
         parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
                 
         # NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
-        self.logger.debug('Getting %s...' % parameters['waveformID'])
+        self.logger.debug('Getting %s...', parameters['waveformID'])
         self.statusLabel.setText(QtCore.QString("Loading %s..." % parameters['waveformID']))
         self.statusLabel.repaint()
         
@@ -514,6 +546,83 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # TODO:  display/save waveform loading progress somewhere? 
                 
         debugPoint = True
+             
+                
+    @QtCore.pyqtSlot()
+    def loadWaveformData(self):
+        
+        # NOTE:  Multi-processing example:  https://pymotw.com/2/multiprocessing/basics.html
+        
+        # Get column names
+        column_names = self.waveformsHandler.get_column_names()
+        
+        # TODO:  Add configurable thread count (= paging size)
+        processCount = 10
+
+        ## Set up some threads to fetch the enclosures
+        #for i in range(processCount):
+            #self.logger.debug('Starting thread %d', i)
+            #worker = Thread(target=self.waveformsHandler.download_data, args=(i,))
+            #worker.setDaemon(True)
+            #worker.start()
+
+        self.logger.debug('Started %d downloading processes', processCount)
+        
+        for row in range(processCount):
+            if row < self.selectionTable.rowCount():
+                
+                # Create parameter dictionary with data from this row
+                parameters = {}
+                parameters['table_row'] = row
+                parameters['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
+                parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
+                parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
+                parameters['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
+                parameters['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
+                parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
+                parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
+                parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+                
+                ###self.waveformsHandler.download_queue.put(parameters)
+                
+                p = multiprocessing.Process(name=str(row), target=self.waveformsHandler.download_data_PROCESS, args=(parameters,))
+                p.daemon = True
+                p.start()
+                # Don't block, don't listen, just let it go. 
+                
+                
+                # NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
+                self.logger.debug('Getting %s...' % parameters['waveformID'])
+                #self.statusLabel.setText(QtCore.QString("Loading %s..." % parameters['waveformID']))
+                #self.statusLabel.repaint()
+                
+                ## Download data
+                #imagePath = self.waveformsHandler.load_data(parameters=parameters)
+                
+                ## TODO:  Test if we got an image back
+                #imageItem = MyTableWidgetImageWidget(self, imagePath)
+                #self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
+                
+                ## Tighten up the table
+                #self.selectionTable.resizeColumnsToContents()
+                #self.selectionTable.resizeRowsToContents()
+        
+                #self.logger.debug('Finished loading waveform preview')
+                #self.statusLabel.setText('')
+                #self.statusLabel.repaint()
+        
+                ## TODO:  display/save waveform loading progress somewhere? 
+                        
+                #debugPoint = True
+        
+        # Now wait for the queue to be empty, indicating that we have
+        # processed all of the downloads.
+        #self.logger.debug('*** Main thread waiting')
+        #self.waveformsHandler.download_queue.join()
+        #self.logger.debug('*** Done')
+        
+        self.logger.debug('Finished loading waveforms')
+        
                 
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
@@ -834,17 +943,17 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # TODO:  Automatically detect longitude and latitude columns
         lons = []
         lats = []
-        stationIDs = []
+        SNCLs = []
         for row in rows:
             lon = float(self.stationsTable.item(row,4).text())
             lons.append(lon)
             lat = float(self.stationsTable.item(row,5).text())
             lats.append(lat)
-            stationID = str(self.stationsTable.item(row,17).text())
-            stationIDs.append(stationID)
+            SNCL = str(self.stationsTable.item(row,17).text())
+            SNCLs.append(SNCL)
             
         # Update the stationsHandler with the latest selection information
-        self.stationsHandler.set_selected_ids(stationIDs)
+        self.stationsHandler.set_selected_ids(SNCLs)
 
         self.seismap.add_stations_highlighting(lons, lats)            
                 

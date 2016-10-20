@@ -10,17 +10,25 @@ Container for waveforms.
 
 from __future__ import (absolute_import, division, print_function)
 
+# Basic packages
 #import urllib
 import os
 
+# Vectors and dataframes
 import numpy as np
 import pandas as pd
 
+# Multi-threading
+from Queue import Queue
+from threading import Thread
+# Multi-processing
+import multiprocessing
+
+# ObsPy
 from obspy import UTCDateTime
 from obspy.taup import TauPyModel
 from obspy.clients import fdsn
 from obspy.geodetics import locations2degrees
-
 
 
 class WaveformsHandler(object):
@@ -44,6 +52,11 @@ class WaveformsHandler(object):
         
         # Current state
         self.currentDF = None
+        
+        # Set up queues for threaded downloading
+        self.download_queue = Queue()
+        self.result_queue = Queue()
+        
         
     def create_waveformsDF(self, eventsDF, stationsDF):
         """
@@ -138,10 +151,11 @@ class WaveformsHandler(object):
         return(waveformsDF)
     
     
-    def download_data(self, parameters=None):
+    def download_data_OLD(self, parameters=None):
         """
         Make a webservice request for waveforms using the passed in options
         """
+        
         # TOOD:  Sanity check parameters
         
         # TODO:  Should parameters be called "event_sncls" and passed in as a dataframe?
@@ -150,11 +164,11 @@ class WaveformsHandler(object):
         source_depth = parameters['source_depth']
         source_lon = parameters['source_lon']
         source_lat = parameters['source_lat']
-        stationID = parameters['stationID']
+        SNCL = parameters['SNCL']
         receiver_lon = parameters['receiver_lon']
         receiver_lat = parameters['receiver_lat']
         
-        self.logger.info('Loading data for %s-%s...', source_time, stationID)
+        self.logger.info('Loading data for %s-%s...', source_time, SNCL)
         
         try:
             self.logger.debug('Calculating travel times...')
@@ -178,15 +192,15 @@ class WaveformsHandler(object):
         # Get the waveform
         dataCenter = "IRIS"
         client = fdsn.Client(dataCenter)
-        (network, station, location, channel) = stationID.split('.')
-        self.logger.info('Loading %s from %s', stationID, dataCenter)
+        (network, station, location, channel) = SNCL.split('.')
+        self.logger.info('Loading %s from %s', SNCL, dataCenter)
         try:
             st = client.get_waveforms(network, station, location, channel, starttime, endtime)
         except Exception as e:
             self.logger.error('%s', e)
         
         # Create the png image
-        filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".png"
+        filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".png"
         imagePath = filename
         self.logger.debug('Saving %s', filename)
         try:
@@ -196,7 +210,7 @@ class WaveformsHandler(object):
             self.logger.error('%s', e)
         
         # Save the miniseed file
-        filename = self.downloadDir + '/' + stationID + '_' + str(source_time) + ".MSEED"
+        filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
         self.logger.debug('Saving %s', filename)
         try:
             st.write(filename, format="MSEED") 
@@ -205,6 +219,179 @@ class WaveformsHandler(object):
         
         return(imagePath)
     
+    
+    def download_data_THREAD(self, i):
+        """
+        Make a webservice request for waveforms using the passed in options
+        """
+        
+        # NOTE:  Multi-threaded queue example:  https://pymotw.com/2/Queue/
+        
+        #def downloadEnclosures(i, q):
+            #"""This is the worker thread function.
+            #It processes items in the queue one after
+            #another.  These daemon threads go into an
+            #infinite loop, and only exit when
+            #the main thread ends.
+            #"""
+            #while True:
+                #print '%s: Looking for the next enclosure' % i
+                #url = q.get()
+                #print '%s: Downloading:' % i, url
+                ## instead of really downloading the URL,
+                ## we just pretend and sleep
+                #time.sleep(i + 2)
+                #q.task_done()
+                
+        while True:
+            
+            parameters = self.download_queue.get()
+
+            # TOOD:  Sanity check parameters
+            
+            # TODO:  Should parameters be called "event_sncls" and passed in as a dataframe?
+            
+            row = parameters['table_row']
+            source_time = parameters['time']
+            source_depth = parameters['source_depth']
+            source_lon = parameters['source_lon']
+            source_lat = parameters['source_lat']
+            SNCL = parameters['SNCL']
+            receiver_lon = parameters['receiver_lon']
+            receiver_lat = parameters['receiver_lat']
+            
+            self.logger.info('Loading data for %s-%s...', source_time, SNCL)
+            
+            try:
+                self.logger.debug('Calculating travel times for %s-%s...', source_time, SNCL)
+                model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
+                tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
+            except Exception as e:
+                self.logger.debug('%s', e)
+                # TODO:  What type of exception to trap?
+                raise
+        
+            # TODO:  Are traveltimes always sorted by time?
+            # TODO:  Do we need to check the phase?
+            earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
+            
+            # TODO:  get user chosen window parameters from WaveformOptionsDialog
+            secs_before = 60
+            secs_after = 600
+            starttime = earliest_arrival_time - secs_before
+            endtime = earliest_arrival_time + secs_after
+            
+            # Get the waveform
+            dataCenter = "IRIS"
+            client = fdsn.Client(dataCenter)
+            (network, station, location, channel) = SNCL.split('.')
+            self.logger.info('Loading %s from %s', SNCL, dataCenter)
+            try:
+                st = client.get_waveforms(network, station, location, channel, starttime, endtime)
+            except Exception as e:
+                self.logger.error('%s', e)
+            
+            ## Create the png image
+            #filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".png"
+            #imagePath = filename
+            #self.logger.debug('Saving %s', filename)
+            #try:
+                #st.plot(outfile=filename,
+                        #size=(self.plot_width,self.plot_height))
+            #except Exception as e:
+                #self.logger.error('%s', e)
+            
+            ## Save the miniseed file
+            #filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
+            #self.logger.debug('Saving %s', filename)
+            #try:
+                #st.write(filename, format="MSEED") 
+            #except Exception as e:
+                #self.logger.error('%s', e)
+        
+            #return(imagePath)
+            
+            self.download_queue.task_done()
+        
+            self.logger.debug('Finished thread %d', i)
+
+        
+    def download_data_PROCESS(self, parameters=None):
+        """
+        Make a webservice request for waveforms using the passed in options
+        """
+        
+        process_name = multiprocessing.current_process().name
+        
+        # NOTE:  Multi-process example:  https://pymotw.com/2/multiprocessing/basics.html
+        # NOTE:  Multi-process example:  http://www.blog.pythonlibrary.org/2016/08/02/python-201-a-multiprocessing-tutorial/
+                        
+        # TOOD:  Sanity check parameters
+        
+        # TODO:  Should parameters be called "event_sncls" and passed in as a dataframe?
+        
+        row = parameters['table_row']
+        source_time = parameters['time']
+        source_depth = parameters['source_depth']
+        source_lon = parameters['source_lon']
+        source_lat = parameters['source_lat']
+        SNCL = parameters['SNCL']
+        receiver_lon = parameters['receiver_lon']
+        receiver_lat = parameters['receiver_lat']
+        
+        try:
+            #self.logger.debug('Process %s -- calculating travel times for %s-%s...', process_name, source_time, SNCL)
+            model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
+            tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
+        except Exception as e:
+            #self.logger.debug('Process %s -- %s', process_name, e)
+            # TODO:  What type of exception to trap?
+            ###raise
+            pass
+    
+        # TODO:  Are traveltimes always sorted by time?
+        # TODO:  Do we need to check the phase?
+        earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
+        
+        # TODO:  get user chosen window parameters from WaveformOptionsDialog
+        secs_before = 60
+        secs_after = 600
+        starttime = earliest_arrival_time - secs_before
+        endtime = earliest_arrival_time + secs_after
+        
+        # Get the waveform
+        dataCenter = "IRIS"
+        client = fdsn.Client(dataCenter)
+        (network, station, location, channel) = SNCL.split('.')
+        #self.logger.info('Process %s -- loading %s from %s', process_name, SNCL, dataCenter)
+        try:
+            st = client.get_waveforms(network, station, location, channel, starttime, endtime)
+        except Exception as e:
+            #self.logger.error('%s', e)
+            pass
+        
+        ## Create the png image
+        #filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".png"
+        #imagePath = filename
+        #self.logger.debug('Saving %s', filename)
+        #try:
+            #st.plot(outfile=filename,
+                    #size=(self.plot_width,self.plot_height))
+        #except Exception as e:
+            #self.logger.error('%s', e)
+        
+        ## Save the miniseed file
+        #filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
+        #self.logger.debug('Saving %s', filename)
+        #try:
+            #st.write(filename, format="MSEED") 
+        #except Exception as e:
+            #self.logger.error('%s', e)
+    
+        #return(imagePath)
+        
+        #self.logger.debug('Process %s completed', process_name)
+
         
     def load_data(self, parameters=None):
         """
@@ -219,18 +406,18 @@ class WaveformsHandler(object):
         source_depth = parameters['source_depth']
         source_lon = parameters['source_lon']
         source_lat = parameters['source_lat']
-        stationID = parameters['stationID']  # TODO:  Replace all uses of 'stationID' with 'SNCL'
+        SNCL = parameters['SNCL']
         receiver_lon = parameters['receiver_lon']
         receiver_lat = parameters['receiver_lat']
         
-        self.logger.info('Loading data for %s-%s...', source_time, stationID)
+        self.logger.info('Loading data for %s-%s...', source_time, SNCL)
 
         # Find the matching row in self.currentDF
         # NOTE:  The table may show a resorted subset of the full currentDF so we need
         # NOTE:  to use the parameters to find the matching row of currentDF
         
         # TODO:  Is this the best way to find the matching row?
-        SNCL_mask = self.currentDF.SNCL.isin([stationID])
+        SNCL_mask = self.currentDF.SNCL.isin([SNCL])
         event_mask = self.currentDF.Time.isin([source_time])  # TODO:  Use 'EventID' instead of 'Time' to identify events?
         matching_row_mask = SNCL_mask & event_mask
         row_index = matching_row_mask.tolist().index(True)
@@ -239,7 +426,7 @@ class WaveformsHandler(object):
             imagePath = self.currentDF.Waveform.iloc[row_index]
         
         else:
-            imagePath = self.download_data(parameters)
+            imagePath = self.download_data_OLD(parameters)
             self.currentDF.Downloaded.iloc[row_index] = True
         
         return(imagePath)
