@@ -25,6 +25,9 @@ import pandas as pd
 import threading
 import multiprocessing
 
+# ObsPy
+import obspy
+
 # PyQt4 packages
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -333,7 +336,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
         
-        self.waveformsQueue = multiprocessing.Queue()
+        self.waveformsMessageQueue = multiprocessing.Queue()
         
         # Selection table
         self.selectionTable.setSortingEnabled(True)
@@ -542,19 +545,42 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         Wait for entries to appear on the queue and then update GUI labels.
         This should be run in a deamon thread.
         """
-        toggle = True
+        
+        # TODO:  plot_width, plot_height should come from preferences
+        plot_width = 600
+        plot_height = 200
+        statusText = ""
         while True:
-            toggle = not toggle
-            # TODO:  Probably should use a blocking self.waveformsQueue.get() here
+            # TODO:  Could use a blocking self.waveformsMessageQueue.get() here
             time.sleep(0.5)
-###            self.logger.debug('Checking the queue for newly downloaded waveforms')
-            ###if not self.waveformsQueue.empty():
-            if self.waveformsQueue.empty():
-                self.statusLabel.setText('')
-            else:
-                basename = self.waveformsQueue.get()
-                self.statusLabel.setText(basename)
-            self.statusLabel.repaint()
+            
+            if not self.waveformsMessageQueue.empty():
+                item = self.waveformsMessageQueue.get()
+                status = item['status']
+                id = item['id']
+                mseedFile = item['mseedFile']
+                message = item['message']
+                if status == "OK":
+                    statusText = message
+                    self.statusLabel.setText(statusText)
+                    self.statusLabel.repaint()
+                elif status == "READY":
+                    statusText = message
+                    self.statusLabel.setText(statusText)
+                    self.statusLabel.repaint()
+                    # Generate a plot
+                    pngFile = mseedFile.replace('MSEED','png')
+                    st = obspy.core.read(mseedFile)
+                    st.plot(outfile=pngFile, size=(plot_width,plot_height))
+                else:
+                    if message.find("No data available") >= 0:
+                        statusText = "No data available for %s" % id
+                    else:
+                        statusText = message                    
+                    self.statusLabel.setText(statusText)
+                    self.statusLabel.repaint()
+            
+                
     
     
     @QtCore.pyqtSlot()
@@ -624,7 +650,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         self.logger.debug('Starting waveformsHandler process')
         # Have the waveformsHandler download data in a separate process (run as a daemon so it doesn't block)
-        self.waveformsHandler.download_data(parametersList, self.waveformsQueue)
+        self.waveformsHandler.download_data(parametersList, self.waveformsMessageQueue)
         
         self.logger.debug('Returning from loadWaveformData')
         
