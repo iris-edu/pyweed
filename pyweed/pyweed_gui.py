@@ -20,9 +20,6 @@ import logging
 import numpy as np
 import pandas as pd
 
-# Multi-threading
-from Queue import Queue
-from threading import Thread
 # Multi-processing
 import multiprocessing
 
@@ -52,6 +49,8 @@ from preferences import Preferences
 from eventsHandler import EventsHandler
 from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
+#from waveformDownloadProcess import WaveformDownloadProcess
+from waveformDownload import waveformDownload
 from seismap import Seismap
 
 __appName__ = "PYWEED"
@@ -356,30 +355,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Finished initializing waveform dialog')
         
-        # NOTE:  http://stackoverflow.com/questions/12083034/pyqt-updating-gui-from-a-callback
-        
-        #class MyThread(QtCore.QThread):
-            #updated = QtCore.pyqtSignal(str)
-        
-            #def run( self ):
-                ## do some functionality
-                #for i in range(10000):
-                    #self.updated.emit(str(i))
-        
-        #class Windows(QtGui.QWidget):
-            #def __init__( self, parent = None ):
-                #super(Windows, self).__init__(parent)
-        
-                #self._thread = MyThread(self)
-                #self._thread.updated.connect(self.updateText)
-        
-                ## create a line edit and a button
-        
-                #self._button.clicked.connect(self._thread.start)
-        
-            #def updateText( self, text ):
-                #self.widget.setText(text)        
-
         
     @QtCore.pyqtSlot()    
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
@@ -522,6 +497,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
         parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
         parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+        parameters['plot_width'] = 600 # TODO:  This should be in preferences
+        parameters['plot_height'] = 200 # TODO:  This should be in preferences
                 
         # NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
         self.logger.debug('Getting %s...', parameters['waveformID'])
@@ -551,6 +528,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     @QtCore.pyqtSlot()
     def loadWaveformData(self):
         
+        # NOTE:  Google "python multiprocessing try except":
+        # NOTE:  Good example:  http://stackoverflow.com/questions/16943404/python-multiprocessing-and-handling-exceptions-in-workers
+        # NOTE:  Similar advice:  http://stackoverflow.com/questions/19924104/python-multiprocessing-handling-child-errors-in-parent
+        
         # NOTE:  Multi-processing example:  https://pymotw.com/2/multiprocessing/basics.html
         
         # Get column names
@@ -559,21 +540,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # TODO:  Add configurable thread count (= paging size)
         processCount = 10
 
-        ## Set up some threads to fetch the enclosures
-        #for i in range(processCount):
-            #self.logger.debug('Starting thread %d', i)
-            #worker = Thread(target=self.waveformsHandler.download_data, args=(i,))
-            #worker.setDaemon(True)
-            #worker.start()
 
         self.logger.debug('Started %d downloading processes', processCount)
         
+        jobs = []
         for row in range(processCount):
             if row < self.selectionTable.rowCount():
                 
                 # Create parameter dictionary with data from this row
                 parameters = {}
-                parameters['table_row'] = row
+                parameters['downloadDir'] = self.waveformsHandler.downloadDir
                 parameters['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
                 parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
                 parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
@@ -582,11 +558,15 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
                 parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
                 parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+                parameters['plot_width'] = 600 # TODO:  This should be in preferences
+                parameters['plot_height'] = 200 # TODO:  This should be in preferences
                 
-                ###self.waveformsHandler.download_queue.put(parameters)
-                
-                p = multiprocessing.Process(name=str(row), target=self.waveformsHandler.download_data_PROCESS, args=(parameters,))
+                # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
+                ###p = WaveformDownloadProcess(parameters)
+                #multiprocessing.log_to_stderr(logging.DEBUG)
+                p = multiprocessing.Process(target=waveformDownload, args=(parameters,))
                 p.daemon = True
+                jobs.append(p)
                 p.start()
                 # Don't block, don't listen, just let it go. 
                 
@@ -621,7 +601,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         #self.waveformsHandler.download_queue.join()
         #self.logger.debug('*** Done')
         
-        self.logger.debug('Finished loading waveforms')
+        ###self.logger.debug('Finished loading waveforms')
         
                 
 
