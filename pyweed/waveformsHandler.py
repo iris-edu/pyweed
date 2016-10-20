@@ -18,9 +18,9 @@ import os
 import numpy as np
 import pandas as pd
 
-# Multi-threading
-from Queue import Queue
-from threading import Thread
+## Multi-threading
+#from Queue import Queue
+#from threading import Thread
 # Multi-processing
 import multiprocessing
 
@@ -30,6 +30,7 @@ from obspy.taup import TauPyModel
 from obspy.clients import fdsn
 from obspy.geodetics import locations2degrees
 
+from waveformsDownloader import WaveformsDownloader
 
 class WaveformsHandler(object):
     """
@@ -52,11 +53,7 @@ class WaveformsHandler(object):
         
         # Current state
         self.currentDF = None
-        
-        # Set up queues for threaded downloading
-        self.download_queue = Queue()
-        self.result_queue = Queue()
-        
+                
         
     def create_waveformsDF(self, eventsDF, stationsDF):
         """
@@ -151,86 +148,6 @@ class WaveformsHandler(object):
         return(waveformsDF)
     
     
-    def download_data_PROCESS(self, parameters=None):
-        """
-        Make a webservice request for waveforms using the passed in options
-        """
-        
-        # NOTE:  This function is intended to be run as a separate process and cannot use logging
-        # NOTE:  or raise errors. It must create it's own separate transcript file if necessary.
-        
-        process_name = multiprocessing.current_process().name
-        
-        # NOTE:  Multi-process example:  https://pymotw.com/2/multiprocessing/basics.html
-        # NOTE:  Multi-process example:  http://www.blog.pythonlibrary.org/2016/08/02/python-201-a-multiprocessing-tutorial/
-                        
-        # TOOD:  Sanity check parameters
-        
-        # TODO:  Should parameters be called "event_sncls" and passed in as a dataframe?
-        
-        row = parameters['table_row']
-        source_time = parameters['time']
-        source_depth = parameters['source_depth']
-        source_lon = parameters['source_lon']
-        source_lat = parameters['source_lat']
-        SNCL = parameters['SNCL']
-        receiver_lon = parameters['receiver_lon']
-        receiver_lat = parameters['receiver_lat']
-        
-        try:
-            #self.logger.debug('Process %s -- calculating travel times for %s-%s...', process_name, source_time, SNCL)
-            model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
-            tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
-        except Exception as e:
-            #self.logger.debug('Process %s -- %s', process_name, e)
-            # TODO:  What type of exception to trap?
-            ###raise
-            pass
-    
-        # TODO:  Are traveltimes always sorted by time?
-        # TODO:  Do we need to check the phase?
-        earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
-        
-        # TODO:  get user chosen window parameters from WaveformOptionsDialog
-        secs_before = 60
-        secs_after = 600
-        starttime = earliest_arrival_time - secs_before
-        endtime = earliest_arrival_time + secs_after
-        
-        # Get the waveform
-        dataCenter = "IRIS"
-        client = fdsn.Client(dataCenter)
-        (network, station, location, channel) = SNCL.split('.')
-        #self.logger.info('Process %s -- loading %s from %s', process_name, SNCL, dataCenter)
-        try:
-            st = client.get_waveforms(network, station, location, channel, starttime, endtime)
-        except Exception as e:
-            #self.logger.error('%s', e)
-            pass
-        
-        ## Create the png image
-        #filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".png"
-        #imagePath = filename
-        #self.logger.debug('Saving %s', filename)
-        #try:
-            #st.plot(outfile=filename,
-                    #size=(self.plot_width,self.plot_height))
-        #except Exception as e:
-            #self.logger.error('%s', e)
-        
-        ## Save the miniseed file
-        #filename = self.downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
-        #self.logger.debug('Saving %s', filename)
-        #try:
-            #st.write(filename, format="MSEED") 
-        #except Exception as e:
-            #self.logger.error('%s', e)
-    
-        #return(imagePath)
-        
-        #self.logger.debug('Process %s completed', process_name)
-
-        
     def load_data(self, parameters=None):
         """
         Load a waveform image from cache or download/plot first.
@@ -268,6 +185,23 @@ class WaveformsHandler(object):
             self.currentDF.Downloaded.iloc[row_index] = True
         
         return(imagePath)
+
+
+    def download_data(self, parametersList=None):
+        """
+        Load a waveform image from cache or download/plot first.
+        """
+        
+        # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
+        
+        p = WaveformsDownloader(parametersList)
+        p.daemon = True
+        p.start()
+        # Don't block, don't listen, just let it go. 
+    
+        self.logger.debug('Star sted WaveformsDownloader process with pid %s', p.pid)
+
+        return
 
 
     def get_column_names(self):

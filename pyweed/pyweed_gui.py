@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 # Multi-processing
-import multiprocessing
+#import multiprocessing
 
 # PyQt4 packages
 from PyQt4 import QtCore
@@ -50,8 +50,8 @@ from eventsHandler import EventsHandler
 from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
 #from waveformDownloadProcess import WaveformDownloadProcess
-from waveformDownload import waveformDownload
-from waveformsDownloader import WaveformsDownloader
+#from waveformDownload import waveformDownload
+#from waveformsDownloader import WaveformsDownloader
 from seismap import Seismap
 
 __appName__ = "PYWEED"
@@ -591,15 +591,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         
                 #debugPoint = True
         
-        # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
-        p = WaveformsDownloader(parametersList)
-        #multiprocessing.log_to_stderr(logging.DEBUG)
-        #p = multiprocessing.Process(target=waveformDownload, args=(parameters,))
-        p.daemon = True
-        p.start()
-        # Don't block, don't listen, just let it go. 
-                    
-        self.logger.debug('Stated WaveformsDownloader process with pid %s', p.pid)
+        self.waveformsHandler.download_data(parametersList)
         
         # TODO:  Another python or Qt thread or ??? to monitor creation of files?
         
