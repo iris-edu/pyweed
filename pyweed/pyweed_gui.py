@@ -51,10 +51,11 @@ from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
 #from waveformDownloadProcess import WaveformDownloadProcess
 from waveformDownload import waveformDownload
+from waveformsDownloader import WaveformsDownloader
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -537,14 +538,17 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Get column names
         column_names = self.waveformsHandler.get_column_names()
         
-        # TODO:  Add configurable thread count (= paging size)
-        processCount = 10
+        # TODO:  Add configurable count of the number of waveforms to download at a time
+        pagingCount = 10
 
 
-        self.logger.debug('Started %d downloading processes', processCount)
+        self.logger.debug('Downloading %d waveforms', pagingCount)
         
-        jobs = []
-        for row in range(processCount):
+        # TODO:  Need a way to keep track of what we've already downlaoded and which page we're on
+        
+        parametersList = []
+        
+        for row in range(pagingCount):
             if row < self.selectionTable.rowCount():
                 
                 # Create parameter dictionary with data from this row
@@ -561,18 +565,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 parameters['plot_width'] = 600 # TODO:  This should be in preferences
                 parameters['plot_height'] = 200 # TODO:  This should be in preferences
                 
-                # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
-                ###p = WaveformDownloadProcess(parameters)
-                #multiprocessing.log_to_stderr(logging.DEBUG)
-                p = multiprocessing.Process(target=waveformDownload, args=(parameters,))
-                p.daemon = True
-                jobs.append(p)
-                p.start()
-                # Don't block, don't listen, just let it go. 
-                
+                parametersList.append(parameters)
                 
                 # NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
-                self.logger.debug('Getting %s...' % parameters['waveformID'])
+                #self.logger.debug('Getting %s...' % parameters['waveformID'])
                 #self.statusLabel.setText(QtCore.QString("Loading %s..." % parameters['waveformID']))
                 #self.statusLabel.repaint()
                 
@@ -595,13 +591,19 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         
                 #debugPoint = True
         
-        # Now wait for the queue to be empty, indicating that we have
-        # processed all of the downloads.
-        #self.logger.debug('*** Main thread waiting')
-        #self.waveformsHandler.download_queue.join()
-        #self.logger.debug('*** Done')
+        # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
+        p = WaveformsDownloader(parametersList)
+        #multiprocessing.log_to_stderr(logging.DEBUG)
+        #p = multiprocessing.Process(target=waveformDownload, args=(parameters,))
+        p.daemon = True
+        p.start()
+        # Don't block, don't listen, just let it go. 
+                    
+        self.logger.debug('Stated WaveformsDownloader process with pid %s', p.pid)
         
-        ###self.logger.debug('Finished loading waveforms')
+        # TODO:  Another python or Qt thread or ??? to monitor creation of files?
+        
+        return
         
                 
 
