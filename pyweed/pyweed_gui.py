@@ -15,13 +15,15 @@ import os
 import sys
 import string
 import logging
+import time # TODO:  remove?
 
 # Vectors and dataframes
 import numpy as np
 import pandas as pd
 
-# Multi-processing
-#import multiprocessing
+# Threads and Multi-processing
+import threading
+import multiprocessing
 
 # PyQt4 packages
 from PyQt4 import QtCore
@@ -331,6 +333,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
         
+        self.waveformsQueue = multiprocessing.Queue()
+        
         # Selection table
         self.selectionTable.setSortingEnabled(True)
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -353,6 +357,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
+        
+        # Set up a thread for watching waveforms that lasts as long as this dialog is open
+        self.logger.debug('Starting waveformWatcher thread')
+        # TODO:  Another python or Qt thread or ??? to monitor creation of files?
+        self.waveformWatcher = threading.Thread(name='waveformWatcher', target=self.waveformWatcher)
+        self.waveformWatcher.setDaemon(True)
+        self.waveformWatcher.start()
 
         self.logger.debug('Finished initializing waveform dialog')
         
@@ -525,7 +536,27 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 
         debugPoint = True
              
-                
+
+    def waveformWatcher(self):
+        """
+        Wait for entries to appear on the queue and then update GUI labels.
+        This should be run in a deamon thread.
+        """
+        toggle = True
+        while True:
+            toggle = not toggle
+            # TODO:  Probably should use a blocking self.waveformsQueue.get() here
+            time.sleep(0.5)
+###            self.logger.debug('Checking the queue for newly downloaded waveforms')
+            ###if not self.waveformsQueue.empty():
+            if self.waveformsQueue.empty():
+                self.statusLabel.setText('')
+            else:
+                basename = self.waveformsQueue.get()
+                self.statusLabel.setText(basename)
+            self.statusLabel.repaint()
+    
+    
     @QtCore.pyqtSlot()
     def loadWaveformData(self):
         
@@ -591,13 +622,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         
                 #debugPoint = True
         
-        self.waveformsHandler.download_data(parametersList)
+        self.logger.debug('Starting waveformsHandler process')
+        # Have the waveformsHandler download data in a separate process (run as a daemon so it doesn't block)
+        self.waveformsHandler.download_data(parametersList, self.waveformsQueue)
         
-        # TODO:  Another python or Qt thread or ??? to monitor creation of files?
+        self.logger.debug('Returning from loadWaveformData')
+        
         
         return
-        
-                
+
+
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     

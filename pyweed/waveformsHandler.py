@@ -187,19 +187,19 @@ class WaveformsHandler(object):
         return(imagePath)
 
 
-    def download_data(self, parametersList=None):
+    def download_data(self, parametersList=None, waveformsQueue=None):
         """
-        Load a waveform image from cache or download/plot first.
+        Start a new process to download a set of waveforms.
         """
         
         # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
         
-        p = WaveformsDownloader(parametersList)
-        p.daemon = True
-        p.start()
+        waveformsDownloader = WaveformsDownloader(parametersList, waveformsQueue)
+        waveformsDownloader.daemon = True
+        waveformsDownloader.start()
         # Don't block, don't listen, just let it go. 
     
-        self.logger.debug('Star sted WaveformsDownloader process with pid %s', p.pid)
+        self.logger.debug('Started WaveformsDownloader process with pid %s', waveformsDownloader.pid)
 
         return
 
