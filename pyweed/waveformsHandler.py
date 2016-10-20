@@ -187,14 +187,14 @@ class WaveformsHandler(object):
         return(imagePath)
 
 
-    def download_data(self, parametersList=None, waveformsQueue=None):
+    def download_data(self, parametersList=None, waveformsMessageQueue=None):
         """
         Start a new process to download a set of waveforms.
         """
         
         # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
         
-        waveformsDownloader = WaveformsDownloader(parametersList, waveformsQueue)
+        waveformsDownloader = WaveformsDownloader(parametersList, waveformsMessageQueue)
         waveformsDownloader.daemon = True
         waveformsDownloader.start()
         # Don't block, don't listen, just let it go. 

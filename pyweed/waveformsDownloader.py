@@ -36,7 +36,7 @@ class WaveformsDownloader(multiprocessing.Process):
     """
     Subprocess class for downloading waveforms.
     """
-    def __init__(self, parametersList, waveformsQueue):
+    def __init__(self, parametersList, waveformsMessageQueue):
         super(WaveformsDownloader, self).__init__()
         
         # Set up multiprocessor logging
@@ -46,7 +46,7 @@ class WaveformsDownloader(multiprocessing.Process):
         
         # Save internal variables
         self.parametersList = parametersList
-        self.waveformsQueue = waveformsQueue
+        self.waveformsMessageQueue = waveformsMessageQueue
     
         return
         
@@ -71,13 +71,18 @@ class WaveformsDownloader(multiprocessing.Process):
             
             self.logger.debug("%s TauPyModel", SNCL)
 
+            basename = SNCL + '_' + str(source_time)
+
+            message = "Downloading %s" % basename
+            self.waveformsMessageQueue.put( {"status":"OK", "id":basename, "mseedFile":"", "message":message} )
+
             try:
                 model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
                 tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
             except Exception as e:
-                # TODO:  What type of exception to trap?
+                self.waveformsMessageQueue.put( {"status":"ERROR", "id":basename, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
-                pass
+                next
         
             # TODO:  Are traveltimes always sorted by time?
             # TODO:  Do we need to check the phase?
@@ -95,23 +100,37 @@ class WaveformsDownloader(multiprocessing.Process):
             dataCenter = "IRIS"
             client = fdsn.Client(dataCenter)
             (network, station, location, channel) = SNCL.split('.')
-            ###self.logger.info('Process %s -- loading %s from %s', self.pid, SNCL, dataCenter)
             try:
                 st = client.get_waveforms(network, station, location, channel, starttime, endtime)
             except Exception as e:
-                self.logger.error("%s", e)
-                pass
+                self.waveformsMessageQueue.put( {"status":"ERROR", "id":basename, "mseedFile":"", "message":str(e)} )                
+                self.logger.error('%s', e)
+                next
             
             # Save the miniseed file
             filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
             self.logger.debug("%s st.write filename=%s", SNCL, filename)
-            ###self.logger.debug('Saving %s', filename)
             try:
                 st.write(filename, format="MSEED") 
             except Exception as e:
-                self.logger.error("%s", e)
-                pass
+                self.waveformsMessageQueue.put( {"status":"ERROR", "id":basename, "mseedFile":"", "message":str(e)} )                
+                self.logger.error('%s', e)
+                next
                 
+
+            # NOTE:  Getting the following when I try to plot while using multiprocessing
+            # NOTE:
+            # NOTE:  The process has forked and you cannot use this CoreFoundation functionality safely. You MUST exec().
+            # NOTE:  Break on __THE_PROCESS_HAS_FORKED_AND_YOU_CANNOT_USE_THIS_COREFOUNDATION_FUNCTIONALITY___YOU_MUST_EXEC__() to debug.
+            # NOTE:
+            # NOTE:  Instead, we plot in a separate *thread* that runs pyweed_gui.WaveformDialog.waveformWatcher().
+            
+            # Announce that this file is ready for plotting
+            message = "Plotting %s" % basename
+            self.waveformsMessageQueue.put( {"status":"READY", "id":basename, "mseedFile":filename, "message":message})
+            
+            
+            
             ####################################################################
             # TODO:  Solve issue with image creation
             ####################################################################            
@@ -133,9 +152,10 @@ class WaveformsDownloader(multiprocessing.Process):
                 #print("%s" % e)
                 #pass
 
-            basename = SNCL + '_' + str(source_time) + ".MSEED"
-            
-            self.waveformsQueue.put(basename)
+        
+        message = "Finished downloading %d waveforms" % len(self.parametersList)
+        self.waveformsMessageQueue.put( {"status":"OK", "id":"", "mseedFile":"", "message":message} )  
+        
         
 ## ------------------------------------------------------------------------------
 ## Helper functions
