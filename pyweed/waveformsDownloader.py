@@ -36,7 +36,7 @@ class WaveformsDownloader(multiprocessing.Process):
     """
     Subprocess class for downloading waveforms.
     """
-    def __init__(self, parametersList):
+    def __init__(self, parametersList, waveformsQueue):
         super(WaveformsDownloader, self).__init__()
         
         # Set up multiprocessor logging
@@ -46,6 +46,7 @@ class WaveformsDownloader(multiprocessing.Process):
         
         # Save internal variables
         self.parametersList = parametersList
+        self.waveformsQueue = waveformsQueue
     
         return
         
@@ -131,7 +132,10 @@ class WaveformsDownloader(multiprocessing.Process):
                 ###self.log.write('%s\n' % e)
                 #print("%s" % e)
                 #pass
+
+            basename = SNCL + '_' + str(source_time) + ".MSEED"
             
+            self.waveformsQueue.put(basename)
         
 ## ------------------------------------------------------------------------------
 ## Helper functions
