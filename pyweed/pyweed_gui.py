@@ -343,6 +343,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
         
+        # Set up a queue to wait for downloded messages from the separate waveformsDownloader process
         self.waveformsMessageQueue = multiprocessing.Queue()
         
         # Selection table
@@ -369,15 +370,77 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
         
-        # Set up a thread for watching waveforms that lasts as long as this dialog is open
-        self.logger.debug('Starting waveformWatcher thread')
-        # TODO:  Another python or Qt thread or ??? to monitor creation of files?
-        self.waveformWatcher = threading.Thread(name='waveformWatcher', target=self.waveformWatcher)
-        self.waveformWatcher.setDaemon(True)
-        self.waveformWatcher.start()
+        ## Set up a thread for watching waveforms that lasts as long as this dialog is open
+        #self.logger.debug('Starting waveformWatcher thread')
+        ## TODO:  Another python or Qt thread or ??? to monitor creation of files?
+        #self.waveformWatcher = threading.Thread(name='waveformWatcher', target=self.waveformWatcher)
+        #self.waveformWatcher.setDaemon(True)
+        #self.waveformWatcher.start()
+        
+        
+        self.downloader = DownloadThread(self.waveformsMessageQueue)
+        self.downloader.data_downloaded.connect(self.on_data_ready)
+        self.downloader.start()
+        
+        
 
         self.logger.debug('Finished initializing waveform dialog')
         
+
+    def on_data_ready(self):
+        item = self.waveformsMessageQueue.get()
+        status = item['status']
+        waveformID = item['waveformID']
+        mseedFile = item['mseedFile']
+        message = item['message']
+        
+        # Get column names
+        column_names = self.waveformsHandler.get_column_names()
+        
+        
+        # TODO:  plot_width, plot_height should come from preferences
+        plot_width = 600
+        plot_height = 200
+        
+        if status == "OK":
+            # Downloading
+            statusText = message
+            self.statusLabel.setText(statusText)
+            self.statusLabel.repaint()
+            
+        elif status == "READY":
+            # Download finished
+            statusText = message
+            self.statusLabel.setText(statusText)
+            self.statusLabel.repaint()
+            # Generate a plot
+            imagePath = mseedFile.replace('MSEED','png')
+            st = obspy.core.read(mseedFile)
+            st.plot(outfile=imagePath, size=(plot_width,plot_height))
+            # Update the Table
+            for row in range(self.selectionTable.rowCount()):
+                if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
+                    break
+            # Update table
+            # NOTE:  Qt complains that calling Qpixmap is not threadsafe. So we cannot load the
+            # NOTE:  in this thread. All we can do is modify the text.
+            #self.selectionTable.setItem(row,column_names.index('Waveform'), QtGui.QTableWidgetItem('Preview ready'))
+            imageItem = MyTableWidgetImageWidget(self, imagePath)
+            self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
+            # Tighten up the table
+            self.selectionTable.resizeColumnsToContents()
+            self.selectionTable.resizeRowsToContents()
+               
+        else:
+            # Problem downloading
+            if message.find("No data available") >= 0:
+                statusText = "No data available for %s" % id
+            else:
+                statusText = message                    
+            self.statusLabel.setText(statusText)
+            self.statusLabel.repaint()
+
+
         
     @QtCore.pyqtSlot()    
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
@@ -726,6 +789,87 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         return
 
 
+# NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
+class DownloadThread(QtCore.QThread):
+
+    data_downloaded = QtCore.pyqtSignal()
+
+    def __init__(self, waveformsMessageQueue):
+        QtCore.QThread.__init__(self)
+        self.text = "Howdy"
+        self.waveformsMessageQueue = waveformsMessageQueue
+
+    def run(self):
+        #for i in range(20):
+            #time.sleep(i)
+            #self.data_downloaded.emit('%s Pardner' % (self.text))
+        """
+        Wait for entries to appear on the queue and then update GUI labels.
+        This should be run in a deamon thread.
+        """
+
+        # Get column names
+        ###column_names = self.waveformsHandler.get_column_names()        
+        
+        # TODO:  plot_width, plot_height should come from preferences
+        #plot_width = 600
+        #plot_height = 200
+        #statusText = ""
+        while True:
+            # TODO:  Could use a blocking self.waveformsMessageQueue.get() here
+            time.sleep(0.5)
+            
+            if not self.waveformsMessageQueue.empty():
+                self.data_downloaded.emit()
+                #item = self.waveformsMessageQueue.get()
+                #status = item['status']
+                #waveformID = item['waveformID']
+                #mseedFile = item['mseedFile']
+                #message = item['message']
+                
+                ##self.data_downloaded.emit('%s: %s' % (status, message))
+                
+                #self.data_downloaded.emit(item)
+                
+                ###if status == "OK":
+                    #### Downloading
+                    ###statusText = message
+                    ###self.statusLabel.setText(statusText)
+                    ###self.statusLabel.repaint()
+                    
+                ###elif status == "READY":
+                    #### Download finished
+                    ###statusText = message
+                    ###self.statusLabel.setText(statusText)
+                    ###self.statusLabel.repaint()
+                    #### Generate a plot
+                    ###imagePath = mseedFile.replace('MSEED','png')
+                    ###st = obspy.core.read(mseedFile)
+                    ###st.plot(outfile=imagePath, size=(plot_width,plot_height))
+                    #### Update the Table
+                    ###for row in range(self.selectionTable.rowCount()):
+                        ###if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
+                            ###break
+                    #### Update table
+                    #### NOTE:  Qt complains that calling Qpixmap is not threadsafe. So we cannot load the
+                    #### NOTE:  in this thread. All we can do is modify the text.
+                    ###self.selectionTable.setItem(row,column_names.index('Waveform'), QtGui.QTableWidgetItem('Preview ready'))
+                    ####imageItem = MyTableWidgetImageWidget(self, imagePath)
+                    ####self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
+                    ##### Tighten up the table
+                    ####self.selectionTable.resizeColumnsToContents()
+                    ####self.selectionTable.resizeRowsToContents()
+                       
+                ###else:
+                    #### Problem downloading
+                    ###if message.find("No data available") >= 0:
+                        ###statusText = "No data available for %s" % id
+                    ###else:
+                        ###statusText = message                    
+                    ###self.statusLabel.setText(statusText)
+                    ###self.statusLabel.repaint()
+
+            
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     
