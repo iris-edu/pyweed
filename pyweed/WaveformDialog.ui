@@ -58,15 +58,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label">
-           <property name="minimumSize">
-            <size>
-             <width>100</width>
-             <height>0</height>
-            </size>
-           </property>
+          <widget class="QPushButton" name="previewPushButton">
            <property name="text">
-            <string>1:10 of #</string>
+            <string>Preview</string>
            </property>
           </widget>
          </item>

@@ -27,10 +27,13 @@ from obspy.taup import TauPyModel
 from obspy.clients import fdsn
 from obspy.geodetics import locations2degrees
 
-# NOTE:  Good documentation and examples:
+# NOTE:  Good documentation and examples of python threading:
 # NOTE:    https://pymotw.com/2/multiprocessing/
 # NOTE:    http://www.blog.pythonlibrary.org/tag/concurrency/
 # NOTE:    http://oz123.github.io/writings/2015-02-25-Simple-Multiprocessing-Task-Queue-in-Python/
+# NOTE:
+# NOTE:  PyQt Qt threading example
+# NOTE:    http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
 
 class WaveformsDownloader(multiprocessing.Process):
     """
@@ -68,19 +71,20 @@ class WaveformsDownloader(multiprocessing.Process):
             receiver_lat = parameters['receiver_lat']
             plot_width = parameters['plot_width']
             plot_height = parameters['plot_height']
+            waveformID = parameters['waveformID']
             
             self.logger.debug("%s TauPyModel", SNCL)
 
             basename = SNCL + '_' + str(source_time)
 
             message = "Downloading %s" % basename
-            self.waveformsMessageQueue.put( {"status":"OK", "id":basename, "mseedFile":"", "message":message} )
+            self.waveformsMessageQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
 
             try:
                 model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
                 tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
             except Exception as e:
-                self.waveformsMessageQueue.put( {"status":"ERROR", "id":basename, "mseedFile":"", "message":str(e)} )                
+                self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 next
         
@@ -103,7 +107,7 @@ class WaveformsDownloader(multiprocessing.Process):
             try:
                 st = client.get_waveforms(network, station, location, channel, starttime, endtime)
             except Exception as e:
-                self.waveformsMessageQueue.put( {"status":"ERROR", "id":basename, "mseedFile":"", "message":str(e)} )                
+                self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 next
             
@@ -113,7 +117,7 @@ class WaveformsDownloader(multiprocessing.Process):
             try:
                 st.write(filename, format="MSEED") 
             except Exception as e:
-                self.waveformsMessageQueue.put( {"status":"ERROR", "id":basename, "mseedFile":"", "message":str(e)} )                
+                self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 next
                 
@@ -127,7 +131,7 @@ class WaveformsDownloader(multiprocessing.Process):
             
             # Announce that this file is ready for plotting
             message = "Plotting %s" % basename
-            self.waveformsMessageQueue.put( {"status":"READY", "id":basename, "mseedFile":filename, "message":message})
+            self.waveformsMessageQueue.put( {"status":"READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
             
             
             
@@ -154,7 +158,7 @@ class WaveformsDownloader(multiprocessing.Process):
 
         
         message = "Finished downloading %d waveforms" % len(self.parametersList)
-        self.waveformsMessageQueue.put( {"status":"OK", "id":"", "mseedFile":"", "message":message} )  
+        self.waveformsMessageQueue.put( {"status":"OK", "waveformID":"", "mseedFile":"", "message":message} )  
         
         
 ## ------------------------------------------------------------------------------

@@ -130,14 +130,14 @@ class WaveformsHandler(object):
         
         # Add columns to track downloads and display waveforms
         waveformsDF['Waveform'] = ""
-        waveformsDF['Downloaded'] = False
+        waveformsDF['WaveformPath'] = False
         
         # Look to see if any have already been downloaded
         for i in range(waveformsDF.shape[0]):
             filename = waveformsDF.SNCL.iloc[i] + '_' + waveformsDF.Time.iloc[i] + ".png"
             imagePath = os.path.join(self.downloadDir, filename)
             waveformsDF.Waveform.iloc[i] = imagePath
-            waveformsDF.Downloaded.iloc[i] = os.path.exists(imagePath)
+            waveformsDF.WaveformPath.iloc[i] = os.path.exists(imagePath)
         
         # Reorganize columns
         waveformsDF = waveformsDF[self.get_column_names()]
@@ -177,12 +177,12 @@ class WaveformsHandler(object):
         matching_row_mask = SNCL_mask & event_mask
         row_index = matching_row_mask.tolist().index(True)
         
-        if self.currentDF.Downloaded.iloc[row_index]:
+        if self.currentDF.WaveformPath.iloc[row_index]:
             imagePath = self.currentDF.Waveform.iloc[row_index]
         
         else:
             imagePath = self.download_data_OLD(parameters)
-            self.currentDF.Downloaded.iloc[row_index] = True
+            self.currentDF.WaveformPath.iloc[row_index] = True
         
         return(imagePath)
 
@@ -205,7 +205,7 @@ class WaveformsHandler(object):
 
 
     def get_column_names(self):
-        columnNames = ['SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'Downloaded']
+        columnNames = ['SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformPath']
         return(columnNames)
     
     def get_column_hidden(self):
