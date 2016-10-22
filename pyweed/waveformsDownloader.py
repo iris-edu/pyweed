@@ -6,6 +6,18 @@ Subprocess class for downloading waveforms.
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
+
+This process is started up when the WaveformsDialog initializaes and continues
+until it is finished downloading.
+
+# TODO:  It can be interrupted with a (?signal) from the WaveformsDialog.
+        
+After each waveform is downloaded and written to disk, a message is placed on
+the waveformsMessageQueue.  This thread and multi-process safe queue is watched
+in a waveformsWatcher thread started when the WaveformsDialog initializes.
+
+Waveforms downloading is both IO- and CPU-intensive so running it in an entirely
+separate process seems best. 
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -14,10 +26,6 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import logging
 
-# Vectors and dataframes
-import numpy as np
-import pandas as pd
-
 # Multi-processing
 import multiprocessing
 
@@ -25,19 +33,21 @@ import multiprocessing
 from obspy import UTCDateTime
 from obspy.taup import TauPyModel
 from obspy.clients import fdsn
-from obspy.geodetics import locations2degrees
 
-# NOTE:  Good documentation and examples of python threading:
+# NOTE:  Good documentation and examples of python multiprocessing:
+# NOTE:
 # NOTE:    https://pymotw.com/2/multiprocessing/
 # NOTE:    http://www.blog.pythonlibrary.org/tag/concurrency/
 # NOTE:    http://oz123.github.io/writings/2015-02-25-Simple-Multiprocessing-Task-Queue-in-Python/
-# NOTE:
-# NOTE:  PyQt Qt threading example
-# NOTE:    http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
 
 class WaveformsDownloader(multiprocessing.Process):
     """
     Subprocess class for downloading waveforms.
+
+    :param parametersList: list of parameter dictionaries containing information
+        needed to download waveforms
+    :param waveformsMessageQueue: python Queue ready to receive messages with the
+        success or failure status of each attempted waveform download
     """
     def __init__(self, parametersList, waveformsMessageQueue):
         super(WaveformsDownloader, self).__init__()
@@ -47,16 +57,23 @@ class WaveformsDownloader(multiprocessing.Process):
         self.logger = multiprocessing.get_logger()
         self.logger.setLevel(logging.DEBUG)    
         
-        # Save internal variables
+        # Configured properties
+        self.secs_before = 60 # TODO:  get configurable plot properties from WaveformOptionsDialog
+        self.secs_after = 600 # TODO:  get configurable plot properties from WaveformOptionsDialog
+
+        # Save arguments as class propteries
         self.parametersList = parametersList
-        self.waveformsMessageQueue = waveformsMessageQueue
+        self.waveformsMessageQueue = waveformsMessageQueue        
     
         return
         
         
     def run(self):
         """
-        Make a webservice request for waveforms using the passed in options
+        Work through the parametersList, downloading each associated waveform in turn.
+        
+        After making a webservice request for data, place a message on the waveformsMessageQueue
+        with information about the success or failure of the request.
         """
                         
         for parameters in self.parametersList:
@@ -92,11 +109,8 @@ class WaveformsDownloader(multiprocessing.Process):
             # TODO:  Do we need to check the phase?
             earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
             
-            # TODO:  get user chosen window parameters from WaveformOptionsDialog
-            secs_before = 60
-            secs_after = 600
-            starttime = earliest_arrival_time - secs_before
-            endtime = earliest_arrival_time + secs_after
+            starttime = earliest_arrival_time - self.secs_before
+            endtime = earliest_arrival_time + self.secs_after
             
             self.logger.debug("%s client.get_waveforms", SNCL)
 
@@ -121,57 +135,24 @@ class WaveformsDownloader(multiprocessing.Process):
                 self.logger.error('%s', e)
                 next
                 
-
             # NOTE:  Getting the following when I try to plot while using multiprocessing
             # NOTE:
             # NOTE:  The process has forked and you cannot use this CoreFoundation functionality safely. You MUST exec().
             # NOTE:  Break on __THE_PROCESS_HAS_FORKED_AND_YOU_CANNOT_USE_THIS_COREFOUNDATION_FUNCTIONALITY___YOU_MUST_EXEC__() to debug.
             # NOTE:
-            # NOTE:  Instead, we plot in a separate *thread* that runs pyweed_gui.WaveformDialog.waveformWatcher().
-            
+            # NOTE:  So, instead of generating plots in this separate process, we will only save files.
+            # NOTE:  A separate waveformsDialog.waveformsWatcherThread is in charge of watching for results
+            # NOTE:  appearing on waveformsDialog.waveformsMessageQueue and signals the main thread.
+            # NOTE:
+            # NOTE:  All plotting and GUI updating should be handled by the GUI main thread.
+
             # Announce that this file is ready for plotting
             message = "Plotting %s" % basename
             self.waveformsMessageQueue.put( {"status":"READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
             
             
-            
-            ####################################################################
-            # TODO:  Solve issue with image creation
-            ####################################################################            
-            
-            ## Create the png image
-            #filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".png"
-            #imagePath = filename
-            #print("%s st.plot filename=%s" % (SNCL,filename))
-            ####self.logger.debug('Saving %s', filename)
-            #try:
-                ## NOTE:  Getting the following when I try to plot while using multiprocessing
-                ## NOTE:
-                ## NOTE:  The process has forked and you cannot use this CoreFoundation functionality safely. You MUST exec().
-                ## NOTE:  Break on __THE_PROCESS_HAS_FORKED_AND_YOU_CANNOT_USE_THIS_COREFOUNDATION_FUNCTIONALITY___YOU_MUST_EXEC__() to debug.                
-                #st.plot(outfile=filename,
-                        #size=(plot_width,plot_height))
-            #except Exception as e:
-                ###self.log.write('%s\n' % e)
-                #print("%s" % e)
-                #pass
-
-        
+        # Send a message saying we are finished
         message = "Finished downloading %d waveforms" % len(self.parametersList)
         self.waveformsMessageQueue.put( {"status":"OK", "waveformID":"", "mseedFile":"", "message":message} )  
         
         
-## ------------------------------------------------------------------------------
-## Helper functions
-## ------------------------------------------------------------------------------
-
-
-
-## ------------------------------------------------------------------------------
-## Main
-## ------------------------------------------------------------------------------
-
-#if __name__ == '__main__':
-    #import doctest
-    #doctest.testmod(exclude_empty=True)
-    

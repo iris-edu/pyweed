@@ -361,7 +361,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         # Connect the Download button
         self.downloadPushButton.pressed.connect(self.loadWaveformData)
-        self.previewPushButton.pressed.connect(self.loadWaveformPreviews)
         
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
@@ -370,24 +369,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
         
-        ## Set up a thread for watching waveforms that lasts as long as this dialog is open
-        #self.logger.debug('Starting waveformWatcher thread')
-        ## TODO:  Another python or Qt thread or ??? to monitor creation of files?
-        #self.waveformWatcher = threading.Thread(name='waveformWatcher', target=self.waveformWatcher)
-        #self.waveformWatcher.setDaemon(True)
-        #self.waveformWatcher.start()
-        
-        
-        self.downloader = DownloadThread(self.waveformsMessageQueue)
-        self.downloader.data_downloaded.connect(self.on_data_ready)
+        # Set up a thread to watch for waveforms that lasts as long as this dialog is open
+        self.logger.debug('Starting waveformWatcher thread')
+        self.downloader = waveformsWatcherThread(self.waveformsMessageQueue)
+        self.downloader.newWaveformSignal.connect(self.handleNewWaveform)
         self.downloader.start()
         
-        
-
         self.logger.debug('Finished initializing waveform dialog')
         
 
-    def on_data_ready(self):
+    def handleNewWaveform(self):
         item = self.waveformsMessageQueue.get()
         status = item['status']
         waveformID = item['waveformID']
@@ -594,124 +585,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         parameters['plot_height'] = 200 # TODO:  This should be in preferences
                 
         # NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
-        self.logger.debug('Getting %s...', parameters['waveformID'])
-        self.statusLabel.setText(QtCore.QString("Loading %s..." % parameters['waveformID']))
-        self.statusLabel.repaint()
-        
-        # Download data
-        imagePath = self.waveformsHandler.load_data(parameters=parameters)
-        
-        # TODO:  Test if we got an image back
-        imageItem = MyTableWidgetImageWidget(self, imagePath)
-        self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
-        
-        # Tighten up the table
-        self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
-
-        self.logger.debug('Finished loading waveform preview')
-        self.statusLabel.setText('')
-        self.statusLabel.repaint()
-
-        # TODO:  display/save waveform loading progress somewhere? 
-                
-        debugPoint = True
-             
-
-    @QtCore.pyqtSlot()
-    def loadWaveformPreviews(self):
-        
-        # Get column names
-        column_names = self.waveformsHandler.get_column_names()
-        
-        #### NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
-        ###self.logger.debug('Getting %s...', parameters['waveformID'])
-        ###self.statusLabel.setText(QtCore.QString("Loading %s..." % parameters['waveformID']))
-        ###self.statusLabel.repaint()
-        
-        #### Download data
-        ###imagePath = self.waveformsHandler.load_data(parameters=parameters)
-        
-        ## TODO:  Test if we got an image back
-        #imageItem = MyTableWidgetImageWidget(self, imagePath)
-        #self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
-        
-        ## Tighten up the table
-        #self.selectionTable.resizeColumnsToContents()
-        #self.selectionTable.resizeRowsToContents()
-
-        #self.logger.debug('Finished loading waveform preview')
-        #self.statusLabel.setText('')
-        #self.statusLabel.repaint()
-
-        ## TODO:  display/save waveform loading progress somewhere? 
-                
-        #debugPoint = True
-             
-
-    def waveformWatcher(self):
-        """
-        Wait for entries to appear on the queue and then update GUI labels.
-        This should be run in a deamon thread.
-        """
-
-        # Get column names
-        column_names = self.waveformsHandler.get_column_names()        
-        
-        # TODO:  plot_width, plot_height should come from preferences
-        plot_width = 600
-        plot_height = 200
-        statusText = ""
-        while True:
-            # TODO:  Could use a blocking self.waveformsMessageQueue.get() here
-            time.sleep(0.5)
-            
-            if not self.waveformsMessageQueue.empty():
-                item = self.waveformsMessageQueue.get()
-                status = item['status']
-                waveformID = item['waveformID']
-                mseedFile = item['mseedFile']
-                message = item['message']
-                
-                if status == "OK":
-                    # Downloading
-                    statusText = message
-                    self.statusLabel.setText(statusText)
-                    self.statusLabel.repaint()
-                    
-                elif status == "READY":
-                    # Download finished
-                    statusText = message
-                    self.statusLabel.setText(statusText)
-                    self.statusLabel.repaint()
-                    # Generate a plot
-                    imagePath = mseedFile.replace('MSEED','png')
-                    st = obspy.core.read(mseedFile)
-                    st.plot(outfile=imagePath, size=(plot_width,plot_height))
-                    # Update the Table
-                    for row in range(self.selectionTable.rowCount()):
-                        if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
-                            break
-                    # Update table
-                    # NOTE:  Qt complains that calling Qpixmap is not threadsafe. So we cannot load the
-                    # NOTE:  in this thread. All we can do is modify the text.
-                    self.selectionTable.setItem(row,column_names.index('Waveform'), QtGui.QTableWidgetItem('Preview ready'))
-                    #imageItem = MyTableWidgetImageWidget(self, imagePath)
-                    #self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
-                    ## Tighten up the table
-                    #self.selectionTable.resizeColumnsToContents()
-                    #self.selectionTable.resizeRowsToContents()
-                       
-                else:
-                    # Problem downloading
-                    if message.find("No data available") >= 0:
-                        statusText = "No data available for %s" % id
-                    else:
-                        statusText = message                    
-                    self.statusLabel.setText(statusText)
-                    self.statusLabel.repaint()
-            
-                
+        self.logger.debug('Clicked on %d, %d', row, col)
+                                     
     
     
     @QtCore.pyqtSlot()
@@ -790,84 +665,32 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
 
 # NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
-class DownloadThread(QtCore.QThread):
-
-    data_downloaded = QtCore.pyqtSignal()
+class waveformsWatcherThread(QtCore.QThread):
+    """
+    After each waveform is downloaded and written to disk, a message is placed on the
+    waveformsMessageQueue.  This thread- and multiprocess-safe queue is watched by the
+    waveformsWatcherThread. This thread is started when the WaveformsDialog initializes.
+    
+    All plot generation and GUI updates must happen in the main thread. The waveformsWatcherThread
+    provides non-blocking communication between the waveformsDownloader process and
+    the main GUI process.
+    """
+    newWaveformSignal = QtCore.pyqtSignal()
 
     def __init__(self, waveformsMessageQueue):
         QtCore.QThread.__init__(self)
-        self.text = "Howdy"
         self.waveformsMessageQueue = waveformsMessageQueue
 
     def run(self):
-        #for i in range(20):
-            #time.sleep(i)
-            #self.data_downloaded.emit('%s Pardner' % (self.text))
         """
-        Wait for entries to appear on the queue and then update GUI labels.
-        This should be run in a deamon thread.
+        Wait for entries to appear on the queue and then signal the main
+        thread that data are available.
         """
-
-        # Get column names
-        ###column_names = self.waveformsHandler.get_column_names()        
-        
-        # TODO:  plot_width, plot_height should come from preferences
-        #plot_width = 600
-        #plot_height = 200
-        #statusText = ""
         while True:
-            # TODO:  Could use a blocking self.waveformsMessageQueue.get() here
+            # Slow things down just a bit to allow for GUI updating
             time.sleep(0.5)
-            
             if not self.waveformsMessageQueue.empty():
-                self.data_downloaded.emit()
-                #item = self.waveformsMessageQueue.get()
-                #status = item['status']
-                #waveformID = item['waveformID']
-                #mseedFile = item['mseedFile']
-                #message = item['message']
-                
-                ##self.data_downloaded.emit('%s: %s' % (status, message))
-                
-                #self.data_downloaded.emit(item)
-                
-                ###if status == "OK":
-                    #### Downloading
-                    ###statusText = message
-                    ###self.statusLabel.setText(statusText)
-                    ###self.statusLabel.repaint()
-                    
-                ###elif status == "READY":
-                    #### Download finished
-                    ###statusText = message
-                    ###self.statusLabel.setText(statusText)
-                    ###self.statusLabel.repaint()
-                    #### Generate a plot
-                    ###imagePath = mseedFile.replace('MSEED','png')
-                    ###st = obspy.core.read(mseedFile)
-                    ###st.plot(outfile=imagePath, size=(plot_width,plot_height))
-                    #### Update the Table
-                    ###for row in range(self.selectionTable.rowCount()):
-                        ###if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
-                            ###break
-                    #### Update table
-                    #### NOTE:  Qt complains that calling Qpixmap is not threadsafe. So we cannot load the
-                    #### NOTE:  in this thread. All we can do is modify the text.
-                    ###self.selectionTable.setItem(row,column_names.index('Waveform'), QtGui.QTableWidgetItem('Preview ready'))
-                    ####imageItem = MyTableWidgetImageWidget(self, imagePath)
-                    ####self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
-                    ##### Tighten up the table
-                    ####self.selectionTable.resizeColumnsToContents()
-                    ####self.selectionTable.resizeRowsToContents()
-                       
-                ###else:
-                    #### Problem downloading
-                    ###if message.find("No data available") >= 0:
-                        ###statusText = "No data available for %s" % id
-                    ###else:
-                        ###statusText = message                    
-                    ###self.statusLabel.setText(statusText)
-                    ###self.statusLabel.repaint()
+                self.newWaveformSignal.emit()
 
             
 

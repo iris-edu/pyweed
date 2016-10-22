@@ -60,9 +60,6 @@ class Ui_WaveformDialog(object):
         self.downloadPushButton = QtGui.QPushButton(self.downloadFrame)
         self.downloadPushButton.setObjectName(_fromUtf8("downloadPushButton"))
         self.horizontalLayout_3.addWidget(self.downloadPushButton)
-        self.previewPushButton = QtGui.QPushButton(self.downloadFrame)
-        self.previewPushButton.setObjectName(_fromUtf8("previewPushButton"))
-        self.horizontalLayout_3.addWidget(self.previewPushButton)
         self.horizontalLayout.addWidget(self.downloadFrame)
         self.horizontalLayout.setStretch(0, 3)
         self.horizontalLayout.setStretch(1, 1)
@@ -99,7 +96,6 @@ class Ui_WaveformDialog(object):
         WaveformDialog.setWindowTitle(_translate("WaveformDialog", "Dialog", None))
         self.filterGroupBox.setTitle(_translate("WaveformDialog", "Filters", None))
         self.downloadPushButton.setText(_translate("WaveformDialog", "Download", None))
-        self.previewPushButton.setText(_translate("WaveformDialog", "Preview", None))
         self.statusLabel.setText(_translate("WaveformDialog", "TextLabel", None))
         self.selectionLabel.setText(_translate("WaveformDialog", "All Event-SNCL Waveforms", None))
 
