@@ -57,13 +57,6 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QPushButton" name="previewPushButton">
-           <property name="text">
-            <string>Preview</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
