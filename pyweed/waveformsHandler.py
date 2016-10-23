@@ -30,11 +30,15 @@ from obspy.taup import TauPyModel
 from obspy.clients import fdsn
 from obspy.geodetics import locations2degrees
 
-from waveformsDownloader import WaveformsDownloader
-
 class WaveformsHandler(object):
     """
-    Container for waveforms.
+    Container for waveforms metadata.
+    
+    The contents of self.currentDF is determined by the user selections
+    in the main GUI events and SNCL tables. There will be a separate
+    entry in self.currentDF for each event-SNCL combination regardless
+    of any filtering that is applied in the WaveformsDialog to reduce
+    the size of the visible table. 
     """
     def __init__(self, logger, preferences):
         """
@@ -47,17 +51,13 @@ class WaveformsHandler(object):
         # Important preferences
         self.downloadDir = self.preferences.Waveforms.downloadDir
         
-        # TODO:  Include these in preferences
-        self.plot_width = 600
-        self.plot_height = 200
-        
         # Current state
         self.currentDF = None
                 
         
     def create_waveformsDF(self, eventsDF, stationsDF):
         """
-        Create a dataframe of event-SNCL combinations
+        Create a dataframe of event-SNCL combinations.
         """
         
         self.logger.debug('Generating event-station combined dataframe...')
@@ -130,14 +130,15 @@ class WaveformsHandler(object):
         
         # Add columns to track downloads and display waveforms
         waveformsDF['Waveform'] = ""
-        waveformsDF['WaveformPath'] = False
+        waveformsDF['WaveformImagePath'] = ""
         
         # Look to see if any have already been downloaded
         for i in range(waveformsDF.shape[0]):
             filename = waveformsDF.SNCL.iloc[i] + '_' + waveformsDF.Time.iloc[i] + ".png"
             imagePath = os.path.join(self.downloadDir, filename)
-            waveformsDF.Waveform.iloc[i] = imagePath
-            waveformsDF.WaveformPath.iloc[i] = os.path.exists(imagePath)
+            if os.path.exists(imagePath):
+                ###waveformsDF.Waveform.iloc[i] = imagePath
+                waveformsDF.WaveformImagePath.iloc[i] = imagePath
         
         # Reorganize columns
         waveformsDF = waveformsDF[self.get_column_names()]
@@ -147,65 +148,20 @@ class WaveformsHandler(object):
     
         return(waveformsDF)
     
-    
-    def load_data(self, parameters=None):
-        """
-        Load a waveform image from cache or download/plot first.
-        """
-        
-        # TOOD:  Sanity check parameters
-        
-        # TODO:  Should parameters be called "event_sncls" and passed in as a dataframe?
-        
-        source_time = parameters['time']
-        source_depth = parameters['source_depth']
-        source_lon = parameters['source_lon']
-        source_lat = parameters['source_lat']
-        SNCL = parameters['SNCL']
-        receiver_lon = parameters['receiver_lon']
-        receiver_lat = parameters['receiver_lat']
-        
-        self.logger.info('Loading data for %s-%s...', source_time, SNCL)
-
-        # Find the matching row in self.currentDF
-        # NOTE:  The table may show a resorted subset of the full currentDF so we need
-        # NOTE:  to use the parameters to find the matching row of currentDF
-        
-        # TODO:  Is this the best way to find the matching row?
-        SNCL_mask = self.currentDF.SNCL.isin([SNCL])
-        event_mask = self.currentDF.Time.isin([source_time])  # TODO:  Use 'EventID' instead of 'Time' to identify events?
-        matching_row_mask = SNCL_mask & event_mask
-        row_index = matching_row_mask.tolist().index(True)
-        
-        if self.currentDF.WaveformPath.iloc[row_index]:
-            imagePath = self.currentDF.Waveform.iloc[row_index]
-        
-        else:
-            imagePath = self.download_data_OLD(parameters)
-            self.currentDF.WaveformPath.iloc[row_index] = True
-        
+    def get_WaveformImagePath(self, waveformID):
+        waveformIDs = self.currentDF.WaveformID.tolist()
+        index = waveformIDs.index(waveformID)
+        imagePath = self.currentDF.WaveformImagePath.iloc[index]
         return(imagePath)
-
-
-    def download_data(self, parametersList=None, waveformsMessageQueue=None):
-        """
-        Start a new process to download a set of waveforms.
-        """
-        
-        # NOTE:  https://pymotw.com/2/multiprocessing/basics.html
-        
-        waveformsDownloader = WaveformsDownloader(parametersList, waveformsMessageQueue)
-        waveformsDownloader.daemon = True
-        waveformsDownloader.start()
-        # Don't block, don't listen, just let it go. 
     
-        self.logger.debug('Started WaveformsDownloader process with pid %s', waveformsDownloader.pid)
-
+    def set_WaveformImagePath(self, waveformID, imagePath):
+        waveformIDs = self.currentDF.WaveformID.tolist()
+        index = waveformIDs.index(waveformID)
+        self.currentDF.WaveformImagePath.iloc[index] = imagePath
         return
-
-
+    
     def get_column_names(self):
-        columnNames = ['SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformPath']
+        columnNames = ['SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
         return(columnNames)
     
     def get_column_hidden(self):
