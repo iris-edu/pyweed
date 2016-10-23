@@ -2,7 +2,7 @@
 
 PyWEED is a cross-platform downloadable app for retrieving event-based seismic data
 
-*(version 0.0.4)*
+*(version 0.0.9)*
 
 # Installation
 
