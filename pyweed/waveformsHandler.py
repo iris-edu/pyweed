@@ -137,13 +137,13 @@ class WaveformsHandler(object):
             filename = waveformsDF.SNCL.iloc[i] + '_' + waveformsDF.Time.iloc[i] + ".png"
             imagePath = os.path.join(self.downloadDir, filename)
             if os.path.exists(imagePath):
-                ###waveformsDF.Waveform.iloc[i] = imagePath
                 waveformsDF.WaveformImagePath.iloc[i] = imagePath
         
         # Reorganize columns
         waveformsDF = waveformsDF[self.get_column_names()]
         
         # Save a copy internally
+        self.currentDF = None
         self.currentDF = waveformsDF
     
         return(waveformsDF)

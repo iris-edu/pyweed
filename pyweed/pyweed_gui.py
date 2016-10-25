@@ -61,7 +61,7 @@ from waveformsDownloader import WaveformsDownloader
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.9"
+__version__ = "0.0.10"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -344,7 +344,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
         
-        # Set up a queue to wait for downloded messages from the separate waveformsDownloader process
+        # Set up a queue to wait for "downloded" messages from the separate waveformsDownloader process
         self.waveformsMessageQueue = multiprocessing.Queue()
         
         # Selection table
@@ -353,10 +353,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.selectionTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         
-        # Connect signals associated with table clicks
-        # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
-        # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
-        QtCore.QObject.connect(self.selectionTable, QtCore.SIGNAL('cellClicked(int, int)'), self.selectionTableClicked)
         # Resize contents after sort
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
         
@@ -372,9 +368,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         # Set up a thread to watch for waveforms that lasts as long as this dialog is open
         self.logger.debug('Starting waveformWatcher thread')
-        self.downloader = waveformsWatcherThread(self.waveformsMessageQueue)
-        self.downloader.newWaveformSignal.connect(self.handleNewWaveform)
-        self.downloader.start()
+        self.waveformsWatcher = waveformsWatcherThread(self.waveformsMessageQueue)
+        self.waveformsWatcher.newWaveformSignal.connect(self.handleNewWaveform)
+        self.waveformsWatcher.start()
         
         self.logger.debug('Finished initializing waveform dialog')
         
@@ -453,7 +449,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
         
         self.logger.debug('Loading waveform choices...')
-        self.statusBar().showMessage('Loading waveform choices...')
         
         ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.eventsHandler.get_selected_dataframe()
@@ -475,7 +470,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Add unique events to the eventComboBox -------------------------------
         
         for i in range(self.eventComboBox.count()):
-            self.eventComboBox.removeItem(i)
+            self.eventComboBox.removeItem(0)
             
         self.eventComboBox.addItem('All events')
         for i in range(eventsDF.shape[0]):
@@ -484,7 +479,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Add unique networks to the networkComboBox ---------------------------
         
         for i in range(self.networkComboBox.count()):
-            self.networkComboBox.removeItem(i)
+            self.networkComboBox.removeItem(0)
             
         self.networkComboBox.addItem('All networks')
         for network in stationsDF.Network.unique().tolist():
@@ -493,7 +488,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Add unique stations to the stationsComboBox --------------------------
 
         for i in range(self.stationComboBox.count()):
-            self.stationComboBox.removeItem(i)
+            self.stationComboBox.removeItem(0)
 
         self.stationComboBox.addItem('All stations')
         for station in stationsDF.Station.unique().tolist():
@@ -533,6 +528,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             if hidden_column[i]:
                 self.selectionTable.setColumnHidden(i,True)
         
+        # NOTE:  You must disable sorting before populating the table. Otherwise rows get
+        # NOTE:  sorted as soon as the sortable column gets filled in, thus invalidating
+        # NOTE:  the row number
+        self.selectionTable.setSortingEnabled(False)
+        
         # Add new contents
         for i in range(waveformsDF.shape[0]):
             for j in range(waveformsDF.shape[1]):
@@ -541,14 +541,17 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(waveformsDF.iat[i,j])))
                     
                 elif waveformsDF.columns[j] == 'Waveform':
-                    # Waveform column will either be an image or plain text
-                    if waveformsDF.WaveformImagePath.iloc[i]:
-                        imagePath = waveformsDF.Waveform.iloc[i]
+                    # NOET:  What to put in the Waveform column depends on what is in the WaveformImagePath column.
+                    # NOTE:  It could be plain text or an imageWidget.
+                    if waveformsDF.WaveformImagePath.iloc[i] == '':
+                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(''))
+                    elif waveformsDF.WaveformImagePath.iloc[i] == 'NO DATA AVAILABLE':
+                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+                    else:
+                        imagePath = waveformsDF.WaveformImagePath.iloc[i]
                         imageItem = MyTableWidgetImageWidget(self, imagePath)
                         self.selectionTable.setCellWidget(i, j, imageItem)
-                    else:
-                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(''))
-
+ 
                 else:
                     # Anything else is converted to normal text
                     self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
@@ -556,6 +559,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
+
+        # Restore table sorting
+        self.selectionTable.setSortingEnabled(True)
         
         self.logger.debug('Finished loading waveform selection table')
 
@@ -579,29 +585,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Finished filtering waveformsDF')
         self.loadSelectionTable(waveformsDF)
     
-    
-    @QtCore.pyqtSlot(int, int)
-    def selectionTableClicked(self, row, col):
-        
-        # Get column names
-        column_names = self.waveformsHandler.get_column_names()
-        
-        # Create parameter dictionary with data from this row
-        parameters = {}
-        parameters['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
-        parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
-        parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
-        parameters['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
-        parameters['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
-        parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
-        parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
-        parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
-        parameters['plot_width'] = 600 # TODO:  This should be in preferences
-        parameters['plot_height'] = 200 # TODO:  This should be in preferences
-                
-        # NOTE:  We need to repaint the statusLabel immediately, otherwise it won't display until this routine finishes
-        self.logger.debug('Clicked on %d, %d', row, col)
-                                     
     
     
     @QtCore.pyqtSlot()
