@@ -103,7 +103,7 @@ class WaveformsDownloader(multiprocessing.Process):
             except Exception as e:
                 self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
-                next
+                continue
         
             # TODO:  Are traveltimes always sorted by time?
             # TODO:  Do we need to check the phase?
@@ -123,7 +123,7 @@ class WaveformsDownloader(multiprocessing.Process):
             except Exception as e:
                 self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
-                next
+                continue
             
             # Save the miniseed file
             filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
@@ -133,7 +133,7 @@ class WaveformsDownloader(multiprocessing.Process):
             except Exception as e:
                 self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
-                next
+                continue
                 
             # NOTE:  Getting the following when I try to plot while using multiprocessing
             # NOTE:
