@@ -143,10 +143,9 @@ class WaveformsHandler(object):
         waveformsDF = waveformsDF[self.get_column_names()]
         
         # Save a copy internally
-        self.currentDF = None
         self.currentDF = waveformsDF
     
-        return(waveformsDF)
+        return(self.currentDF)
     
     def get_WaveformImagePath(self, waveformID):
         waveformIDs = self.currentDF.WaveformID.tolist()

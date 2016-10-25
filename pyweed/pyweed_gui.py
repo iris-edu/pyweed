@@ -328,7 +328,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.pageCount = 50
         
         # Modify default GUI settings
-        label = "Download %d" % self.pageCount
+        ###label = "Download %d" % self.pageCount
+        label = "Download / Refresh"
         self.downloadPushButton.setText(label)
         
         # Get references to MainWindow elements and methods
@@ -407,13 +408,17 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             statusText = message
             self.statusLabel.setText(statusText)
             self.statusLabel.repaint()
+
             try:
                 # Generate a plot
                 imagePath = mseedFile.replace('MSEED','png')
+                self.logger.debug('reading %s, plotting %s', mseedFile, imagePath)
                 st = obspy.core.read(mseedFile)
                 st.plot(outfile=imagePath, size=(plot_width,plot_height))
                 # Update the waveformsHandler
-                self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)
+                self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)                
+                #### Always turn off sorting when updating the table  
+                ###self.selectionTable.setSortingEnabled(False)                               
                 # Update the Table
                 for row in range(self.selectionTable.rowCount()):
                     if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
@@ -421,32 +426,52 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 # Add a pixmap to the Waveform table cell
                 imageItem = MyTableWidgetImageWidget(self, imagePath)
                 self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
+                ###self.selectionTable.setSortingEnabled(True)
+                
             except Exception as e:
                 # Update the waveformsHandler
                 self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
                 self.statusLabel.setText('No data available')
                 self.statusLabel.repaint()
                 
-            # Tighten up the table
-            self.selectionTable.resizeColumnsToContents()
-            self.selectionTable.resizeRowsToContents()
+            #### Tighten up the table
+            ###self.selectionTable.resizeColumnsToContents()
+            ###self.selectionTable.resizeRowsToContents()
                
         else:
             # Problem downloading
             if message.find("No data available") >= 0:
-                statusText = "No data available for %s" % id
+                statusText = "No data available for %s" % waveformID
             else:
                 statusText = message 
             # Update the waveformsHandler
             self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
+            #### Always turn off sorting when updating the table  
+            ###self.selectionTable.setSortingEnabled(False)                               
+            # Update the Table
+            for row in range(self.selectionTable.rowCount()):
+                if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
+                    break
+            # Set the selectionTable Waveform and WaveformImagePath columns
+            self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+            self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+            ###self.selectionTable.setSortingEnabled(True)
+            
             self.statusLabel.setText(statusText)
             self.statusLabel.repaint()
 
+        # Tighten up the table
+        self.selectionTable.resizeColumnsToContents()
+        self.selectionTable.resizeRowsToContents()
+               
+        return
 
         
     @QtCore.pyqtSlot()    
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
-        """Fill the selectionTable with all SNCL-Events selected in the MainWindow."""
+        """
+        Fill the selectionTable with all SNCL-Event combinations selected in the MainWindow.
+        """
         
         self.logger.debug('Loading waveform choices...')
         
@@ -505,7 +530,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Loading waveform selection table...')
         
-        # Display information associated with the waveformsDF columns
+        # NOTE:  You must disable sorting before populating the table. Otherwise rows get
+        # NOTE:  sorted as soon as the sortable column gets filled in, thus invalidating
+        # NOTE:  the row number
+        self.selectionTable.setSortingEnabled(False)
+
         # Note:  Display information should be in the GUI code but needs to match
         # NOTE:  the columns which are created by the waveformsHandler.
         hidden_column = self.waveformsHandler.get_column_hidden()
@@ -527,11 +556,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         for i in np.arange(len(hidden_column)):
             if hidden_column[i]:
                 self.selectionTable.setColumnHidden(i,True)
-        
-        # NOTE:  You must disable sorting before populating the table. Otherwise rows get
-        # NOTE:  sorted as soon as the sortable column gets filled in, thus invalidating
-        # NOTE:  the row number
-        self.selectionTable.setSortingEnabled(False)
         
         # Add new contents
         for i in range(waveformsDF.shape[0]):
@@ -555,10 +579,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 else:
                     # Anything else is converted to normal text
                     self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
+
+                self.selectionTable.resizeRowsToContents()
+                    
                     
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
+        ###self.selectionTable.resizeRowsToContents()
 
         # Restore table sorting
         self.selectionTable.setSortingEnabled(True)
@@ -608,26 +635,27 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         for row in range(self.pageCount):
             if row < self.selectionTable.rowCount():
                 
-                # Create parameter dictionary with data from this row
-                parameters = {}
-                parameters['downloadDir'] = self.waveformsHandler.downloadDir
-                parameters['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
-                parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
-                parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
-                parameters['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
-                parameters['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
-                parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
-                parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
-                parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
-                parameters['plot_width'] = 600 # TODO:  This should be in preferences
-                parameters['plot_height'] = 200 # TODO:  This should be in preferences
+                # Only add parameters if we don't already have this Waveform
+                if str(self.selectionTable.item(row, column_names.index('WaveformImagePath')).text()) == '':
                 
-                parametersList.append(parameters)
+                    # Create parameter dictionary with data from this row
+                    parameters = {}
+                    parameters['downloadDir'] = self.waveformsHandler.downloadDir
+                    parameters['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
+                    parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
+                    parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
+                    parameters['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
+                    parameters['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
+                    parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
+                    parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
+                    parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+                    parameters['plot_width'] = 600 # TODO:  This should be in preferences
+                    parameters['plot_height'] = 200 # TODO:  This should be in preferences
+                    
+                    parametersList.append(parameters)
                 
                         
-        self.logger.debug('Starting waveformsHandler process')
-        # Have the waveformsHandler download data in a separate process (run as a daemon so it doesn't block)
-        ###self.waveformsHandler.download_data(parametersList, self.waveformsMessageQueue)
+        self.logger.debug('Starting waveformsHandler process for %d waveforms', len(parametersList))
         
         # NOTE:  https://pymotw.com/2/multiprocessing/basics.html        
         waveformsDownloader = WaveformsDownloader(parametersList, self.waveformsMessageQueue)
@@ -639,9 +667,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     
         self.logger.debug('Started WaveformsDownloader process with pid %s', waveformsDownloader.pid)
         
-        
         self.logger.debug('Returning from loadWaveformData')
-        
         
         return
 
