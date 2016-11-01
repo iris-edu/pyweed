@@ -21,7 +21,7 @@ import time # TODO:  remove?
 import numpy as np
 import pandas as pd
 
-# Threads and Multi-processing
+# Threads, Multiprocessing and Queues
 import threading
 import multiprocessing
 
@@ -61,7 +61,7 @@ from waveformsDownloader import WaveformsDownloader
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -346,7 +346,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.stationsHandler = parent.stationsHandler
         
         # Set up a queue to wait for "downloded" messages from the separate waveformsDownloader process
-        self.waveformsMessageQueue = multiprocessing.Queue()
+        self.waveformRequestQueue = multiprocessing.Queue()
+        self.waveformResponseQueue = multiprocessing.Queue()
         
         # Selection table
         self.selectionTable.setSortingEnabled(True)
@@ -369,7 +370,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         # Set up a thread to watch for waveforms that lasts as long as this dialog is open
         self.logger.debug('Starting waveformWatcher thread')
-        self.waveformsWatcher = waveformsWatcherThread(self.waveformsMessageQueue)
+        self.waveformsWatcher = waveformsWatcherThread(self.waveformResponseQueue)
         self.waveformsWatcher.newWaveformSignal.connect(self.handleNewWaveform)
         self.waveformsWatcher.start()
         
@@ -378,7 +379,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
     def handleNewWaveform(self):
         """
-        This funciton is invoked on whenever the waveformsWatcherThread emits
+        This funciton is invoked whenever the waveformsWatcherThread emits
         a newWaveformSignal. This means that the separate waveformsDownloader process
         has written a new .MSEED file to disk and it is available for processing.
         """
@@ -390,7 +391,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         column_names = self.waveformsHandler.get_column_names()
 
         # Get the message sent by the waveformsDownloader
-        item = self.waveformsMessageQueue.get()
+        item = self.waveformResponseQueue.get()
         status = item['status']
         waveformID = item['waveformID']
         mseedFile = item['mseedFile']
@@ -417,8 +418,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 st.plot(outfile=imagePath, size=(plot_width,plot_height))
                 # Update the waveformsHandler
                 self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)                
-                #### Always turn off sorting when updating the table  
-                ###self.selectionTable.setSortingEnabled(False)                               
                 # Update the Table
                 for row in range(self.selectionTable.rowCount()):
                     if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
@@ -426,7 +425,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 # Add a pixmap to the Waveform table cell
                 imageItem = MyTableWidgetImageWidget(self, imagePath)
                 self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
-                ###self.selectionTable.setSortingEnabled(True)
                 
             except Exception as e:
                 # Update the waveformsHandler
@@ -434,10 +432,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.statusLabel.setText('No data available')
                 self.statusLabel.repaint()
                 
-            #### Tighten up the table
-            ###self.selectionTable.resizeColumnsToContents()
-            ###self.selectionTable.resizeRowsToContents()
-               
         else:
             # Problem downloading
             if message.find("No data available") >= 0:
@@ -446,8 +440,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 statusText = message 
             # Update the waveformsHandler
             self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
-            #### Always turn off sorting when updating the table  
-            ###self.selectionTable.setSortingEnabled(False)                               
             # Update the Table
             for row in range(self.selectionTable.rowCount()):
                 if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
@@ -455,7 +447,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             # Set the selectionTable Waveform and WaveformImagePath columns
             self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
             self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
-            ###self.selectionTable.setSortingEnabled(True)
             
             self.statusLabel.setText(statusText)
             self.statusLabel.repaint()
@@ -463,6 +454,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
+        
+        # TODO:  Examine table for next needed waveform
+        
+        # TODO:  Put another request onto the requestQueue
                
         return
 
@@ -471,6 +466,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
         """
         Fill the selectionTable with all SNCL-Event combinations selected in the MainWindow.
+        This funciton is triggered whenever the "Get Waveforms" button in the MainWindow is clicked.
         """
         
         self.logger.debug('Loading waveform choices...')
@@ -541,8 +537,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         numeric_column = self.waveformsHandler.get_column_numeric()
 
         # Clear existing contents
-        # NOTE:  Doing clearSelection() first is important!
-        self.selectionTable.clearSelection()
+        ###self.selectionTable.clearSelection() # This is important!
+        ###self.selectionTable.clearContents() # This is important!
+        self.selectionTable.clear() # This is important!
         while (self.selectionTable.rowCount() > 0):
             self.selectionTable.removeRow(0)
         
@@ -556,7 +553,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         for i in np.arange(len(hidden_column)):
             if hidden_column[i]:
                 self.selectionTable.setColumnHidden(i,True)
-        
+
+        # Tighten up the table
+        self.selectionTable.resizeColumnsToContents()
+        self.selectionTable.resizeRowsToContents()
+
         # Add new contents
         for i in range(waveformsDF.shape[0]):
             for j in range(waveformsDF.shape[1]):
@@ -579,13 +580,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 else:
                     # Anything else is converted to normal text
                     self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
-
-                self.selectionTable.resizeRowsToContents()
                     
-                    
+        # TODO:  test a short sleep here?
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
-        ###self.selectionTable.resizeRowsToContents()
+        self.selectionTable.resizeRowsToContents()
 
         # Restore table sorting
         self.selectionTable.setSortingEnabled(True)
@@ -613,9 +612,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.loadSelectionTable(waveformsDF)
     
     
-    
     @QtCore.pyqtSlot()
     def loadWaveformData(self):
+        """
+        This function is triggered whenever the user presses the "Download / Refresh" button.
+        """
         
         # NOTE:  Google "python multiprocessing try except":
         # NOTE:  Good example:  http://stackoverflow.com/questions/16943404/python-multiprocessing-and-handling-exceptions-in-workers
@@ -658,7 +659,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Starting waveformsHandler process for %d waveforms', len(parametersList))
         
         # NOTE:  https://pymotw.com/2/multiprocessing/basics.html        
-        waveformsDownloader = WaveformsDownloader(parametersList, self.waveformsMessageQueue)
+        waveformsDownloader = WaveformsDownloader(parametersList, self.waveformRequestQueue, self.waveformResponseQueue)
         waveformsDownloader.daemon = True
         waveformsDownloader.start()
         # Don't block, don't listen, just let it go. 
@@ -681,15 +682,15 @@ class waveformsWatcherThread(QtCore.QThread):
     provides non-blocking communication between the waveformsDownloader process and the main process.
      
     After each waveform is downloaded and written to disk by the waveformsDownloader, a message 
-    is placed on the waveformsMessageQueue.  This thread- and multiprocess-safe queue is watched
+    is placed on the waveformResponseQueue.  This thread- and multiprocess-safe queue is watched
     by the waveformsWatcherThread. When a new message arrives on the queue a newWaveformSignal
     is emitted which triggers waveformsDialog.handleNewWaveform().
     """
     newWaveformSignal = QtCore.pyqtSignal()
 
-    def __init__(self, waveformsMessageQueue):
+    def __init__(self, waveformResponseQueue):
         QtCore.QThread.__init__(self)
-        self.waveformsMessageQueue = waveformsMessageQueue
+        self.waveformResponseQueue = waveformResponseQueue
 
     def run(self):
         """
@@ -699,7 +700,7 @@ class waveformsWatcherThread(QtCore.QThread):
         while True:
             # Slow things down just a bit to allow for GUI updating
             time.sleep(0.5)
-            if not self.waveformsMessageQueue.empty():
+            if not self.waveformResponseQueue.empty():
                 self.newWaveformSignal.emit()
 
             
@@ -852,8 +853,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.logger.debug('Received %d events, ', eventsDF.shape[0])
 
         # Clear existing contents
-        # NOTE:  Doing clearSelection() first is important!
-        self.eventsTable.clearSelection()
+        self.eventsTable.clearSelection() # This is important!
         while (self.eventsTable.rowCount() > 0):
             self.eventsTable.removeRow(0)
         
@@ -923,8 +923,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.logger.debug('Received %d channels, ', stationsDF.shape[0])
         
         # Clear existing contents
-        # NOTE:  Doing clearSelection() first is important!
-        self.stationsTable.clearSelection()
+        self.stationsTable.clearSelection() # This is important!
         while (self.stationsTable.rowCount() > 0):
             self.stationsTable.removeRow(0)
 

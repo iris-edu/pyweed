@@ -7,13 +7,13 @@ Subprocess class for downloading waveforms.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
-This process is started up when the WaveformsDialog initializaes and continues
-until it is finished downloading.
+This process is started up when the WaveformsDialog "Download / Refresh" button
+is pressed and continues until it is finished downloading.
 
 # TODO:  It can be interrupted with a (?signal) from the WaveformsDialog.
         
 After each waveform is downloaded and written to disk, a message is placed on
-the waveformsMessageQueue.  This thread and multi-process safe queue is watched
+the waveformResponseQueue.  This thread and multi-process safe queue is watched
 in a waveformsWatcher thread started when the WaveformsDialog initializes.
 
 Waveforms downloading is both IO- and CPU-intensive so running it in an entirely
@@ -46,10 +46,10 @@ class WaveformsDownloader(multiprocessing.Process):
 
     :param parametersList: list of parameter dictionaries containing information
         needed to download waveforms
-    :param waveformsMessageQueue: python Queue ready to receive messages with the
+    :param waveformResponseQueue: python Queue ready to receive messages with the
         success or failure status of each attempted waveform download
     """
-    def __init__(self, parametersList, waveformsMessageQueue):
+    def __init__(self, parametersList, waveformReqeustQueue, waveformResponseQueue):
         super(WaveformsDownloader, self).__init__()
         
         # Set up multiprocessor logging
@@ -63,7 +63,7 @@ class WaveformsDownloader(multiprocessing.Process):
 
         # Save arguments as class propteries
         self.parametersList = parametersList
-        self.waveformsMessageQueue = waveformsMessageQueue        
+        self.waveformResponseQueue = waveformResponseQueue        
     
         return
         
@@ -72,7 +72,7 @@ class WaveformsDownloader(multiprocessing.Process):
         """
         Work through the parametersList, downloading each associated waveform in turn.
         
-        After making a webservice request for data, place a message on the waveformsMessageQueue
+        After making a webservice request for data, place a message on the waveformResponseQueue
         with information about the success or failure of the request.
         """
                         
@@ -95,13 +95,13 @@ class WaveformsDownloader(multiprocessing.Process):
             basename = SNCL + '_' + str(source_time)
 
             message = "Downloading %s" % basename
-            self.waveformsMessageQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
+            self.waveformResponseQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
 
             try:
                 model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
                 tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
             except Exception as e:
-                self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 continue
         
@@ -115,13 +115,13 @@ class WaveformsDownloader(multiprocessing.Process):
             self.logger.debug("%s client.get_waveforms", SNCL)
 
             # Get the waveform
-            dataCenter = "IRIS"
+            dataCenter = "IRIS" # TODO:  dataCenter should be configurable
             client = fdsn.Client(dataCenter)
             (network, station, location, channel) = SNCL.split('.')
             try:
                 st = client.get_waveforms(network, station, location, channel, starttime, endtime)
             except Exception as e:
-                self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 continue
             
@@ -129,12 +129,14 @@ class WaveformsDownloader(multiprocessing.Process):
             filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
             self.logger.debug("%s st.write filename=%s", SNCL, filename)
             try:
-                st.write(filename, format="MSEED") 
+                st.write(filename, format="MSEED")
             except Exception as e:
-                self.waveformsMessageQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 continue
                 
+            # TODO:  Is this the place to save another version of the data in the configurable directory in the configurable format?
+            
             # NOTE:  Getting the following when I try to plot while using multiprocessing
             # NOTE:
             # NOTE:  The process has forked and you cannot use this CoreFoundation functionality safely. You MUST exec().
@@ -142,17 +144,19 @@ class WaveformsDownloader(multiprocessing.Process):
             # NOTE:
             # NOTE:  So, instead of generating plots in this separate process, we will only save files.
             # NOTE:  A separate waveformsDialog.waveformsWatcherThread is in charge of watching for results
-            # NOTE:  appearing on waveformsDialog.waveformsMessageQueue and signals the main thread.
+            # NOTE:  appearing on waveformsDialog.waveformResponseQueue and signals the main thread.
             # NOTE:
             # NOTE:  All plotting and GUI updating should be handled by the GUI main thread.
 
             # Announce that this file is ready for plotting
+            # TODO:  Maybe change the status and message to reflect "MSEED_READY". It's not up the the downloader to decide what happens next.
             message = "Plotting %s" % basename
-            self.waveformsMessageQueue.put( {"status":"READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
+            self.waveformResponseQueue.put( {"status":"READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
             
             
         # Send a message saying we are finished
+        # TODO:  Maybe change status to "FINISHED"
         message = "Finished downloading %d waveforms" % len(self.parametersList)
-        self.waveformsMessageQueue.put( {"status":"OK", "waveformID":"", "mseedFile":"", "message":message} )  
+        self.waveformResponseQueue.put( {"status":"OK", "waveformID":"", "mseedFile":"", "message":message} )  
         
         
