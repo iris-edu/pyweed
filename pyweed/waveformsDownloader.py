@@ -85,46 +85,45 @@ class WaveformsDownloader(multiprocessing.Process):
             # Pull elements from the request dictionary
             task = request['task']
             downloadDir = request['downloadDir']
-            #source_time = request['time']
-            #source_depth = request['source_depth']
-            #source_lon = request['source_lon']
-            #source_lat = request['source_lat']
-            #SNCL = request['SNCL']
-            #receiver_lon = request['receiver_lon']
-            #receiver_lat = request['receiver_lat']
+            source_time = request['time']
+            source_depth = request['source_depth']
+            source_lon = request['source_lon']
+            source_lat = request['source_lat']
+            SNCL = request['SNCL']
+            receiver_lon = request['receiver_lon']
+            receiver_lat = request['receiver_lat']
             plot_width = request['plot_width']
             plot_height = request['plot_height']
-            #waveformID = request['waveformID']
+            waveformID = request['waveformID']
 
-            time.sleep(0.5)
-            waveformID = "BOP"
-            message = "%s #%d" % (downloadDir, iteration)
-            self.logger.debug('Got request, sending response')
+            #time.sleep(0.1) # Would a sleep help avoid problems?
+            message = "%s #%d" % (waveformID, iteration)
+            ###self.logger.debug('Got request, sending response')
+            ###self.waveformResponseQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
+            
+            self.logger.debug("%s TauPyModel", SNCL)
+
+            basename = SNCL + '_' + str(source_time)
+
+            message = "Downloading %s" % basename
             self.waveformResponseQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
-            
-            #self.logger.debug("%s TauPyModel", SNCL)
 
-            #basename = SNCL + '_' + str(source_time)
-
-            #message = "Downloading %s" % basename
-            #self.waveformResponseQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
-
-            #try:
-                #model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
-                #tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
-            #except Exception as e:
-                #self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
-                #self.logger.error('%s', e)
-                #continue
+            try:
+                model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
+                tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
+            except Exception as e:
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.logger.error('%s', e)
+                continue
         
-            ## TODO:  Are traveltimes always sorted by time?
-            ## TODO:  Do we need to check the phase?
-            #earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
+            # TODO:  Are traveltimes always sorted by time?
+            # TODO:  Do we need to check the phase?
+            earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
             
-            #starttime = earliest_arrival_time - self.secs_before
-            #endtime = earliest_arrival_time + self.secs_after
+            starttime = earliest_arrival_time - self.secs_before
+            endtime = earliest_arrival_time + self.secs_after
             
-            #self.logger.debug("%s client.get_waveforms", SNCL)
+            self.logger.debug("%s client.get_waveforms", SNCL)
 
             ## Get the waveform
             #dataCenter = "IRIS" # TODO:  dataCenter should be configurable
