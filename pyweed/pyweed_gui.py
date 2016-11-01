@@ -629,64 +629,34 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         # NOTE:  Multi-processing example:  https://pymotw.com/2/multiprocessing/basics.html
         
-        # Get column names
+        # Find the first row with an empty WaveformImagePath
         column_names = self.waveformsHandler.get_column_names()
-        
+        for row in range(self.selectionTable.rowCount()):
+            waveformImagePath = self.selectionTable.item(row,column_names.index('WaveformImagePath')).text()
+            if waveformImagePath == '':
+                break
+
+        # Create a DOWNLOAD_WAVEFORM request with data from this row
         request = {}
         request['task'] = 'DOWNLOAD_WAVEFORM'
         request['downloadDir'] = self.waveformsHandler.downloadDir
-        #request['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
-        #request['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
-        #request['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
-        #request['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
-        #request['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
-        #request['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
-        #request['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
-        #request['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+        request['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
+        request['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
+        request['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
+        request['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
+        request['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
+        request['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
+        request['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
+        request['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
         request['plot_width'] = 600 # TODO:  This should be in preferences
         request['plot_height'] = 200 # TODO:  This should be in preferences
 
+        # Publish the request
+        self.logger.debug('Adding DOWNLOAD_WAVEFORM %s to the requestQueue' % request['waveformID'])        
         self.waveformRequestQueue.put(request)
 
-        #for row in range(self.pageCount):
-            #if row < self.selectionTable.rowCount():
-                
-                ## Only add parameters if we don't already have this Waveform
-                #if str(self.selectionTable.item(row, column_names.index('WaveformImagePath')).text()) == '':
-                
-                    ## Create parameter dictionary with data from this row
-                    #parameters = {}
-                    #parameters['downloadDir'] = self.waveformsHandler.downloadDir
-                    #parameters['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
-                    #parameters['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
-                    #parameters['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
-                    #parameters['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
-                    #parameters['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
-                    #parameters['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
-                    #parameters['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
-                    #parameters['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
-                    #parameters['plot_width'] = 600 # TODO:  This should be in preferences
-                    #parameters['plot_height'] = 200 # TODO:  This should be in preferences
-                    
-                    #parametersList.append(parameters)
-                
-                        
-        #self.logger.debug('Starting waveformsHandler process for %d waveforms', len(parametersList))
-        
-        ## NOTE:  https://pymotw.com/2/multiprocessing/basics.html        
-        #waveformsDownloader = WaveformsDownloader(parametersList, self.waveformResponseQueue)
-        #waveformsDownloader.daemon = True
-        #waveformsDownloader.start()
-        ## Don't block, don't listen, just let it go. 
-        
-        ## TODO:  Should we worry about zombie processes?  Must be careful about terminating processes that share a Queue.
+        return
     
-        #self.logger.debug('Started WaveformsDownloader process with pid %s', waveformsDownloader.pid)
-        
-        #self.logger.debug('Returning from downloadWaveformData')
-        
-        #return
-
 
 # NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
 class waveformsWatcherThread(QtCore.QThread):
