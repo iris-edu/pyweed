@@ -27,6 +27,9 @@ import multiprocessing
 
 # ObsPy
 import obspy
+from obspy import UTCDateTime
+from obspy.taup import TauPyModel
+from obspy.clients import fdsn
 
 # PyQt4 packages
 from PyQt4 import QtCore
@@ -322,11 +325,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
-        # TODO:  pageCount should be configurable
-        self.pageCount = 1
+        # Configured properties
+        self.secs_before = 60 # TODO:  get configurable plot properties from WaveformOptionsDialog
+        self.secs_after = 600 # TODO:  get configurable plot properties from WaveformOptionsDialog
+
         
         # Modify default GUI settings
-        ###label = "Download %d" % self.pageCount
         label = "Download / Refresh"
         self.downloadPushButton.setText(label)
         
@@ -347,6 +351,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformRequestQueue = multiprocessing.Queue()
         self.waveformResponseQueue = multiprocessing.Queue()
         
+        # TODO:  Attempting to avert threading/process disfunction by instantiating ObsPy fdsn.Client in the parent process
+        dataCenter = "IRIS" # TODO:  dataCenter should be configurable
+        self.client = fdsn.Client(dataCenter)
+        
         # Selection table
         self.selectionTable.setSortingEnabled(True)
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -366,12 +374,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
         
-        # Set up a process to download waveforms
-        self.logger.debug('Starting waveformsHandler process')
-        waveformsDownloader = WaveformsDownloader(self.waveformRequestQueue, self.waveformResponseQueue)
-        waveformsDownloader.daemon = True
-        waveformsDownloader.start()
-        self.logger.debug('Started WaveformsDownloader process with pid %s', waveformsDownloader.pid)
+        #### Set up a process to download waveforms
+        ###self.logger.debug('Starting waveformsHandler process')
+        ###waveformsDownloader = WaveformsDownloader(self.waveformRequestQueue, self.waveformResponseQueue, self.client)
+        ###waveformsDownloader.daemon = True
+        ###waveformsDownloader.start()
+        ###self.logger.debug('Started WaveformsDownloader process with pid %s', waveformsDownloader.pid)
+        
+        # Set up a thread to watch for waveform requests that lasts as long as this dialog is open
+        self.logger.debug('Starting waveformRequestWatcherThread')
+        self.waveformRequestWatcher = waveformRequestWatcherThread(self.waveformRequestQueue)
+        self.waveformRequestWatcher.newRequestSignal.connect(self.handleNewRequest)
+        self.waveformRequestWatcher.start()
         
         # Set up a thread to watch for waveforms that lasts as long as this dialog is open
         self.logger.debug('Starting waveformWatcher thread')
@@ -382,87 +396,173 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Finished initializing waveform dialog')
         
 
+    def handleNewRequest(self):
+        """
+        """
+
+        if not self.waveformRequestQueue.empty():
+
+            # Get the message sent by the waveformsDownloader
+            ###time.sleep(0.1) # TODO:  Would a sleep help avoid problems?
+    
+            request = self.waveformRequestQueue.get()
+            
+            # Pull elements from the request dictionary
+            task = request['task']
+            downloadDir = request['downloadDir']
+            source_time = request['time']
+            source_depth = request['source_depth']
+            source_lon = request['source_lon']
+            source_lat = request['source_lat']
+            SNCL = request['SNCL']
+            receiver_lon = request['receiver_lon']
+            receiver_lat = request['receiver_lat']
+            plot_width = request['plot_width']
+            plot_height = request['plot_height']
+            waveformID = request['waveformID']
+    
+            time.sleep(0.5) # TODO:  Would a sleep help avoid problems?
+            
+            self.logger.debug("%s TauPyModel", SNCL)
+    
+            basename = SNCL + '_' + str(source_time)
+    
+            message = "Downloading %s" % basename
+            self.waveformResponseQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
+    
+            try:
+                model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
+                tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
+            except Exception as e:
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.logger.error('%s', e)
+                return
+        
+            # TODO:  Are traveltimes always sorted by time?
+            # TODO:  Do we need to check the phase?
+            earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
+            
+            starttime = earliest_arrival_time - self.secs_before
+            endtime = earliest_arrival_time + self.secs_after
+            
+            self.logger.debug("%s client.get_waveforms", SNCL)
+    
+            # Get the waveform
+            ###dataCenter = "IRIS" # TODO:  dataCenter should be configurable
+            ###client = fdsn.Client(dataCenter)
+            (network, station, location, channel) = SNCL.split('.')
+            try:
+                st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
+            except Exception as e:
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.logger.error('%s', e)
+                return
+            
+            # Save the miniseed file
+            filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
+            self.logger.debug("%s st.write filename=%s", SNCL, filename)
+            try:
+                st.write(filename, format="MSEED")
+            except Exception as e:
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.logger.error('%s', e)
+                return
+            
+            # Announce that this file is ready for plotting
+            # TODO:  Maybe change the status and message to reflect "MSEED_READY". It's not up the the downloader to decide what happens next.
+            message = "Plotting %s" % basename
+            self.waveformResponseQueue.put( {"status":"READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
+            
+        return
+
+
     def handleNewWaveform(self):
         """
         This funciton is invoked whenever the waveformsWatcherThread emits
         a newWaveformSignal. This means that the separate waveformsDownloader process
         has written a new .MSEED file to disk and it is available for processing.
         """
-        # TODO:  plot_width, plot_height should come from preferences
-        plot_width = 600
-        plot_height = 200
 
-        # Get selectionTable column names
-        column_names = self.waveformsHandler.get_column_names()
-
-        # Get the message sent by the waveformsDownloader
-        item = self.waveformResponseQueue.get()
-        status = item['status']
-        waveformID = item['waveformID']
-        mseedFile = item['mseedFile']
-        message = item['message']
-        
-        # Handle different status results
-        if status == "OK":
-            # Downloading
-            statusText = message
-            self.statusLabel.setText(statusText)
-            self.statusLabel.repaint()
+        if not self.waveformResponseQueue.empty():
+    
+            # TODO:  plot_width, plot_height should come from preferences
+            plot_width = 600
+            plot_height = 200
+    
+            # Get selectionTable column names
+            column_names = self.waveformsHandler.get_column_names()
+    
+            # Get the message sent by the waveformsDownloader
+            ###time.sleep(0.1) # TODO:  Would a sleep help avoid problems?
+            item = self.waveformResponseQueue.get()
+            status = item['status']
+            waveformID = item['waveformID']
+            mseedFile = item['mseedFile']
+            message = item['message']
             
-        elif status == "READY":
-            # Download finished
-            statusText = message
-            self.statusLabel.setText(statusText)
-            self.statusLabel.repaint()
-
-            try:
-                # Generate a plot
-                imagePath = mseedFile.replace('MSEED','png')
-                self.logger.debug('reading %s, plotting %s', mseedFile, imagePath)
-                st = obspy.core.read(mseedFile)
-                st.plot(outfile=imagePath, size=(plot_width,plot_height))
+            # Handle different status results
+            if status == "OK":
+                # Downloading
+                statusText = message
+                self.statusLabel.setText(statusText)
+                self.statusLabel.repaint()
+                
+            elif status == "READY":
+                # Download finished
+                statusText = message
+                self.statusLabel.setText(statusText)
+                self.statusLabel.repaint()
+    
+                try:
+                    # Generate a plot
+                    imagePath = mseedFile.replace('MSEED','png')
+                    self.logger.debug('reading %s, plotting %s', mseedFile, imagePath)
+                    st = obspy.core.read(mseedFile)
+                    st.plot(outfile=imagePath, size=(plot_width,plot_height))
+                    # Update the waveformsHandler
+                    self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)                
+                    # Update the Table
+                    for row in range(self.selectionTable.rowCount()):
+                        if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
+                            break
+                    # Add a pixmap to the Waveform table cell
+                    imageItem = MyTableWidgetImageWidget(self, imagePath)
+                    self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
+                    self.statusLabel.setText('')
+                    self.statusLabel.repaint()
+                    
+                except Exception as e:
+                    # Update the waveformsHandler
+                    self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
+                    self.statusLabel.setText('No data available')
+                    self.statusLabel.repaint()
+                    
+            else:
+                # Problem downloading
+                if message.find("No data available") >= 0:
+                    statusText = "No data available for %s" % waveformID
+                else:
+                    statusText = message 
                 # Update the waveformsHandler
-                self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)                
+                self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
                 # Update the Table
                 for row in range(self.selectionTable.rowCount()):
                     if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
                         break
-                # Add a pixmap to the Waveform table cell
-                imageItem = MyTableWidgetImageWidget(self, imagePath)
-                self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
+                # Set the selectionTable Waveform and WaveformImagePath columns
+                self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+                self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                 
-            except Exception as e:
-                # Update the waveformsHandler
-                self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
-                self.statusLabel.setText('No data available')
+                self.statusLabel.setText(statusText)
                 self.statusLabel.repaint()
-                
-        else:
-            # Problem downloading
-            if message.find("No data available") >= 0:
-                statusText = "No data available for %s" % waveformID
-            else:
-                statusText = message 
-            # Update the waveformsHandler
-            self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
-            # Update the Table
-            for row in range(self.selectionTable.rowCount()):
-                if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
-                    break
-            # Set the selectionTable Waveform and WaveformImagePath columns
-            self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
-            self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+    
+            # Tighten up the table
+            self.selectionTable.resizeColumnsToContents()
+            self.selectionTable.resizeRowsToContents()
             
-            self.statusLabel.setText(statusText)
-            self.statusLabel.repaint()
-
-        # Tighten up the table
-        self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
-        
-        # TODO:  Examine table for next needed waveform
-        
-        # TODO:  Put another request onto the requestQueue
+            # TODO:  Examine table for next needed waveform
+            
+            # TODO:  Put another request onto the requestQueue
                
         return
 
@@ -683,11 +783,43 @@ class waveformsWatcherThread(QtCore.QThread):
         thread that data are available.
         """
         while True:
-            # Slow things down just a bit to allow for GUI updating
+            # NOTE:  At least a half second sleep seems critical here.
+            # TODO:  Could we do a Queue.get() at this point and block until something arrives?
             time.sleep(0.5)
             if not self.waveformResponseQueue.empty():
                 self.newWaveformSignal.emit()
 
+
+# NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
+class waveformRequestWatcherThread(QtCore.QThread):
+    """
+    This thread is started when the WaveformsDialog initializes.
+    
+    ###All plot generation and GUI updates must happen in the main thread. The waveformsWatcherThread
+    ###provides non-blocking communication between the waveformsDownloader process and the main process.
+     
+    ###After each waveform is downloaded and written to disk by the waveformsDownloader, a message 
+    ###is placed on the waveformResponseQueue.  This thread- and multiprocess-safe queue is watched
+    ###by the waveformsWatcherThread. When a new message arrives on the queue a newWaveformSignal
+    ###is emitted which triggers waveformsDialog.handleNewWaveform().
+    """
+    newRequestSignal = QtCore.pyqtSignal()
+
+    def __init__(self, waveformRequestQueue):
+        QtCore.QThread.__init__(self)
+        self.waveformRequestQueue = waveformRequestQueue
+
+    def run(self):
+        """
+        Wait for entries to appear on the queue and then signal the main
+        thread that a request has been made.
+        """
+        while True:
+            # NOTE:  At least a half second sleep seems critical here.
+            # TODO:  Could we do a Queue.get() at this point and block until something arrives?
+            time.sleep(0.5)
+            if not self.waveformRequestQueue.empty():
+                self.newRequestSignal.emit()
             
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
