@@ -50,7 +50,7 @@ class WaveformsDownloader(multiprocessing.Process):
     :param waveformResponseQueue: python Queue ready to receive messages with the
         success or failure status of each attempted waveform download
     """
-    def __init__(self, waveformRequestQueue, waveformResponseQueue):
+    def __init__(self, waveformRequestQueue, waveformResponseQueue, client):
         super(WaveformsDownloader, self).__init__()
         
         # Set up multiprocessor logging
@@ -63,6 +63,7 @@ class WaveformsDownloader(multiprocessing.Process):
         self.secs_after = 600 # TODO:  get configurable plot properties from WaveformOptionsDialog
 
         # Save arguments as class propteries
+        self.client = client
         self.waveformRequestQueue = waveformRequestQueue
         self.waveformResponseQueue = waveformResponseQueue        
     
@@ -96,7 +97,7 @@ class WaveformsDownloader(multiprocessing.Process):
             plot_height = request['plot_height']
             waveformID = request['waveformID']
 
-            #time.sleep(0.1) # Would a sleep help avoid problems?
+            time.sleep(0.5) # TODO:  Would a sleep help avoid problems?
             message = "%s #%d" % (waveformID, iteration)
             ###self.logger.debug('Got request, sending response')
             ###self.waveformResponseQueue.put( {"status":"OK", "waveformID":waveformID, "mseedFile":"", "message":message} )
@@ -125,16 +126,29 @@ class WaveformsDownloader(multiprocessing.Process):
             
             self.logger.debug("%s client.get_waveforms", SNCL)
 
-            ## Get the waveform
-            #dataCenter = "IRIS" # TODO:  dataCenter should be configurable
-            #client = fdsn.Client(dataCenter)
-            #(network, station, location, channel) = SNCL.split('.')
-            #try:
-                #st = client.get_waveforms(network, station, location, channel, starttime, endtime)
-            #except Exception as e:
-                #self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
-                #self.logger.error('%s', e)
-                #continue
+            # NOTE:  When running the waveformsDownloader as a separate process we run into problems with
+            # NOTE:  
+            # NOTE:    client = fds.nClient(dataCenter)
+            # NOTE:
+            # NOTE:  The waveformsDownloader process just stops and becomes unresponsive when it gets to this line.
+            # NOTE:
+            # NOTE:  Deep inside of the Client class, pythong threading is invoked which  apparently conflict
+            # NOTE:  with my simple attempts to run waveformsDownloader as a long-lived process that waits for
+            # NOTE:  instructions to come on the requestThread.
+            # NOTE:
+            # NOTE:  Previously I had success running this process to download multiple files at a time and then end
+            # NOTE:  without having to wait for instructions on the reqeustQueue.
+            
+            # Get the waveform
+            ###dataCenter = "IRIS" # TODO:  dataCenter should be configurable
+            ###client = fdsn.Client(dataCenter)
+            (network, station, location, channel) = SNCL.split('.')
+            try:
+                st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
+            except Exception as e:
+                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
+                self.logger.error('%s', e)
+                continue
             
             ## Save the miniseed file
             #filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
@@ -165,9 +179,4 @@ class WaveformsDownloader(multiprocessing.Process):
             #self.waveformResponseQueue.put( {"status":"READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
             
             
-        ## Send a message saying we are finished
-        ## TODO:  Maybe change status to "FINISHED"
-        #message = "Finished downloading %d waveforms" % len(self.parametersList)
-        #self.waveformResponseQueue.put( {"status":"OK", "waveformID":"", "mseedFile":"", "message":message} )  
-        
-        
+            # Loop continues until a request with task='TERMINATE' is received.
