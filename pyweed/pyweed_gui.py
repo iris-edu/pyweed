@@ -428,10 +428,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
             basename = SNCL + '_' + str(source_time)
     
-            # Update WaveformDialog statusLabel
-            statusText = "Downloading %s" % basename
-            self.statusLabel.setText(statusText)
-            self.statusLabel.repaint()
+            #### Update WaveformDialog statusLabel
+            ###statusText = "Downloading %s" % basename
+            ###self.statusLabel.setText(statusText)
+            ###self.statusLabel.repaint()
                 
             # Calculate arrival times
             self.logger.debug("%s calculate travel time", SNCL)
@@ -473,7 +473,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             # Announce that this file is ready for plotting
             # TODO:  Maybe change the status and message to reflect "MSEED_READY". It's not up the the downloader to decide what happens next.
             message = "Plotting %s" % basename
-            self.waveformResponseQueue.put( {"status":"READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
+            self.waveformResponseQueue.put( {"status":"MSEED_READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
             
         return
 
@@ -502,12 +502,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             
             self.logger.debug("waveformResponseSignal: %s -- %s", status, waveformID)
 
+            # WaveformDialog status text
+            statusText = ''
+            
             # Handle different status results                
-            if status == "READY":
-                # Download finished
-                statusText = message
-                self.statusLabel.setText(statusText)
-                self.statusLabel.repaint()
+            if status == "MSEED_READY":
     
                 try:
                     # Generate a plot
@@ -516,28 +515,27 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     st = obspy.core.read(mseedFile)
                     self.logger.debug('plotting %s', imagePath)
                     st.plot(outfile=imagePath, size=(plot_width,plot_height))
+                    
                     # Update the waveformsHandler
-                    self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)                
+                    self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)  
+                    
                     # Update the Table
                     for row in range(self.selectionTable.rowCount()):
                         if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
+                            # Add imagePath to the WaveformImagePath table cell
+                            self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem(imagePath))
+                            # Add a pixmap to the Waveform table cell
+                            imageItem = MyTableWidgetImageWidget(self, imagePath)                    
+                            self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
                             break
-                    # Add imagePath to the WaveformImagePath table cell
-                    self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem(imagePath))
-                    # Add a pixmap to the Waveform table cell
-                    imageItem = MyTableWidgetImageWidget(self, imagePath)                    
-                    self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
-                    self.statusLabel.setText('')
-                    self.statusLabel.repaint()
-                    
+                                            
                 except Exception as e:
                     # Update the selectionTable
                     self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                     self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                     # Update the waveformsHandler
                     self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
-                    self.statusLabel.setText('No data available')
-                    self.statusLabel.repaint()
+                    statusText = "No data available for %s" % waveformID
                     
             else:
                 # Problem downloading
@@ -545,24 +543,27 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     statusText = "No data available for %s" % waveformID
                 else:
                     statusText = message 
+                    
                 # Update the waveformsHandler
                 self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
+                
                 # Update the Table
                 for row in range(self.selectionTable.rowCount()):
                     if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
+                        # Set the selectionTable Waveform and WaveformImagePath columns
+                        self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+                        self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                         break
-                # Set the selectionTable Waveform and WaveformImagePath columns
-                self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
-                self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
-                
-                self.statusLabel.setText(statusText)
-                self.statusLabel.repaint()
-    
+         
+            # Update status text       
+            self.statusLabel.setText(statusText)
+            self.statusLabel.repaint()
+
             # Tighten up the table
             self.selectionTable.resizeColumnsToContents()
             self.selectionTable.resizeRowsToContents()
-            
-            # TODO:  Put another request onto the requestQueue
+
+            # Request more data
             self.downloadWaveformData()
                
         return
@@ -661,8 +662,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.selectionTable.setColumnHidden(i,True)
 
         # Tighten up the table
-        self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
+        ###self.selectionTable.resizeColumnsToContents()
+        ###self.selectionTable.resizeRowsToContents()
 
         # Add new contents
         for i in range(waveformsDF.shape[0]):
@@ -687,7 +688,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     # Anything else is converted to normal text
                     self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
                     
-        # TODO:  test a short sleep here?
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
@@ -723,6 +723,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """
         This function is triggered whenever the user presses the "Download / Refresh" button.
         """
+
+        # WaveformDialog status text
+        statusText = ''
         
         # Find the first row of the selectionTable with an empty WaveformImagePath
         column_names = self.waveformsHandler.get_column_names()
@@ -734,9 +737,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # NOTE:  At this point, we have either stopped at the first row where waveformImagePath ==''
         # NOTE:    --OR --
         # NOTE:  we have finished the loop without encountering any missing waveforms.
-        
-        # TODO:  After exhausing the visible selectionTable we should got to the waveformsHandler
-        # TODO:  until that is also exhausted.
         
         if waveformImagePath == '':
             # Create a DOWNLOAD_WAVEFORM request with data from this row
@@ -758,8 +758,46 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
             self.waveformRequestQueue.put(request)
             
+            statusText = "Downloading %s" % request['waveformID']
+            
         else:
-            self.logger.debug('COMPLETED all downloads')
+            
+            # After exhausing the all rows in the currently visible selectionTable we should
+            # go through the rows of waveformsHandler.currentDF until that is also exhausted.
+
+            for row in range(self.waveformsHandler.currentDF.shape[0]):
+                waveformImagePath = self.waveformsHandler.currentDF.WaveformImagePath.iloc[row]
+                if waveformImagePath == '':
+                    break
+            
+            if waveformImagePath == '':
+                # Create a DOWNLOAD_WAVEFORM request with data from this row
+                request = {}
+                request['task'] = 'DOWNLOAD_WAVEFORM'
+                request['downloadDir'] = self.waveformsHandler.downloadDir
+                request['time'] = str(self.waveformsHandler.currentDF.Time.iloc[row])
+                request['source_depth'] = float(self.waveformsHandler.currentDF.Depth.iloc[row])
+                request['source_lon'] = float(self.waveformsHandler.currentDF.Event_Lon.iloc[row])
+                request['source_lat'] = float(self.waveformsHandler.currentDF.Event_Lat.iloc[row])
+                request['SNCL'] = str(self.waveformsHandler.currentDF.SNCL.iloc[row])
+                request['receiver_lon'] = float(self.waveformsHandler.currentDF.Station_Lon.iloc[row])
+                request['receiver_lat'] = float(self.waveformsHandler.currentDF.Station_Lat.iloc[row])
+                request['waveformID'] = str(self.waveformsHandler.currentDF.WaveformID.iloc[row])
+                request['plot_width'] = 600 # TODO:  This should be in preferences
+                request['plot_height'] = 200 # TODO:  This should be in preferences
+        
+                # Publish the request
+                self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
+                self.waveformRequestQueue.put(request)
+                
+                statusText = "Downloading %s" % request['waveformID']                
+                
+            else:
+                self.logger.debug('COMPLETED all downloads')
+
+        # Update status text       
+        self.statusLabel.setText(statusText)
+        self.statusLabel.repaint()
             
         return
     
@@ -769,13 +807,8 @@ class waveformResponseWatcherThread(QtCore.QThread):
     """
     This thread is started when the WaveformsDialog initializes.
     
-    All plot generation and GUI updates must happen in the main thread. The waveformResponseWatcherThread
-    provides non-blocking communication between the waveformsDownloader process and the main process.
-     
-    After each waveform is downloaded and written to disk by the waveformsDownloader, a message 
-    is placed on the waveformResponseQueue.  This thread- and multiprocess-safe queue is watched
-    by the waveformResponseWatcherThread. When a new message arrives on the queue a waveformResponseSignal
-    is emitted which triggers waveformsDialog.handleNewWaveform().
+    When a message appears on the waveformResponseQueue, this thread
+    emits a waveformResponseSignal which then triggers waveformResponseHandler().
     """
     waveformResponseSignal = QtCore.pyqtSignal()
 
@@ -789,8 +822,7 @@ class waveformResponseWatcherThread(QtCore.QThread):
         thread that data are available.
         """
         while True:
-            # NOTE:  At least a half second sleep seems critical here.
-            # TODO:  Could we do a Queue.get() at this point and block until something arrives?
+            # NOTE:  A small sleep gives the main thread a chance to respond to GUI events
             time.sleep(0.2)
             if not self.waveformResponseQueue.empty():
                 self.waveformResponseSignal.emit()
@@ -801,13 +833,8 @@ class waveformRequestWatcherThread(QtCore.QThread):
     """
     This thread is started when the WaveformsDialog initializes.
     
-    ###All plot generation and GUI updates must happen in the main thread. The waveformResponseWatcherThread
-    ###provides non-blocking communication between the waveformsDownloader process and the main process.
-     
-    ###After each waveform is downloaded and written to disk by the waveformsDownloader, a message 
-    ###is placed on the waveformResponseQueue.  This thread- and multiprocess-safe queue is watched
-    ###by the waveformResponseWatcherThread. When a new message arrives on the queue a waveformResponseSignal
-    ###is emitted which triggers waveformsDialog.handleNewWaveform().
+    When a message appears on the waveformRequestQueue, this thread
+    emits a waveformRequestSignal which then triggers waveformRequestHandler().
     """
     waveformRequestSignal = QtCore.pyqtSignal()
 
@@ -821,8 +848,7 @@ class waveformRequestWatcherThread(QtCore.QThread):
         thread that a request has been made.
         """
         while True:
-            # NOTE:  At least a half second sleep seems critical here.
-            # TODO:  Could we do a Queue.get() at this point and block until something arrives?
+            # NOTE:  A small sleep gives the main thread a chance to respond to GUI events
             time.sleep(0.2)
             if not self.waveformRequestQueue.empty():
                 self.waveformRequestSignal.emit()
