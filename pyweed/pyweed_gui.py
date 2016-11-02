@@ -594,6 +594,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         
         # Add event-SNCL combintations to the selection table
         self.loadSelectionTable(waveformsDF)
+        
+        # Tighten up the table
+        self.selectionTable.resizeColumnsToContents()
+        self.selectionTable.resizeRowsToContents()        
 
         # Add unique events to the eventComboBox -------------------------------
         
@@ -717,6 +721,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Finished filtering waveformsDF')
         self.loadSelectionTable(waveformsDF)
     
+        # Tighten up the table
+        self.selectionTable.resizeColumnsToContents()
+        self.selectionTable.resizeRowsToContents()
+        
     
     @QtCore.pyqtSlot()
     def downloadWaveformData(self):
