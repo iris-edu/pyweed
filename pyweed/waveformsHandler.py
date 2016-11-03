@@ -139,6 +139,9 @@ class WaveformsHandler(object):
             if os.path.exists(imagePath):
                 waveformsDF.WaveformImagePath.iloc[i] = imagePath
         
+        # Add a Keep column for checkboxes
+        waveformsDF['Keep'] = ''
+        
         # Reorganize columns
         waveformsDF = waveformsDF[self.get_column_names()]
         
@@ -160,15 +163,15 @@ class WaveformsHandler(object):
         return
     
     def get_column_names(self):
-        columnNames = ['SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
+        columnNames = ['Keep', 'SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
         return(columnNames)
     
     def get_column_hidden(self):
-        is_hidden =    [False,  False,      False,       False,   False,  False,      True,        True,        True,      True,      True,      True,          True,          True,         True,                True]
+        is_hidden =    [False,  False,  False,      False,       False,   False,  False,      True,        True,        True,      True,      True,      True,          True,          True,         True,                True]
         return(is_hidden)
     
     def get_column_numeric(self):
-        is_numeric =   [False,  True,       True,        True,    False,  False,      True,        True,        False,     False,     False,     True,          True,          False,        False,               False]
+        is_numeric =   [False,  False,  True,       True,        True,    False,  False,      True,        True,        False,     False,     False,     True,          True,          False,        False,               False]
         return(is_numeric)
     
     
