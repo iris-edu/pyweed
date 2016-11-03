@@ -140,7 +140,7 @@ class WaveformsHandler(object):
                 waveformsDF.WaveformImagePath.iloc[i] = imagePath
         
         # Add a Keep column for checkboxes
-        waveformsDF['Keep'] = ''
+        waveformsDF['Keep'] = True
         
         # Reorganize columns
         waveformsDF = waveformsDF[self.get_column_names()]
@@ -160,6 +160,18 @@ class WaveformsHandler(object):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         self.currentDF.WaveformImagePath.iloc[index] = imagePath
+        return
+    
+    def get_WaveformKeep(self, waveformID):
+        waveformIDs = self.currentDF.WaveformID.tolist()
+        index = waveformIDs.index(waveformID)
+        keep = self.currentDF.Keep.iloc[index]
+        return(keep)
+    
+    def set_WaveformKeep(self, waveformID, keep):
+        waveformIDs = self.currentDF.WaveformID.tolist()
+        index = waveformIDs.index(waveformID)
+        self.currentDF.Keep.iloc[index] = keep
         return
     
     def get_column_names(self):
