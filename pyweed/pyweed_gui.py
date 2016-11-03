@@ -57,7 +57,6 @@ from preferences import Preferences
 from eventsHandler import EventsHandler
 from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
-###from waveformsDownloader import WaveformsDownloader
 
 from seismap import Seismap
 
@@ -331,7 +330,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         
         # Modify default GUI settings
-        label = "Download / Refresh"
+        label = "Save Waveforms"
         self.downloadPushButton.setText(label)
         
         # Get references to MainWindow elements and methods
@@ -627,6 +626,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.stationComboBox.addItem(station)
 
         self.logger.debug('Finished loading waveform choices')
+        
+        # Start requesting data
+        self.downloadWaveformData()
+        
+        return
+     
 
         
     @QtCore.pyqtSlot()    
@@ -677,7 +682,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(waveformsDF.iat[i,j])))
                     
                 elif waveformsDF.columns[j] == 'Waveform':
-                    # NOET:  What to put in the Waveform column depends on what is in the WaveformImagePath column.
+                    # NOTE:  What to put in the Waveform column depends on what is in the WaveformImagePath column.
                     # NOTE:  It could be plain text or an imageWidget.
                     if waveformsDF.WaveformImagePath.iloc[i] == '':
                         self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(''))
@@ -688,6 +693,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         imageItem = MyTableWidgetImageWidget(self, imagePath)
                         self.selectionTable.setCellWidget(i, j, imageItem)
  
+                elif waveformsDF.columns[j] == 'Keep':
+                    checkBoxItem = QtGui.QTableWidgetItem()
+                    checkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                    checkBoxItem.setCheckState(QtCore.Qt.Checked)       
+                    self.selectionTable.setItem(i, j, checkBoxItem)
+                    
                 else:
                     # Anything else is converted to normal text
                     self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
@@ -700,6 +711,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setSortingEnabled(True)
         
         self.logger.debug('Finished loading waveform selection table')
+        
+        return
 
         
     @QtCore.pyqtSlot(int)
@@ -724,6 +737,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
+        
+        return
         
     
     @QtCore.pyqtSlot()
