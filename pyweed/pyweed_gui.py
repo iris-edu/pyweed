@@ -372,13 +372,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
-        
-        #### Set up a process to download waveforms
-        ###self.logger.debug('Starting waveformsHandler process')
-        ###waveformsDownloader = WaveformsDownloader(self.waveformRequestQueue, self.waveformResponseQueue, self.client)
-        ###waveformsDownloader.daemon = True
-        ###waveformsDownloader.start()
-        ###self.logger.debug('Started WaveformsDownloader process with pid %s', waveformsDownloader.pid)
+        self.selectionTable.itemClicked.connect(self.handleTableItemClicked)
         
         # Set up a thread to watch for waveform requests that lasts as long as this dialog is open
         self.logger.debug('Starting waveformRequestWatcherThread')
@@ -427,11 +421,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
             basename = SNCL + '_' + str(source_time)
     
-            #### Update WaveformDialog statusLabel
-            ###statusText = "Downloading %s" % basename
-            ###self.statusLabel.setText(statusText)
-            ###self.statusLabel.repaint()
-                
             # Calculate arrival times
             self.logger.debug("%s calculate travel time", SNCL)
             try:
@@ -567,6 +556,23 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                
         return
 
+
+    # NOTE:  http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
+    # NOTE:  http://stackoverflow.com/questions/30462078/using-a-checkbox-in-pyqt
+    def handleTableItemClicked(self, item):
+        # The checkbox column is named 'Keep'
+        row = item.row()
+        col = item.column()
+        column_names = self.waveformsHandler.get_column_names()
+        if col == column_names.index('Keep'):
+            waveformID = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+            if item.checkState() == QtCore.Qt.Checked:
+                self.waveformsHandler.set_WaveformKeep(waveformID, True)
+            else:
+                self.waveformsHandler.set_WaveformKeep(waveformID, False)
+                
+        return
+
         
     @QtCore.pyqtSlot()    
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
@@ -670,10 +676,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             if hidden_column[i]:
                 self.selectionTable.setColumnHidden(i,True)
 
-        # Tighten up the table
-        ###self.selectionTable.resizeColumnsToContents()
-        ###self.selectionTable.resizeRowsToContents()
-
         # Add new contents
         for i in range(waveformsDF.shape[0]):
             for j in range(waveformsDF.shape[1]):
@@ -696,7 +698,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 elif waveformsDF.columns[j] == 'Keep':
                     checkBoxItem = QtGui.QTableWidgetItem()
                     checkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                    checkBoxItem.setCheckState(QtCore.Qt.Checked)       
+                    if self.waveformsHandler.get_WaveformKeep(waveformsDF.WaveformID.iloc[i]):
+                        checkBoxItem.setCheckState(QtCore.Qt.Checked)
+                    else:
+                        checkBoxItem.setCheckState(QtCore.Qt.Unchecked)                        
                     self.selectionTable.setItem(i, j, checkBoxItem)
                     
                 else:
