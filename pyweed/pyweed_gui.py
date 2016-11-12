@@ -872,7 +872,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         else:
             self.logger.error('Output format "%s" not recognized' % formatChoice)
             
-        
+        savedCount = 0
         for row in range(self.waveformsHandler.currentDF.shape[0]):
             keep = self.waveformsHandler.currentDF.Keep.iloc[row]
             waveformID = self.waveformsHandler.currentDF.WaveformID.iloc[row]
@@ -883,14 +883,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 outputFile = mseedFile.replace('MSEED',extension)
                 outputPath = os.path.join(outputDir,outputFile)
                 statusText = "Saving %s " % (outputFile)
-                self.statusLabel.setText(statusText)
-                self.statusLabel.repaint()
                 self.logger.debug('reading %s', mseedFile)
                 st = obspy.core.read(mseedPath)
                 self.logger.debug('writing %s', outputPath)
                 st.write(outputPath, format=outputFormat)
-
                 
+                savedCount += 1
+                self.statusLabel.setText("Saved %d waveforms as %s ..." % (savedCount,formatChoice))
+                self.statusLabel.repaint()
+                QtGui.QApplication.processEvents() # update the status label
+
         self.statusLabel.setText('')
             
         
