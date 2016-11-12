@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_LoggingDialog(object):
     def setupUi(self, LoggingDialog):
         LoggingDialog.setObjectName(_fromUtf8("LoggingDialog"))
-        LoggingDialog.resize(738, 469)
+        LoggingDialog.resize(1051, 1171)
         self.verticalLayout = QtGui.QVBoxLayout(LoggingDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.loggingPlainTextEdit = QtGui.QPlainTextEdit(LoggingDialog)
