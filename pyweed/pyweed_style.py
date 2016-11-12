@@ -12,17 +12,6 @@ from __future__ import (absolute_import, division, print_function)
 
 stylesheet = """
 
-/* Example for testing */
-/*
-QFrame, QLabel, QToolTip {
-    border: 2px solid green;
-    border-radius: 4px;
-    padding: 2px;
-}
-*/
-
-/* Example for testing */
-/* QTableWidget::item:focus { background-color:gray50; color:red;  border: 0px } */
 
 QTableView {
     gridline-color: white;
@@ -40,5 +29,42 @@ QDialog#WaveformDialog QTableView#selectionTable {
     selection-background-color: white;
     selection-color: black;
 }
+
+
+/* Example
+QPushButton
+{
+    color: #b1b1b1;
+    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #565656, stop: 0.1 #525252, stop: 0.5 #4e4e4e, stop: 0.9 #4a4a4a, stop: 1 #464646);
+    border-width: 1px;
+    border-color: #1e1e1e;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 12px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:pressed
+{
+    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2d2d2d, stop: 0.1 #2b2b2b, stop: 0.5 #292929, stop: 0.9 #282828, stop: 1 #252525);
+}
+
+QPushButton:hover
+{
+    border: 2px solid QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);
+}
+
+QPushButton:focus {
+    background-color: red;
+}
+*/
+
+/* Prevent WaveformDialog.directoryPushButton from staying highlighted */
+QDialog#WaveformDialog directoryPushButton:focus {
+    background-color: white;
+}
+
 
 """

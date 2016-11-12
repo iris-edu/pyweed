@@ -72,13 +72,13 @@ class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
 
         # Initialize loggingPlainTextEdit
         self.loggingPlainTextEdit.setReadOnly(True)
-        
+
         # Add a widget logging handler to the logger
         loggingHandler = MyTextEditLoggingHandler(widget=self.loggingPlainTextEdit)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         loggingHandler.setFormatter(formatter)
         logger.addHandler(loggingHandler)
-     
+
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
     """Dialog window for event options used in creating a webservice query."""
@@ -86,7 +86,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         super(self.__class__, self).__init__()
         self.setupUi(self)
         self.setWindowTitle('Event Query Options')
-        
+
         # Get references to MainWindow elements
         self.logger = parent.logger
         self.seismap = parent.seismap
@@ -96,7 +96,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.timeButtonGroup = QtGui.QButtonGroup()
         self.timeButtonGroup.addButton(self.timeBetweenRadioButton,1)
         self.timeButtonGroup.addButton(self.timeDuringStationsRadioButton,2)
-        
+
         self.locationButtonGroup = QtGui.QButtonGroup()
         self.locationButtonGroup.addButton(self.locationRangeRadioButton,1)
         self.locationButtonGroup.addButton(self.locationDistanceFromPointRadioButton,2)
@@ -115,7 +115,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))        
         self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
-        
+
         # Set tab order
         self.setTabOrder(self.minmagLineEdit, self.maxmagLineEdit)
         self.setTabOrder(self.maxmagLineEdit, self.mindepthLineEdit)        
@@ -143,7 +143,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.distanceFromPointMaxRadiusLineEdit.setText(prefs.distanceFromPointMaxRadius)
         self.distanceFromPointEastLineEdit.setText(prefs.distanceFromPointEast)
         self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
-        
+
         # Initialize the date selectors # TODO: using preferences
         self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
         self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
@@ -151,13 +151,13 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         monthAgo = today.addMonths(-1)
         self.starttimeDateTimeEdit.setDateTime(monthAgo)
         self.endtimeDateTimeEdit.setDateTime(today)
-        
+
         # Intialize time and location type selection using preferences
         getattr(self, prefs.selectedTimeButton).setChecked(True)
         getattr(self, prefs.selectedLocationButton).setChecked(True)
-        
 
-        
+
+
     @QtCore.pyqtSlot()    
     def getOptions(self):
         """
@@ -165,7 +165,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         All dictionary values are properly formatted for use in building an event service URL.
         """
         options = {}        
-        
+
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
         options['endtime'] = str(self.endtimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
@@ -173,7 +173,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         options['maxmag'] = str(self.maxmagLineEdit.text())
         options['mindepth'] = str(self.mindepthLineEdit.text())
         options['maxdepth'] = str(self.maxdepthLineEdit.text())
-        
+
         # catalog, type, and lat-lon ranges are optional
         #if str(self.catalogComboBox.currentText()) != 'All Catalogs':
             #options['catalog'] = str(self.type.currentText())
@@ -197,7 +197,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
                 options['lon'] = str(self.distanceFromPointEastLineEdit.text())            
             if str(self.distanceFromPointNorthLineEdit.text()) != '':
                 options['lat'] = str(self.distanceFromPointNorthLineEdit.text())
-            
+
         return options
 
 
@@ -217,7 +217,7 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.timeButtonGroup = QtGui.QButtonGroup()
         self.timeButtonGroup.addButton(self.timeBetweenRadioButton,1)
         self.timeButtonGroup.addButton(self.timeDuringEventsRadioButton,2)
-        
+
         self.locationButtonGroup = QtGui.QButtonGroup()
         self.locationButtonGroup.addButton(self.locationRangeRadioButton,1)
         self.locationButtonGroup.addButton(self.locationDistanceFromPointRadioButton,2)
@@ -232,7 +232,7 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))        
         self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
-        
+
         # Set tab order
         self.setTabOrder(self.networkLineEdit, self.stationLineEdit)
         self.setTabOrder(self.stationLineEdit, self.locationLineEdit)        
@@ -281,11 +281,11 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         All dictionary values are properly formatted for use in building an event service URL.
         """
         options = {}        
-        
+
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
         options['endtime'] = str(self.endtimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
-        
+
         # SNCL and lat-lon ranges are optional
         if str(self.networkLineEdit.text()) != '':
             options['network'] = str(self.networkLineEdit.text())            
@@ -313,7 +313,7 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
                 options['lon'] = str(self.distanceFromPointEastLineEdit.text())            
             if str(self.distanceFromPointNorthLineEdit.text()) != '':
                 options['lat'] = str(self.distanceFromPointNorthLineEdit.text())
-            
+
         return options
 
 
@@ -327,16 +327,25 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Configured properties
         self.secs_before = 60 # TODO:  get configurable plot properties from WaveformOptionsDialog
         self.secs_after = 600 # TODO:  get configurable plot properties from WaveformOptionsDialog
-
         
+        self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformPath
+
+
         # Modify default GUI settings
         label = "Save Waveforms"
-        self.downloadPushButton.setText(label)
+        self.savePushButton.setText(label)
+        
+        self.directoryPushButton.setText(self.waveformDirectory)
+        self.directoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)        
+
+        # Fill the format combo box
+        self.formatComboBox.addItems(['ASCII','GSE2','MSEED','SAC'])
+        self.formatComboBox.setCurrentIndex(2)
         
         # Get references to MainWindow elements and methods
         self.logger = parent.logger
         self.statusBar = parent.statusBar
-        
+
         self.logger.debug('Initializing waveform dialog...')
 
         # Waveforms
@@ -345,27 +354,28 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
         self.stationsHandler = parent.stationsHandler
-        
+
         # Set up queues to request waveform downloads and respond with a status
         self.waveformRequestQueue = multiprocessing.Queue()
         self.waveformResponseQueue = multiprocessing.Queue()
-        
-        # TODO:  Attempting to avert threading/process disfunction by instantiating ObsPy fdsn.Client in the parent process
+
+        # NOTE:  Attempting to avert threading/process dysfunction by instantiating ObsPy fdsn.Client in the parent process
         dataCenter = "IRIS" # TODO:  dataCenter should be configurable
         self.client = fdsn.Client(dataCenter)
-        
+
         # Selection table
         self.selectionTable.setSortingEnabled(True)
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.selectionTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        
+
         # Resize contents after sort
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
-        
-        # Connect the Download button
-        self.downloadPushButton.pressed.connect(self.downloadWaveformData)
-        
+
+        # Connect the Download buttons
+        self.savePushButton.pressed.connect(self.saveWaveformData)
+        self.directoryPushButton.pressed.connect(self.getWaveformDirectory)
+
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
         # NOTE:  currentIndexChanged() responds to both user and programmatic changes. Use activated() for user initiated changes
@@ -373,21 +383,21 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.selectionTable.itemClicked.connect(self.handleTableItemClicked)
-        
+
         # Set up a thread to watch for waveform requests that lasts as long as this dialog is open
         self.logger.debug('Starting waveformRequestWatcherThread')
         self.waveformRequestWatcher = waveformRequestWatcherThread(self.waveformRequestQueue)
         self.waveformRequestWatcher.waveformRequestSignal.connect(self.handleWaveformRequest)
         self.waveformRequestWatcher.start()
-        
+
         # Set up a thread to watch for waveforms that lasts as long as this dialog is open
         self.logger.debug('Starting waveformWatcher thread')
         self.waveformResponseWatcher = waveformResponseWatcherThread(self.waveformResponseQueue)
         self.waveformResponseWatcher.waveformResponseSignal.connect(self.handleWaveformResponse)
         self.waveformResponseWatcher.start()
-        
+
         self.logger.debug('Finished initializing waveform dialog')
-        
+
 
     def handleWaveformRequest(self):
         """
@@ -397,12 +407,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # NOTE:  The watcher should guarantee there is something in the queue
         # NOTE:  before emitting the waveformRequestSignal that is connected
         # NOTE:  to this function. But it doesn't hurt to check again.
-        
+
         if not self.waveformRequestQueue.empty():
 
             # Get the request    
             request = self.waveformRequestQueue.get()
-            
+
             # Pull elements from the request dictionary
             task = request['task']
             downloadDir = request['downloadDir']
@@ -416,11 +426,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             plot_width = request['plot_width']
             plot_height = request['plot_height']
             waveformID = request['waveformID']
-    
+
             self.logger.debug("waveformRequestSignal: %s -- %s", task, waveformID)
 
             basename = SNCL + '_' + str(source_time)
-    
+
             # Calculate arrival times
             self.logger.debug("%s calculate travel time", SNCL)
             try:
@@ -430,14 +440,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 return
-        
+
             # TODO:  Are traveltimes always sorted by time?
             # TODO:  Do we need to check the phase?
             earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
-            
+
             starttime = earliest_arrival_time - self.secs_before
             endtime = earliest_arrival_time + self.secs_after
-            
+
             # Download the waveform
             self.logger.debug("%s download waveform", SNCL)    
             (network, station, location, channel) = SNCL.split('.')
@@ -447,7 +457,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 return
-            
+
             # Save the miniseed file
             filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
             self.logger.debug("%s save as MiniSEED", SNCL)
@@ -457,12 +467,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
                 self.logger.error('%s', e)
                 return
-            
+
             # Announce that this file is ready for plotting
             # TODO:  Maybe change the status and message to reflect "MSEED_READY". It's not up the the downloader to decide what happens next.
             message = "Plotting %s" % basename
             self.waveformResponseQueue.put( {"status":"MSEED_READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
-            
+
         return
 
 
@@ -473,29 +483,29 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         has written a new .MSEED file to disk and it is available for processing.
         """
         if not self.waveformResponseQueue.empty():
-    
+
             # TODO:  plot_width, plot_height should come from preferences
             plot_width = 600
             plot_height = 200
-    
+
             # Get selectionTable column names
             column_names = self.waveformsHandler.get_column_names()
-    
+
             # Get the message sent by the waveformsDownloader
             item = self.waveformResponseQueue.get()
             status = item['status']
             waveformID = item['waveformID']
             mseedFile = item['mseedFile']
             message = item['message']
-            
+
             self.logger.debug("waveformResponseSignal: %s -- %s", status, waveformID)
 
             # WaveformDialog status text
             statusText = ''
-            
+
             # Handle different status results                
             if status == "MSEED_READY":
-    
+
                 try:
                     # Generate a plot
                     imagePath = mseedFile.replace('MSEED','png')
@@ -503,10 +513,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     st = obspy.core.read(mseedFile)
                     self.logger.debug('plotting %s', imagePath)
                     st.plot(outfile=imagePath, size=(plot_width,plot_height))
-                    
+
                     # Update the waveformsHandler
                     self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)  
-                    
+
                     # Update the Table
                     for row in range(self.selectionTable.rowCount()):
                         if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
@@ -516,7 +526,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                             imageItem = MyTableWidgetImageWidget(self, imagePath)                    
                             self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
                             break
-                                            
+
                 except Exception as e:
                     # Update the selectionTable
                     self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
@@ -524,17 +534,17 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     # Update the waveformsHandler
                     self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
                     statusText = "No data available for %s" % waveformID
-                    
+
             else:
                 # Problem downloading
                 if message.find("No data available") >= 0:
                     statusText = "No data available for %s" % waveformID
                 else:
                     statusText = message 
-                    
+
                 # Update the waveformsHandler
                 self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
-                
+
                 # Update the Table
                 for row in range(self.selectionTable.rowCount()):
                     if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
@@ -542,7 +552,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                         self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                         break
-         
+
             # Update status text       
             self.statusLabel.setText(statusText)
             self.statusLabel.repaint()
@@ -553,7 +563,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
             # Request more data
             self.downloadWaveformData()
-               
+
         return
 
 
@@ -570,54 +580,54 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.waveformsHandler.set_WaveformKeep(waveformID, True)
             else:
                 self.waveformsHandler.set_WaveformKeep(waveformID, False)
-                
+
         return
 
-        
+
     @QtCore.pyqtSlot()    
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
         """
         Fill the selectionTable with all SNCL-Event combinations selected in the MainWindow.
         This funciton is triggered whenever the "Get Waveforms" button in the MainWindow is clicked.
         """
-        
+
         self.logger.debug('Loading waveform choices...')
-        
+
         ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.eventsHandler.get_selected_dataframe()
         stationsDF = self.stationsHandler.get_selected_dataframe()
-        
+
         self.statusLabel.setText(QtCore.QString("Calculating distances..."))
         self.statusLabel.repaint()
-        
+
         waveformsDF = self.waveformsHandler.create_waveformsDF(eventsDF, stationsDF)
-        
+
         self.statusLabel.setText(QtCore.QString(""))
         self.statusLabel.repaint()
-        
+
         self.logger.debug('Finished building dataframe for %d waveforms', waveformsDF.shape[0])
-                        
+
         # Add event-SNCL combintations to the selection table
         self.loadSelectionTable(waveformsDF)
-        
+
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()        
 
         # Add unique events to the eventComboBox -------------------------------
-        
+
         for i in range(self.eventComboBox.count()):
             self.eventComboBox.removeItem(0)
-            
+
         self.eventComboBox.addItem('All events')
         for i in range(eventsDF.shape[0]):
             self.eventComboBox.addItem(eventsDF.Time.iloc[i])
-        
+
         # Add unique networks to the networkComboBox ---------------------------
-        
+
         for i in range(self.networkComboBox.count()):
             self.networkComboBox.removeItem(0)
-            
+
         self.networkComboBox.addItem('All networks')
         for network in stationsDF.Network.unique().tolist():
             self.networkComboBox.addItem(network)
@@ -632,14 +642,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.stationComboBox.addItem(station)
 
         self.logger.debug('Finished loading waveform choices')
-        
+
         # Start requesting data
         self.downloadWaveformData()
-        
-        return
-     
 
-        
+        return
+
+
+
     @QtCore.pyqtSlot()    
     def loadSelectionTable(self, waveformsDF):
         """
@@ -647,7 +657,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """
 
         self.logger.debug('Loading waveform selection table...')
-        
+
         # NOTE:  You must disable sorting before populating the table. Otherwise rows get
         # NOTE:  sorted as soon as the sortable column gets filled in, thus invalidating
         # NOTE:  the row number
@@ -664,7 +674,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.clear() # This is important!
         while (self.selectionTable.rowCount() > 0):
             self.selectionTable.removeRow(0)
-        
+
         # Create new table
         self.selectionTable.setRowCount(waveformsDF.shape[0])
         self.selectionTable.setColumnCount(waveformsDF.shape[1])
@@ -682,7 +692,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 if numeric_column[j]:
                     # Guarantee that all elements are converted to strings for display but apply proper sorting
                     self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(waveformsDF.iat[i,j])))
-                    
+
                 elif waveformsDF.columns[j] == 'Waveform':
                     # NOTE:  What to put in the Waveform column depends on what is in the WaveformImagePath column.
                     # NOTE:  It could be plain text or an imageWidget.
@@ -694,7 +704,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         imagePath = waveformsDF.WaveformImagePath.iloc[i]
                         imageItem = MyTableWidgetImageWidget(self, imagePath)
                         self.selectionTable.setCellWidget(i, j, imageItem)
- 
+
                 elif waveformsDF.columns[j] == 'Keep':
                     checkBoxItem = QtGui.QTableWidgetItem()
                     checkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
@@ -703,23 +713,23 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     else:
                         checkBoxItem.setCheckState(QtCore.Qt.Unchecked)                        
                     self.selectionTable.setItem(i, j, checkBoxItem)
-                    
+
                 else:
                     # Anything else is converted to normal text
                     self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
-                    
+
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
 
         # Restore table sorting
         self.selectionTable.setSortingEnabled(True)
-        
+
         self.logger.debug('Finished loading waveform selection table')
-        
+
         return
 
-        
+
     @QtCore.pyqtSlot(int)
     def loadFilteredSelectionTable(self):
         """
@@ -738,23 +748,29 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             waveformsDF = waveformsDF[waveformsDF.Station == station]
         self.logger.debug('Finished filtering waveformsDF')
         self.loadSelectionTable(waveformsDF)
-    
+
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
-        
+
         return
-        
-    
+
+
     @QtCore.pyqtSlot()
     def downloadWaveformData(self):
         """
-        This function is triggered whenever the user presses the "Download / Refresh" button.
+        This function is triggered after the selectionTable is initially loaded
+        by loadWaveformChoices() and, after that, by handleWaveformResponse() after
+        it has finished handling a waveform.
+        
+        This function looks at the current selectionTable view for any waveforms
+        that have not yet been downloaded. After that table is exhausted, it goes
+        through all not-yet-downloaded data in waveformHandler.currentDF.
         """
 
         # WaveformDialog status text
         statusText = ''
-        
+
         # Find the first row of the selectionTable with an empty WaveformImagePath
         column_names = self.waveformsHandler.get_column_names()
         for row in range(self.selectionTable.rowCount()):
@@ -765,7 +781,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # NOTE:  At this point, we have either stopped at the first row where waveformImagePath ==''
         # NOTE:    --OR --
         # NOTE:  we have finished the loop without encountering any missing waveforms.
-        
+
         if waveformImagePath == '':
             # Create a DOWNLOAD_WAVEFORM request with data from this row
             request = {}
@@ -781,15 +797,15 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             request['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
             request['plot_width'] = 600 # TODO:  This should be in preferences
             request['plot_height'] = 200 # TODO:  This should be in preferences
-    
+
             # Publish the request
             self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
             self.waveformRequestQueue.put(request)
-            
+
             statusText = "Downloading %s" % request['waveformID']
-            
+
         else:
-            
+
             # After exhausing the all rows in the currently visible selectionTable we should
             # go through the rows of waveformsHandler.currentDF until that is also exhausted.
 
@@ -797,7 +813,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 waveformImagePath = self.waveformsHandler.currentDF.WaveformImagePath.iloc[row]
                 if waveformImagePath == '':
                     break
-            
+
             if waveformImagePath == '':
                 # Create a DOWNLOAD_WAVEFORM request with data from this row
                 request = {}
@@ -813,28 +829,99 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 request['waveformID'] = str(self.waveformsHandler.currentDF.WaveformID.iloc[row])
                 request['plot_width'] = 600 # TODO:  This should be in preferences
                 request['plot_height'] = 200 # TODO:  This should be in preferences
-        
+
                 # Publish the request
                 self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
                 self.waveformRequestQueue.put(request)
-                
+
                 statusText = "Downloading %s" % request['waveformID']                
-                
+
             else:
                 self.logger.debug('COMPLETED all downloads')
 
         # Update status text       
         self.statusLabel.setText(statusText)
         self.statusLabel.repaint()
-            
+
         return
-    
+
+
+    @QtCore.pyqtSlot()
+    def saveWaveformData(self):
+        """
+        This function is triggered whenever the user presses the "Save Waveforms" button.
+        """
+
+        inputDir = self.waveformsHandler.downloadDir
+        outputDir = self.waveformDirectory # TODO:  change to saveDir
+        
+        # Handle user format choice
+        formatChoice = str(self.formatComboBox.currentText())
+        if formatChoice == 'ASCII':
+            outputFormat = 'TSPAIR'
+            extension = 'ascii'
+        elif formatChoice == 'GSE2':
+            outputFormat = 'GSE2'
+            extension = 'gse'
+        elif formatChoice == 'MSEED':
+            outputFormat = 'MSEED'
+            extension = 'mseed'
+        elif formatChoice == 'SAC':
+            outputFormat = 'SAC'
+            extension = 'sac'
+        else:
+            self.logger.error('Output format "%s" not recognized' % formatChoice)
+            
+        
+        for row in range(self.waveformsHandler.currentDF.shape[0]):
+            keep = self.waveformsHandler.currentDF.Keep.iloc[row]
+            waveformID = self.waveformsHandler.currentDF.WaveformID.iloc[row]
+            waveformImagePath = self.waveformsHandler.currentDF.WaveformImagePath.iloc[row]
+            if keep and (waveformImagePath != "NO DATA AVAILABLE"):
+                mseedPath = waveformImagePath.replace('.png','.MSEED')
+                mseedFile = os.path.basename(mseedPath)
+                outputFile = mseedFile.replace('MSEED',extension)
+                outputPath = os.path.join(outputDir,outputFile)
+                statusText = "Saving %s " % (outputFile)
+                self.statusLabel.setText(statusText)
+                self.statusLabel.repaint()
+                self.logger.debug('reading %s', mseedFile)
+                st = obspy.core.read(mseedPath)
+                self.logger.debug('writing %s', outputPath)
+                st.write(outputPath, format=outputFormat)
+
+                
+        self.statusLabel.setText('')
+            
+        
+        
+    @QtCore.pyqtSlot()
+    def getWaveformDirectory(self):
+        """
+        This function is triggered whenever the user presses the "to <directory>" button.
+        """
+
+        # If the user quits or cancels this dialog, '' is returned
+        newDirectory = str(QtGui.QFileDialog.getExistingDirectory(
+            self,
+            "Waveform Directory",
+            os.path.expanduser("~"),
+            QtGui.QFileDialog.ShowDirsOnly))
+        
+        if newDirectory != '':
+            self.waveformDirectory = newDirectory
+            self.directoryPushButton.setText(self.waveformDirectory)
+        
+
+
+
+# ----- Request/Response watchers ----------------------------------------------
 
 # NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
 class waveformResponseWatcherThread(QtCore.QThread):
     """
     This thread is started when the WaveformsDialog initializes.
-    
+
     When a message appears on the waveformResponseQueue, this thread
     emits a waveformResponseSignal which then triggers waveformResponseHandler().
     """
@@ -860,7 +947,7 @@ class waveformResponseWatcherThread(QtCore.QThread):
 class waveformRequestWatcherThread(QtCore.QThread):
     """
     This thread is started when the WaveformsDialog initializes.
-    
+
     When a message appears on the waveformRequestQueue, this thread
     emits a waveformRequestSignal which then triggers waveformRequestHandler().
     """
@@ -880,25 +967,27 @@ class waveformRequestWatcherThread(QtCore.QThread):
             time.sleep(0.2)
             if not self.waveformRequestQueue.empty():
                 self.waveformRequestSignal.emit()
-            
+
+
+# ----- Main Window ------------------------------------------------------------
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
-    
+
     def __init__(self,parent=None):
 
         super(self.__class__, self).__init__()
         self.setupUi(self)
-        
+
         # Set MainWindow properties
         self.appName = __appName__
         self.version = __version__        
         self.setWindowTitle('%s version %s' % (self.appName, self.version))
-        
+
         # Create StatusBar
         sb = QtGui.QStatusBar()
         sb.setFixedHeight(18)
         self.setStatusBar(sb)
-        
+
         # Load configurable preferences from ~/.pyweed/config.ini
         self.preferences = Preferences()
         try:
@@ -906,7 +995,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         except Exception as e:
             print("Unable to load configuration preferences -- using defaults.\n%s" % e)
             pass
-        
+
         # TODO:  logging example   -- http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
         # TODO:  logging example 2 -- http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
 
@@ -918,7 +1007,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         except Exception as e:
             self.logger.setLevel(logging.DEBUG)
         self.loggingDialog = LoggingDialog(self, self.logger)
-        
+
         # Make sure the download directory exists
         self.logger.debug('Checking on download directory...')
         if not os.path.exists(self.preferences.Waveforms.downloadDir):
@@ -927,7 +1016,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             except Exception as e:
                 logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 SystemExit()       
-        
+
         # Get the Figure object from the map_canvas
         self.logger.debug('Setting up main map...')
         self.map_figure = self.map_canvas.fig
@@ -936,7 +1025,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         prefs = self.preferences.Map
         self.seismap = Seismap(projection=prefs.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
-        
+
         # Events
         self.logger.debug('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)        
@@ -962,14 +1051,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Waveforms
         self.logger.debug('Setting up wavaeforms dialog...')
         self.waveformsDialog = WaveformDialog(self)
-        
+
         self.logger.debug('Setting up main window...')
-        
+
         # Connect the main window buttons
         self.getEventsButton.pressed.connect(self.getEvents)
         self.getStationsButton.pressed.connect(self.getStations)
         self.getWaveformsButton.pressed.connect(self.getWaveforms)
-        
+
         # Create menuBar
         # see:  http://doc.qt.io/qt-4.8/qmenubar.html
         # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
@@ -979,12 +1068,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         mainMenu.setNativeMenuBar(False)
 
         fileMenu = mainMenu.addMenu('&File')
-    
+
         quitAction = QtGui.QAction("&Quit", self)
         quitAction.setShortcut("Ctrl+Q")
         quitAction.triggered.connect(self.closeApplication)        
         fileMenu.addAction(quitAction)
-    
+
         optionsMenu = mainMenu.addMenu('Options')
 
         eventOptionsAction = QtGui.QAction("Show Event Options", self)
@@ -993,9 +1082,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         stationOptionsAction = QtGui.QAction("Show Station Options", self)
         QtCore.QObject.connect(stationOptionsAction, QtCore.SIGNAL('triggered()'), self.stationQueryDialog.show)
         optionsMenu.addAction(stationOptionsAction)
-    
+
         helpMenu = mainMenu.addMenu('Help')
-    
+
         aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
         aboutPyweedAction.triggered.connect(self.aboutPyweed)        
         helpMenu.addAction(aboutPyweedAction)
@@ -1003,11 +1092,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         loggingDialogAction = QtGui.QAction("Show Logs", self)
         QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
         helpMenu.addAction(loggingDialogAction)
-        
+
         # Display MainWindow
         self.show()        
-   
-   
+
+
     @QtCore.pyqtSlot()
     def getEvents(self):
         """
@@ -1015,7 +1104,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.logger.info('Loading events...')
         self.statusBar().showMessage('Loading events...')
-        
+
         # Get events and subset to desired columns
         parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
@@ -1024,7 +1113,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # NOTE:         ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
         hidden_column = [ False,  False,       False,       False,      False,      False,     False,               True,     True,      True,          True,            True,        True]
         numeric_column = [False,  True,        True,        True,       True,       False,     False,               False,    False,     False,         False,           False,       False]
-        
+
         # Add events to the events table ---------------------------------------
 
         self.logger.debug('Received %d events, ', eventsDF.shape[0])
@@ -1033,7 +1122,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.clearSelection() # This is important!
         while (self.eventsTable.rowCount() > 0):
             self.eventsTable.removeRow(0)
-        
+
         # Create new table
         self.eventsTable.setRowCount(eventsDF.shape[0])
         self.eventsTable.setColumnCount(eventsDF.shape[1])
@@ -1043,7 +1132,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for i in np.arange(len(hidden_column)):
             if hidden_column[i]:
                 self.eventsTable.setColumnHidden(i,True)
-        
+
         # Add new contents
         for i in range(eventsDF.shape[0]):
             for j in range(eventsDF.shape[1]):
@@ -1056,11 +1145,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Tighten up the table
         self.eventsTable.resizeColumnsToContents()
         self.eventsTable.resizeRowsToContents()
-        
+
         # Add items to the map -------------------------------------------------
-                
+
         self.seismap.add_events(eventsDF)
-        
+
         if self.eventQueryDialog.locationRangeRadioButton.isChecked():
             n = float(self.eventQueryDialog.locationRangeNorthLineEdit.text())
             e = float(self.eventQueryDialog.locationRangeEastLineEdit.text())
@@ -1085,7 +1174,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.logger.info('Loading channels...')
         self.statusBar().showMessage('Loading channels...')
-        
+
         # Get stations and subset to desired columns
         parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
@@ -1096,9 +1185,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         numeric_column = [False,     False,     False,      False,     True,        True,       True,        True,    True,      True,  False,               True,    True,        False,        True,         False,       False,     False]
 
         # Add stations to the stations table -----------------------------------
-        
+
         self.logger.debug('Received %d channels, ', stationsDF.shape[0])
-        
+
         # Clear existing contents
         self.stationsTable.clearSelection() # This is important!
         while (self.stationsTable.rowCount() > 0):
@@ -1126,11 +1215,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Tighten up the table
         self.stationsTable.resizeColumnsToContents()
         self.stationsTable.resizeRowsToContents()
-                   
+
         # Add items to the map -------------------------------------------------
 
         self.seismap.add_stations(stationsDF)
-        
+
         if self.stationQueryDialog.locationRangeRadioButton.isChecked():
             n = float(self.stationQueryDialog.locationRangeNorthLineEdit.text())
             e = float(self.stationQueryDialog.locationRangeEastLineEdit.text())
@@ -1146,7 +1235,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.logger.info('Loaded %d channels', stationsDF.shape[0])
         self.statusBar().showMessage('Loaded %d channels' % (stationsDF.shape[0]))
-        
+
 
     @QtCore.pyqtSlot()
     def getWaveforms(self):
@@ -1163,9 +1252,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         rows = []
         for idx in self.eventsTable.selectionModel().selectedRows():
             rows.append(idx.row())
-        
+
         self.logger.debug('%d events currently selected', len(rows))
-        
+
         # Get lons, lats and 
         # TODO:  Automatically detect column indexes
         lons = []
@@ -1178,20 +1267,20 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             lats.append(lat)
             eventID = str(self.eventsTable.item(row,12).text())
             eventIDs.append(eventID)
-            
+
         # Update the eventsHandler with the latest selection information
         self.eventsHandler.set_selected_ids(eventIDs)
 
         self.seismap.add_events_highlighting(lons, lats)
-        
-        
+
+
     @QtCore.pyqtSlot(int, int)
     def stationsTableClicked(self, row, col):
         # Get selected rows
         rows = []
         for idx in self.stationsTable.selectionModel().selectedRows():
             rows.append(idx.row())
-        
+
         self.logger.debug('%d stations currently selected', len(rows))
 
         # Get lons and lats
@@ -1206,13 +1295,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             lats.append(lat)
             SNCL = str(self.stationsTable.item(row,17).text())
             SNCLs.append(SNCL)
-            
+
         # Update the stationsHandler with the latest selection information
         self.stationsHandler.set_selected_ids(SNCLs)
 
         self.seismap.add_stations_highlighting(lons, lats)            
-                
-        
+
+
     def aboutPyweed(self):
         """Display About message box."""
         # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox
@@ -1220,7 +1309,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         ###email = "adam@iris.washington.edu"
         license_link = "https://github.com/iris-edu-int/pyweed/blob/master/LICENSE"
         license_name = "MIT"
-        
+
         msgBox = QtGui.QMessageBox()
         msgBox.setWindowTitle(self.tr("About " + self.appName))
         msgBox.setTextFormat(QtCore.Qt.RichText)
@@ -1234,7 +1323,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
                        "<br><br>" +
                        "<a href='{0}'>{0}</a><br><br>".format(website) +
 ###                       "<a href='mailto:{0}'>{0}</a><br><br>".format(email) +
-                       "License: <a href='{0}'>{1}</a>".format(license_link, license_name))
+"License: <a href='{0}'>{1}</a>".format(license_link, license_name))
 
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
         msgBox.exec_()
@@ -1246,7 +1335,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # TODO:  Careful shutdown
         self.logger.info('Closing application...')
         QtGui.QApplication.quit()
-             
+
 
 if __name__ == "__main__":
 
@@ -1254,4 +1343,4 @@ if __name__ == "__main__":
     app.setStyleSheet(stylesheet)
     GUI = MainWindow()
     sys.exit(app.exec_())
-    
+
