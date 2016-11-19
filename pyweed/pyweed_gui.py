@@ -335,12 +335,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         label = "Save Waveforms"
         self.savePushButton.setText(label)
         
-        self.directoryPushButton.setText(self.waveformDirectory)
-        self.directoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)        
+        self.saveDirectoryPushButton.setText(self.waveformDirectory)
+        self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)        
 
         # Fill the format combo box
-        self.formatComboBox.addItems(['ASCII','GSE2','MSEED','SAC'])
-        self.formatComboBox.setCurrentIndex(2)
+        self.saveFormatComboBox.addItems(['ASCII','GSE2','MSEED','SAC'])
+        self.saveFormatComboBox.setCurrentIndex(2)
         
         # Get references to MainWindow elements and methods
         self.logger = parent.logger
@@ -374,7 +374,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Connect the Download buttons
         self.savePushButton.pressed.connect(self.saveWaveformData)
-        self.directoryPushButton.pressed.connect(self.getWaveformDirectory)
+        self.saveDirectoryPushButton.pressed.connect(self.getWaveformDirectory)
 
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
@@ -554,8 +554,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         break
 
             # Update status text       
-            self.statusLabel.setText(statusText)
-            self.statusLabel.repaint()
+            self.downloadStatusLabel.setText(statusText)
+            self.downloadStatusLabel.repaint()
 
             # Tighten up the table
             self.selectionTable.resizeColumnsToContents()
@@ -597,13 +597,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         eventsDF = self.eventsHandler.get_selected_dataframe()
         stationsDF = self.stationsHandler.get_selected_dataframe()
 
-        self.statusLabel.setText(QtCore.QString("Calculating distances..."))
-        self.statusLabel.repaint()
+        self.downloadStatusLabel.setText(QtCore.QString("Calculating distances..."))
+        self.downloadStatusLabel.repaint()
 
         waveformsDF = self.waveformsHandler.create_waveformsDF(eventsDF, stationsDF)
 
-        self.statusLabel.setText(QtCore.QString(""))
-        self.statusLabel.repaint()
+        self.downloadStatusLabel.setText(QtCore.QString(""))
+        self.downloadStatusLabel.repaint()
 
         self.logger.debug('Finished building dataframe for %d waveforms', waveformsDF.shape[0])
 
@@ -840,8 +840,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.logger.debug('COMPLETED all downloads')
 
         # Update status text       
-        self.statusLabel.setText(statusText)
-        self.statusLabel.repaint()
+        self.downloadStatusLabel.setText(statusText)
+        self.downloadStatusLabel.repaint()
 
         return
 
@@ -856,7 +856,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         outputDir = self.waveformDirectory # TODO:  change to saveDir
         
         # Handle user format choice
-        formatChoice = str(self.formatComboBox.currentText())
+        formatChoice = str(self.saveFormatComboBox.currentText())
         if formatChoice == 'ASCII':
             outputFormat = 'TSPAIR'
             extension = 'ascii'
@@ -889,11 +889,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 st.write(outputPath, format=outputFormat)
                 
                 savedCount += 1
-                self.statusLabel.setText("Saved %d waveforms as %s ..." % (savedCount,formatChoice))
-                self.statusLabel.repaint()
+                self.downloadStatusLabel.setText("Saved %d waveforms as %s ..." % (savedCount,formatChoice))
+                self.downloadStatusLabel.repaint()
                 QtGui.QApplication.processEvents() # update the status label
 
-        self.statusLabel.setText('')
+        self.downloadStatusLabel.setText('')
             
         
         
@@ -912,7 +912,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         
         if newDirectory != '':
             self.waveformDirectory = newDirectory
-            self.directoryPushButton.setText(self.waveformDirectory)
+            self.saveDirectoryPushButton.setText(self.waveformDirectory)
         
 
 
