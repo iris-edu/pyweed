@@ -63,20 +63,6 @@ QDialog#WaveformDialog QFrame {
     border: 0px none black;
 }
 
-/*
-QDialog#WaveformDialog QFrame#saveFrame {
-    margin: 0px;
-    padding: 0px;
-    border: 0px none black;
-}
-
-QDialog#WaveformDialog QFrame#saveFrame > QFrame {
-    margin: 0px;
-    padding: 0px;
-    border: 0px none black;
-}
-*/
-
 
 
 
