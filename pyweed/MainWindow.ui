@@ -18,6 +18,9 @@
     <item>
      <widget class="QWidget" name="getButtonsWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="margin">
+        <number>2</number>
+       </property>
        <item>
         <widget class="QPushButton" name="getEventsButton">
          <property name="text">
@@ -44,7 +47,6 @@
        </item>
       </layout>
       <zorder>getWaveformsButton</zorder>
-      <zorder>splitter</zorder>
       <zorder>getEventsButton</zorder>
       <zorder>getStationsButton</zorder>
      </widget>
@@ -62,6 +64,9 @@
         <enum>QFrame::Raised</enum>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="margin">
+         <number>2</number>
+        </property>
         <item>
          <widget class="Qt4MplCanvas" name="map_canvas" native="true">
           <property name="sizePolicy">
@@ -82,15 +87,21 @@
         <enum>QFrame::Raised</enum>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout">
+        <property name="margin">
+         <number>2</number>
+        </property>
         <item>
          <widget class="QFrame" name="eventsFrame">
           <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
+           <enum>QFrame::NoFrame</enum>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="margin">
+            <number>2</number>
+           </property>
            <item>
             <widget class="QTableWidget" name="eventsTable">
              <property name="styleSheet">
@@ -110,12 +121,15 @@
         <item>
          <widget class="QFrame" name="stationsFrame">
           <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
+           <enum>QFrame::NoFrame</enum>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
+           <property name="margin">
+            <number>2</number>
+           </property>
            <item>
             <widget class="QTableWidget" name="stationsTable">
              <property name="styleSheet">

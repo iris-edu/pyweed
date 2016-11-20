@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1240</width>
+    <width>1224</width>
     <height>1103</height>
    </rect>
   </property>
@@ -27,7 +27,7 @@
        <number>2</number>
       </property>
       <item>
-       <widget class="QGroupBox" name="downloadButtonGroupBox">
+       <widget class="QGroupBox" name="downloadGroupBox">
         <property name="title">
          <string>Download / Preview Waveforms</string>
         </property>
@@ -38,48 +38,6 @@
          <property name="margin">
           <number>2</number>
          </property>
-         <item>
-          <widget class="QWidget" name="widget_5" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <property name="margin">
-             <number>2</number>
-            </property>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="downloadPushButton">
-              <property name="text">
-               <string>Start / Stop</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </item>
          <item alignment="Qt::AlignLeft">
           <widget class="QWidget" name="widget" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -164,24 +122,46 @@
            </layout>
           </widget>
          </item>
-         <item alignment="Qt::AlignHCenter">
-          <widget class="QLabel" name="downloadStatusLabel">
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Plain</enum>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
+         <item>
+          <widget class="QWidget" name="widget_5" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <property name="margin">
+             <number>2</number>
+            </property>
+            <item>
+             <widget class="QToolButton" name="downloadToolButton">
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Start / Stop Downloads</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignLeft">
+             <widget class="QLabel" name="downloadStatusLabel">
+              <property name="text">
+               <string>Download status</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="saveButtonGroupBox">
+       <widget class="QGroupBox" name="saveGroupBox">
         <property name="title">
          <string>Save / Reformat Waveforms</string>
         </property>
@@ -189,48 +169,6 @@
          <property name="margin">
           <number>2</number>
          </property>
-         <item>
-          <widget class="QWidget" name="widget_6" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <property name="margin">
-             <number>2</number>
-            </property>
-            <item>
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="savePushButton">
-              <property name="text">
-               <string>Start / Stop</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </item>
          <item alignment="Qt::AlignLeft">
           <widget class="QWidget" name="widget_3" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -299,17 +237,36 @@
            </layout>
           </widget>
          </item>
-         <item alignment="Qt::AlignHCenter">
-          <widget class="QLabel" name="saveStatusLabel">
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Plain</enum>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
+         <item>
+          <widget class="QWidget" name="widget_6" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="margin">
+             <number>2</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="savePushButton">
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Save Downloaded Waveforms</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignLeft">
+             <widget class="QLabel" name="saveStatusLabel">
+              <property name="text">
+               <string>Save status</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
@@ -336,6 +293,9 @@
          <string>Table Filters</string>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="3,1,1">
+         <property name="margin">
+          <number>2</number>
+         </property>
          <item>
           <widget class="QComboBox" name="eventComboBox"/>
          </item>
@@ -346,13 +306,6 @@
           <widget class="QComboBox" name="stationComboBox"/>
          </item>
         </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="selectionLabel">
-        <property name="text">
-         <string>All Event-SNCL Waveforms</string>
-        </property>
        </widget>
       </item>
       <item>
