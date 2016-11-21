@@ -66,15 +66,15 @@ QDialog#WaveformDialog QFrame {
 /* Start/Stop toggle buttons */
 
 QDialog#WaveformDialog QToolButton {
+  border-width: 4px;
+}
+
+/*
+QDialog#WaveformDialog QToolButton:checked {
   color: white;
   background-color: seagreen;
 }
-
-QDialog#WaveformDialog QToolButton:checked {
-  color: black;
-  background-color: salmon;
-}
-
+*/
 
 
 /* Example
