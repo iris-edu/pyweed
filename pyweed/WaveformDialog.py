@@ -84,6 +84,7 @@ class Ui_WaveformDialog(object):
         self.downloadToolButton.setMinimumSize(QtCore.QSize(200, 0))
         self.downloadToolButton.setCheckable(True)
         self.downloadToolButton.setChecked(True)
+        self.downloadToolButton.setPopupMode(QtGui.QToolButton.InstantPopup)
         self.downloadToolButton.setObjectName(_fromUtf8("downloadToolButton"))
         self.horizontalLayout_7.addWidget(self.downloadToolButton)
         self.downloadStatusLabel = QtGui.QLabel(self.widget_5)

@@ -373,10 +373,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
 
         # Connect the Download and Save buttons
-        self.downloadToolButton.setText('Stop Download')
-        self.downloadToolButton.setEnabled(True)
-        self.downloadToolButton.setChecked(True)
-        self.downloadToolButton.pressed.connect(self.toggleDownloadWaveformData)
+        self.downloadToolButton.toggled.connect(self.toggleDownloadWaveformData)
         self.savePushButton.pressed.connect(self.saveWaveformData)
         self.saveDirectoryPushButton.pressed.connect(self.getWaveformDirectory)
 
@@ -659,9 +656,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.logger.debug('Finished loading waveform choices')
 
         # Start requesting data
-        self.downloadToolButton.setText('Stop Download')
+        self.downloadToolButton.setText('Downloading...')
         self.downloadToolButton.setEnabled(True)
         self.downloadToolButton.setChecked(True)
+        self.downloadToolButton.setDown(True)
         self.downloadWaveformData()
 
         return
@@ -779,22 +777,19 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """
         
         if self.downloadToolButton.isChecked():
-            # disable download GUI elements
-            self.downloadToolButton.setText('Resume Downloaod')
-            self.downloadToolButton.setChecked(False)
-            self.secondsBeforeSpinBox.setEnabled(False)
-            self.secondsAfterSpinBox.setEnabled(False)
-            # Update GUI
-            ###QtGui.QApplication.processEvents()
-            
-        else:
             # enable download GUI elements
-            self.downloadToolButton.setText('Stop Download')
-            self.downloadToolButton.setChecked(True)
+            self.downloadToolButton.setText('Downloading...')
             self.secondsBeforeSpinBox.setEnabled(True)
             self.secondsAfterSpinBox.setEnabled(True)
             # Resume downloading
             self.downloadWaveformData()
+            
+        else:
+            # disable download GUI elements
+            self.downloadToolButton.setText('Download Stopped')
+            self.secondsBeforeSpinBox.setEnabled(False)
+            self.secondsAfterSpinBox.setEnabled(False)
+            # Update GUI
             
         return
     
@@ -810,6 +805,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         that have not yet been downloaded. After that table is exhausted, it goes
         through all not-yet-downloaded data in waveformHandler.currentDF.
         """
+
+        # Update GUI in case we came from an internal call
+        QtGui.QApplication.processEvents()
 
         # WaveformDialog status text
         statusText = ''
