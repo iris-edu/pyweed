@@ -573,7 +573,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.downloadWaveformData()
             else:
                 # Update status text       
-                self.downloadStatusLabel.setText('Download stopped')
+                self.downloadStatusLabel.setText('')
                 self.downloadStatusLabel.repaint()
 
         return
@@ -779,16 +779,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         if self.downloadToolButton.isChecked():
             # enable download GUI elements
             self.downloadToolButton.setText('Downloading...')
-            self.secondsBeforeSpinBox.setEnabled(True)
-            self.secondsAfterSpinBox.setEnabled(True)
+            self.secondsBeforeSpinBox.setEnabled(False)
+            self.secondsAfterSpinBox.setEnabled(False)
             # Resume downloading
             self.downloadWaveformData()
             
         else:
             # disable download GUI elements
             self.downloadToolButton.setText('Download Stopped')
-            self.secondsBeforeSpinBox.setEnabled(False)
-            self.secondsAfterSpinBox.setEnabled(False)
+            self.secondsBeforeSpinBox.setEnabled(True)
+            self.secondsAfterSpinBox.setEnabled(True)
             # Update GUI
             
         return
