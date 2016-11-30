@@ -65,22 +65,22 @@ QDialog#WaveformDialog QFrame {
 
 /* Start/Stop toggle buttons */
 
-QDialog#WaveformDialog QToolButton { /* unchecked = "NOT downloading" */
+QDialog#WaveformDialog QToolButton { /* unchecked = up = "NOT downloading" */
   padding: 3px;
-  background-color: white;
-  border-left: 2px solid gray20;
-  border-top: 2px solid gray20;
-  border-right: 2px solid gray80;
-  border-bottom: 2px solid gray80;
+  background-color: #d3d3d3;
+  border-left: 2px solid #d3d3d3;
+  border-top: 2px solid #d3d3d3;
+  border-right: 2px solid #696969;
+  border-bottom: 2px solid #696969;
 }
 
-QDialog#WaveformDialog QToolButton:checked { /* checked = "downloading" */
+QDialog#WaveformDialog QToolButton:checked { /* checked = down/depressed = "downloading" */
   padding: 3px;
-  background-color: #gray80;
-  border-left: 2px solid gray80;
-  border-top: 2px solid gray80;
-  border-right: 2px solid gray20;
-  border-bottom: 2px solid gray20;
+  background-color: white;
+  border-left: 2px solid #696969;
+  border-top: 2px solid #696969;
+  border-right: 2px solid #d3d3d3;
+  border-bottom: 2px solid #d3d3d3;
 }
 
 
