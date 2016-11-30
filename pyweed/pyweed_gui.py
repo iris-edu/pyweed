@@ -61,7 +61,7 @@ from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.12"
+__version__ = "0.0.13"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -371,8 +371,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
 
         # Connect the Download and Save buttons
-        self.downloadToolButton.toggled.connect(self.toggledDownloadWaveformData)
-        self.savePushButton.pressed.connect(self.saveWaveformData)
+        self.downloadToolButton.toggled.connect(self.toggledDownloadToolButton)
+        self.saveToolButton.toggled.connect(self.toggledSaveToolButton)
         self.saveDirectoryPushButton.pressed.connect(self.getWaveformDirectory)
 
         # Connect signals associated with comboBoxes
@@ -654,12 +654,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.stationComboBox.addItem(station)
 
         self.logger.debug('Finished loading waveform choices')
+        
+        # Initialize saveToolButton to OFF/UP
+        self.saveToolButton.setEnabled(True)
+        self.saveToolButton.setChecked(False)
+        self.saveToolButton.setDown(False)
+        self.toggledSaveToolButton() # trigger toggled action
 
-        # Initialize downloadToolButton
+        # Initialize downloadToolButton to ON/DOWN
         self.downloadToolButton.setEnabled(True)
-        self.downloadToolButton.setChecked(True) # start down/on
-        self.downloadToolButton.setDown(True) # start down/on
-        self.toggledDownloadWaveformData() # trigger toggle action
+        self.downloadToolButton.setChecked(True)
+        self.downloadToolButton.setDown(True)
+        self.toggledDownloadToolButton() # trigger toggled action
 
         return
 
@@ -770,14 +776,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
 
     @QtCore.pyqtSlot()
-    def toggledDownloadWaveformData(self):
+    def toggledDownloadToolButton(self):
         """
         Triggered when downloadToolButton is toggled.
         """
 
         if self.downloadToolButton.isChecked():
             if self.waveformDownloadsComplete:
-                # pop the button back up and enable download GUI elements
+                # pop the button back up and enable Download GUI elements
                 self.downloadToolButton.setText('Download Finished')
                 self.secondsBeforeSpinBox.setEnabled(True)
                 self.secondsAfterSpinBox.setEnabled(True)
@@ -786,7 +792,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.downloadToolButton.setChecked(False)
                 self.downloadToolButton.setDown(False)
             else:
-                # leave the button down and disable download GUI elements
+                # leave the button down and disable Download GUI elements
                 self.downloadToolButton.setText('Downloading...')
                 self.secondsBeforeSpinBox.setEnabled(False)
                 self.secondsAfterSpinBox.setEnabled(False)
@@ -796,7 +802,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.downloadWaveformData()
 
         else:
-            # leave the button up and enable download GUI elements
+            # leave the button up and enable Download GUI elements
             if self.waveformDownloadsComplete:
                 self.downloadToolButton.setText('Download Finished')
             else:
@@ -805,6 +811,38 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.secondsAfterSpinBox.setEnabled(True)
             self.secondsBeforeLabel.setStyleSheet('color: black')
             self.secondsAfterLabel.setStyleSheet('color: black')
+
+        return
+
+
+    @QtCore.pyqtSlot()
+    def toggledSaveToolButton(self):
+        """
+        Triggered when saveToolButton is toggled.
+        """
+
+        if self.saveToolButton.isChecked():
+            # leave the button down and disable Save GUI elements
+            # TODO:  status message
+            self.saveToolButton.setText('Save Scheduled')
+            self.saveDirectoryPushButton.setEnabled(False)
+            self.saveFormatComboBox.setEnabled(False)
+            self.saveDirectoryLabel.setStyleSheet('color: gray')
+            self.saveFormatLabel.setStyleSheet('color: gray')
+            self.saveStatusLabel.setText("Wating for downloads to finish...")
+            self.saveStatusLabel.repaint()
+            if self.waveformDownloadsComplete:
+                self.saveWaveformData()
+            
+        else:
+            # leave the button up and enable Save GUI elements
+            self.saveToolButton.setText('No Save Scheduled')
+            self.saveDirectoryPushButton.setEnabled(True)
+            self.saveFormatComboBox.setEnabled(True)
+            self.saveDirectoryLabel.setStyleSheet('color: black')
+            self.saveFormatLabel.setStyleSheet('color: black')
+            self.saveStatusLabel.setText("")
+            self.saveStatusLabel.repaint()
 
         return
 
@@ -897,7 +935,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.downloadToolButton.setEnabled(True) # TODO:  set this to False
                 self.downloadToolButton.setChecked(False) # up/off
                 self.downloadToolButton.setDown(False) # up/off
-                self.toggledDownloadWaveformData()
+                self.toggledDownloadToolButton()
                 self.logger.debug('COMPLETED all downloads')
 
                 statusText = "Completed all downloads"
@@ -909,6 +947,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Update status text       
         self.downloadStatusLabel.setText(statusText)
         self.downloadStatusLabel.repaint()
+        
+        # Save data if appropriate
+        if self.waveformDownloadsComplete and self.saveToolButton.isChecked():
+            self.saveWaveformData()
 
         return
 
@@ -916,7 +958,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     @QtCore.pyqtSlot()
     def saveWaveformData(self):
         """
-        This function is triggered whenever the user presses the "Save Waveforms" button.
+        Save waveforms after all downloads are complete.
         """
 
         inputDir = self.waveformsHandler.downloadDir
@@ -938,6 +980,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             extension = 'sac'
         else:
             self.logger.error('Output format "%s" not recognized' % formatChoice)
+            self.saveStatusLabel.setText('Output format "%s" not recognized' % formatChoice)
+            self.saveStatusLabel.repaint()
+            return
+
+        self.saveToolButton.setText('Saving...')
 
         # Total to be downloaded
         keep = self.waveformsHandler.currentDF.Keep
@@ -967,8 +1014,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.saveStatusLabel.repaint()
                 QtGui.QApplication.processEvents() # update GUI
 
-        ###self.saveStatusLabel.setText('')
-
+        # Toggle saveToolButton state
+        self.saveToolButton.setEnabled(True)
+        self.saveToolButton.setChecked(False) # up/off
+        self.saveToolButton.setDown(False) # up/off
+        self.toggledSaveToolButton()
+        self.logger.debug('COMPLETED writing all waveforms')
+        
 
 
     @QtCore.pyqtSlot()

@@ -32,7 +32,6 @@ QTableView {
     gridline-color: white;
 }
 
-
 /* Tighten up all frames */
 
 QFrame {
@@ -40,20 +39,13 @@ QFrame {
     padding: 0px;
 }
 
+/* Increase 'disabled' contrast */
+
+QSpinBox:!enabled {
+    color: gray;
+}
 
 /* ----- Waveforms Dialog ----------------------------------------------------*/
-
-QDialog#WaveformDialog QTableView#selectionTable {
-    selection-background-color: white;
-    selection-color: black;
-}
-
-
-/* Prevent WaveformDialog.directoryPushButton from staying highlighted */
-
-QDialog#WaveformDialog directoryPushButton:focus {
-    background-color: white;
-}
 
 /* Remove border from frames */
 
@@ -63,9 +55,14 @@ QDialog#WaveformDialog QFrame {
     border: 0px none black;
 }
 
+QDialog#WaveformDialog QTableView#selectionTable {
+    selection-background-color: white;
+    selection-color: black;
+}
+
 /* Start/Stop toggle buttons */
 
-QDialog#WaveformDialog QToolButton { /* unchecked = up = "NOT downloading" */
+QDialog#WaveformDialog QToolButton { /* unchecked = up = "action canceled" */
   padding: 3px;
   background-color: #d3d3d3;
   border-left: 2px solid #d3d3d3;
@@ -74,7 +71,7 @@ QDialog#WaveformDialog QToolButton { /* unchecked = up = "NOT downloading" */
   border-bottom: 2px solid #696969;
 }
 
-QDialog#WaveformDialog QToolButton:checked { /* checked = down/depressed = "downloading" */
+QDialog#WaveformDialog QToolButton:checked { /* checked = down = "action activated" */
   padding: 3px;
   background-color: white;
   border-left: 2px solid #696969;
@@ -84,34 +81,12 @@ QDialog#WaveformDialog QToolButton:checked { /* checked = down/depressed = "down
 }
 
 
-/* Example
-QPushButton
-{
-    color: #b1b1b1;
-    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #565656, stop: 0.1 #525252, stop: 0.5 #4e4e4e, stop: 0.9 #4a4a4a, stop: 1 #464646);
-    border-width: 1px;
-    border-color: #1e1e1e;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 12px;
-    padding-left: 5px;
-    padding-right: 5px;
+
+/* Prevent WaveformDialog.directoryPushButton from staying highlighted */
+
+QDialog#WaveformDialog directoryPushButton:focus {
+    background-color: white;
 }
 
-QPushButton:pressed
-{
-    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2d2d2d, stop: 0.1 #2b2b2b, stop: 0.5 #292929, stop: 0.9 #282828, stop: 1 #252525);
-}
-
-QPushButton:hover
-{
-    border: 2px solid QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);
-}
-
-QPushButton:focus {
-    background-color: red;
-}
-*/
 
 """
