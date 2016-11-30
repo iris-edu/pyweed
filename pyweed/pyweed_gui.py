@@ -327,21 +327,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Configured properties
         self.secs_before = 60 # TODO:  get configurable plot properties from WaveformOptionsDialog
         self.secs_after = 600 # TODO:  get configurable plot properties from WaveformOptionsDialog
-        
+
         self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformPath
 
 
         # Modify default GUI settings
-        ###label = "Save Waveforms"
-        ###self.saveToolButton.setText(label)
-        
         self.saveDirectoryPushButton.setText(self.waveformDirectory)
         self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)        
 
         # Fill the format combo box
         self.saveFormatComboBox.addItems(['ASCII','GSE2','MSEED','SAC'])
         self.saveFormatComboBox.setCurrentIndex(2)
-        
+
         # Get references to MainWindow elements and methods
         self.logger = parent.logger
         self.statusBar = parent.statusBar
@@ -350,6 +347,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Waveforms
         self.waveformsHandler = WaveformsHandler(self.logger, parent.preferences)
+        self.waveformDownloadsComplete = False
 
         # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
@@ -373,7 +371,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
 
         # Connect the Download and Save buttons
-        self.downloadToolButton.toggled.connect(self.toggleDownloadWaveformData)
+        self.downloadToolButton.toggled.connect(self.toggledDownloadWaveformData)
         self.savePushButton.pressed.connect(self.saveWaveformData)
         self.saveDirectoryPushButton.pressed.connect(self.getWaveformDirectory)
 
@@ -605,6 +603,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Loading waveform choices...')
 
+        self.waveformDownloadsComplete = False
+
         ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.eventsHandler.get_selected_dataframe()
         stationsDF = self.stationsHandler.get_selected_dataframe()
@@ -655,12 +655,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Finished loading waveform choices')
 
-        # Start requesting data
-        self.downloadToolButton.setText('Downloading...')
+        # Initialize downloadToolButton
         self.downloadToolButton.setEnabled(True)
-        self.downloadToolButton.setChecked(True)
-        self.downloadToolButton.setDown(True)
-        self.downloadWaveformData()
+        self.downloadToolButton.setChecked(True) # start down/on
+        self.downloadToolButton.setDown(True) # start down/on
+        self.toggledDownloadWaveformData() # trigger toggle action
 
         return
 
@@ -771,28 +770,44 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
 
     @QtCore.pyqtSlot()
-    def toggleDownloadWaveformData(self):
+    def toggledDownloadWaveformData(self):
         """
         Triggered when downloadToolButton is toggled.
         """
-        
+
         if self.downloadToolButton.isChecked():
-            # enable download GUI elements
-            self.downloadToolButton.setText('Downloading...')
-            self.secondsBeforeSpinBox.setEnabled(False)
-            self.secondsAfterSpinBox.setEnabled(False)
-            # Resume downloading
-            self.downloadWaveformData()
-            
+            if self.waveformDownloadsComplete:
+                # pop the button back up and enable download GUI elements
+                self.downloadToolButton.setText('Download Finished')
+                self.secondsBeforeSpinBox.setEnabled(True)
+                self.secondsAfterSpinBox.setEnabled(True)
+                self.secondsBeforeLabel.setStyleSheet('color: black')
+                self.secondsAfterLabel.setStyleSheet('color: black')
+                self.downloadToolButton.setChecked(False)
+                self.downloadToolButton.setDown(False)
+            else:
+                # leave the button down and disable download GUI elements
+                self.downloadToolButton.setText('Downloading...')
+                self.secondsBeforeSpinBox.setEnabled(False)
+                self.secondsAfterSpinBox.setEnabled(False)
+                self.secondsBeforeLabel.setStyleSheet('color: gray')
+                self.secondsAfterLabel.setStyleSheet('color: gray')
+                # Resume downloading
+                self.downloadWaveformData()
+
         else:
-            # disable download GUI elements
-            self.downloadToolButton.setText('Download Stopped')
+            # leave the button up and enable download GUI elements
+            if self.waveformDownloadsComplete:
+                self.downloadToolButton.setText('Download Finished')
+            else:
+                self.downloadToolButton.setText('Download Stopped')
             self.secondsBeforeSpinBox.setEnabled(True)
             self.secondsAfterSpinBox.setEnabled(True)
-            # Update GUI
-            
+            self.secondsBeforeLabel.setStyleSheet('color: black')
+            self.secondsAfterLabel.setStyleSheet('color: black')
+
         return
-    
+
 
     @QtCore.pyqtSlot()
     def downloadWaveformData(self):
@@ -800,7 +815,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         This function is triggered after the selectionTable is initially loaded
         by loadWaveformChoices() and, after that, by handleWaveformResponse() after
         it has finished handling a waveform.
-        
+
         This function looks at the current selectionTable view for any waveforms
         that have not yet been downloaded. After that table is exhausted, it goes
         through all not-yet-downloaded data in waveformHandler.currentDF.
@@ -843,7 +858,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
             self.waveformRequestQueue.put(request)
 
-            statusText = "Downloading %s" % request['waveformID']
+            statusText = "%s" % request['waveformID']
 
         else:
 
@@ -875,10 +890,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
                 self.waveformRequestQueue.put(request)
 
-                statusText = "Downloading %s" % request['waveformID']                
+                statusText = "%s" % request['waveformID']                
 
             else:
+                self.waveformDownloadsComplete = True
+                self.downloadToolButton.setEnabled(True) # TODO:  set this to False
+                self.downloadToolButton.setChecked(False) # up/off
+                self.downloadToolButton.setDown(False) # up/off
+                self.toggledDownloadWaveformData()
                 self.logger.debug('COMPLETED all downloads')
+
+                statusText = "Completed all downloads"
+
 
         # Update GUI
         QtGui.QApplication.processEvents()
@@ -898,7 +921,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         inputDir = self.waveformsHandler.downloadDir
         outputDir = self.waveformDirectory # TODO:  change to saveDir
-        
+
         # Handle user format choice
         formatChoice = str(self.saveFormatComboBox.currentText())
         if formatChoice == 'ASCII':
@@ -915,7 +938,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             extension = 'sac'
         else:
             self.logger.error('Output format "%s" not recognized' % formatChoice)
-            
+
         # Total to be downloaded
         keep = self.waveformsHandler.currentDF.Keep
         waveformImagePath = self.waveformsHandler.currentDF.WaveformImagePath
@@ -938,16 +961,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 st = obspy.core.read(mseedPath)
                 self.logger.debug('writing %s', outputPath)
                 st.write(outputPath, format=outputFormat)
-                
+
                 savedCount += 1
                 self.saveStatusLabel.setText("Saved %d / %d waveforms as %s" % (savedCount,totalCount,formatChoice))
                 self.saveStatusLabel.repaint()
                 QtGui.QApplication.processEvents() # update GUI
 
         ###self.saveStatusLabel.setText('')
-            
-        
-        
+
+
+
     @QtCore.pyqtSlot()
     def getWaveformDirectory(self):
         """
@@ -960,11 +983,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             "Waveform Directory",
             os.path.expanduser("~"),
             QtGui.QFileDialog.ShowDirsOnly))
-        
+
         if newDirectory != '':
             self.waveformDirectory = newDirectory
             self.saveDirectoryPushButton.setText(self.waveformDirectory)
-        
+
 
 
 
@@ -1102,8 +1125,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
         # Waveforms
-        self.logger.debug('Setting up wavaeforms dialog...')
+        self.logger.debug('Setting up waveforms dialog...')
         self.waveformsDialog = WaveformDialog(self)
+        self.getWaveformsButton.setEnabled(False)
 
         self.logger.debug('Setting up main window...')
 
@@ -1326,6 +1350,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.seismap.add_events_highlighting(lons, lats)
 
+        self.manageGetWaveformsButton()
+
 
     @QtCore.pyqtSlot(int, int)
     def stationsTableClicked(self, row, col):
@@ -1352,9 +1378,26 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Update the stationsHandler with the latest selection information
         self.stationsHandler.set_selected_ids(SNCLs)
 
-        self.seismap.add_stations_highlighting(lons, lats)            
+        self.seismap.add_stations_highlighting(lons, lats)  
+        
+        self.manageGetWaveformsButton()
 
 
+    def manageGetWaveformsButton(self):
+        """
+        Handle enabled/disabled status of the "Get Waveforms" button
+        based on the presence/absence of selected events and stations
+        """
+        # http://stackoverflow.com/questions/3345785/getting-number-of-elements-in-an-iterator-in-python
+        selectedEventsCount = sum(1 for idx in self.eventsTable.selectionModel().selectedRows() )
+        selectedStationsCount = sum(1 for idx in self.stationsTable.selectionModel().selectedRows() )
+        
+        if selectedEventsCount > 0 and selectedStationsCount > 0:
+            self.getWaveformsButton.setEnabled(True)
+        else:
+            self.getWaveformsButton.setEnabled(False)
+        
+    
     def aboutPyweed(self):
         """Display About message box."""
         # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox

@@ -45,7 +45,7 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="secondsBeforeLabel">
               <property name="text">
                <string>Waveform start (secs before P-wave)</string>
               </property>
@@ -87,7 +87,7 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_2">
+             <widget class="QLabel" name="secondsAfterLabel">
               <property name="text">
                <string>Waveform end (secs after P-wave)</string>
               </property>
@@ -137,7 +137,7 @@
                </size>
               </property>
               <property name="text">
-               <string>Start / Stop Downloads</string>
+               <string/>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -179,7 +179,7 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_3">
+             <widget class="QLabel" name="saveDirectoryLabel">
               <property name="text">
                <string>To:</string>
               </property>
@@ -215,7 +215,7 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_4">
+             <widget class="QLabel" name="saveFormatLabel">
               <property name="text">
                <string>As:</string>
               </property>
