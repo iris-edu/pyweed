@@ -347,7 +347,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Waveforms
         self.waveformsHandler = WaveformsHandler(self.logger, parent.preferences)
-        self.waveformDownloadsComplete = False
+        self.waveformsDownloadComplete = False
+        self.waveformsSaveComplete = False
 
         # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
@@ -603,7 +604,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Loading waveform choices...')
 
-        self.waveformDownloadsComplete = False
+        self.waveformsDownloadComplete = False
 
         ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.eventsHandler.get_selected_dataframe()
@@ -778,13 +779,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     @QtCore.pyqtSlot()
     def toggledDownloadToolButton(self):
         """
-        Triggered when downloadToolButton is toggled.
+        Triggered after downloadToolButton is toggled.
         """
 
         if self.downloadToolButton.isChecked():
-            if self.waveformDownloadsComplete:
+            if self.waveformsDownloadComplete:
                 # pop the button back up and enable Download GUI elements
                 self.downloadToolButton.setText('Download Finished')
+                self.downloadGroupBox.setStyleSheet("QGroupBox { background-color: #e7e7e7 } ")
                 self.secondsBeforeSpinBox.setEnabled(True)
                 self.secondsAfterSpinBox.setEnabled(True)
                 self.secondsBeforeLabel.setStyleSheet('color: black')
@@ -794,6 +796,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             else:
                 # leave the button down and disable Download GUI elements
                 self.downloadToolButton.setText('Downloading...')
+                self.downloadGroupBox.setStyleSheet("QGroupBox { background-color: #EEDC82 } ") # light goldenrod 2
                 self.secondsBeforeSpinBox.setEnabled(False)
                 self.secondsAfterSpinBox.setEnabled(False)
                 self.secondsBeforeLabel.setStyleSheet('color: gray')
@@ -803,14 +806,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         else:
             # leave the button up and enable Download GUI elements
-            if self.waveformDownloadsComplete:
+            if self.waveformsDownloadComplete:
                 self.downloadToolButton.setText('Download Finished')
             else:
                 self.downloadToolButton.setText('Download Stopped')
+            self.downloadGroupBox.setStyleSheet("QGroupBox { background-color: #e7e7e7 } ")
             self.secondsBeforeSpinBox.setEnabled(True)
             self.secondsAfterSpinBox.setEnabled(True)
             self.secondsBeforeLabel.setStyleSheet('color: black')
             self.secondsAfterLabel.setStyleSheet('color: black')
+
 
         return
 
@@ -818,7 +823,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     @QtCore.pyqtSlot()
     def toggledSaveToolButton(self):
         """
-        Triggered when saveToolButton is toggled.
+        Triggered after saveToolButton is toggled.
         """
 
         if self.saveToolButton.isChecked():
@@ -831,19 +836,24 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.saveFormatLabel.setStyleSheet('color: gray')
             self.saveStatusLabel.setText("Wating for downloads to finish...")
             self.saveStatusLabel.repaint()
-            if self.waveformDownloadsComplete:
+            if self.waveformsDownloadComplete:
                 self.saveWaveformData()
             
         else:
+            # If we toggle because we finish saving, leave the status message
+            if self.waveformsSaveComplete:
+                self.saveToolButton.setText('Save Finished')
+                pass
+            else:
+                self.saveToolButton.setText('No Save Scheduled')
+                self.saveStatusLabel.setText("")
+                self.saveStatusLabel.repaint()
             # leave the button up and enable Save GUI elements
-            self.saveToolButton.setText('No Save Scheduled')
             self.saveDirectoryPushButton.setEnabled(True)
             self.saveFormatComboBox.setEnabled(True)
             self.saveDirectoryLabel.setStyleSheet('color: black')
             self.saveFormatLabel.setStyleSheet('color: black')
-            self.saveStatusLabel.setText("")
-            self.saveStatusLabel.repaint()
-
+    
         return
 
 
@@ -864,6 +874,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # WaveformDialog status text
         statusText = ''
+         
 
         # Find the first row of the selectionTable with an empty WaveformImagePath
         column_names = self.waveformsHandler.get_column_names()
@@ -931,7 +942,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 statusText = "%s" % request['waveformID']                
 
             else:
-                self.waveformDownloadsComplete = True
+                self.waveformsDownloadComplete = True
                 self.downloadToolButton.setEnabled(True) # TODO:  set this to False
                 self.downloadToolButton.setChecked(False) # up/off
                 self.downloadToolButton.setDown(False) # up/off
@@ -939,7 +950,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.logger.debug('COMPLETED all downloads')
 
                 statusText = "Completed all downloads"
-
+                
 
         # Update GUI
         QtGui.QApplication.processEvents()
@@ -949,8 +960,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadStatusLabel.repaint()
         
         # Save data if appropriate
-        if self.waveformDownloadsComplete and self.saveToolButton.isChecked():
-            self.saveWaveformData()
+        if self.waveformsDownloadComplete:
+            if self.saveToolButton.isChecked():
+                self.saveWaveformData()
+            else:
+                self.saveToolButton.setText('Ready to Save')
+                
 
         return
 
@@ -984,6 +999,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.saveStatusLabel.repaint()
             return
 
+        self.saveGroupBox.setStyleSheet("QGroupBox { background-color: #EEDC82 } ") # light goldenrod 2
         self.saveToolButton.setText('Saving...')
 
         # Total to be downloaded
@@ -1015,13 +1031,15 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 QtGui.QApplication.processEvents() # update GUI
 
         # Toggle saveToolButton state
+        self.waveformsSaveComplete = True
         self.saveToolButton.setEnabled(True)
         self.saveToolButton.setChecked(False) # up/off
         self.saveToolButton.setDown(False) # up/off
         self.toggledSaveToolButton()
+        self.saveGroupBox.setStyleSheet("QGroupBox { background-color: #e7e7e7 } ")
+        
         self.logger.debug('COMPLETED writing all waveforms')
         
-
 
     @QtCore.pyqtSlot()
     def getWaveformDirectory(self):
