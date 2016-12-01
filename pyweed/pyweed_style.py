@@ -45,6 +45,27 @@ QSpinBox:!enabled {
     color: gray;
 }
 
+/* Modify default GroupBox style */
+
+QGroupBox {
+    background-color: #e7e7e7;
+    border: 1px solid lightGray;
+    border-radius: 3px;
+    margin-top: 1.0em;
+}
+/*
+groupBox.setStyleSheet("QGroupBox { background-color: \
+    rgb(255, 255, 255); border: 3px solid rgb(255, 0, 0); }")
+    */
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 3px 0 3px;
+    font: bold 14px;
+}
+
+
 /* ----- Waveforms Dialog ----------------------------------------------------*/
 
 /* Remove border from frames */
@@ -64,21 +85,23 @@ QDialog#WaveformDialog QTableView#selectionTable {
 
 QDialog#WaveformDialog QToolButton { /* unchecked = up = "action canceled" */
   padding: 3px;
-  background-color: #d3d3d3;
-  border-left: 2px solid #d3d3d3;
-  border-top: 2px solid #d3d3d3;
-  border-right: 2px solid #696969;
-  border-bottom: 2px solid #696969;
+  background-color: lightGray;
+  border-left: 2px solid lightGray;
+  border-top: 2px solid lightGray;
+  border-right: 2px solid darkGray;
+  border-bottom: 2px solid darkGray;
 }
 
 QDialog#WaveformDialog QToolButton:checked { /* checked = down = "action activated" */
   padding: 3px;
   background-color: white;
-  border-left: 2px solid #696969;
-  border-top: 2px solid #696969;
-  border-right: 2px solid #d3d3d3;
-  border-bottom: 2px solid #d3d3d3;
+  border-left: 2px solid darkGray;
+  border-top: 2px solid darkGray;
+  border-right: 2px solid lightGray;
+  border-bottom: 2px solid lightGray;
 }
+
+
 
 
 
