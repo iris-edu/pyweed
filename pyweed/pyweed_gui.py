@@ -492,7 +492,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             plot_height = 200
 
             # Get selectionTable column names
-            column_names = self.waveformsHandler.get_column_names()
+            column_names = self.waveformsHandler.getColumnNames()
 
             # Get the message sent by the waveformsDownloader
             item = self.waveformResponseQueue.get()
@@ -518,7 +518,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     st.plot(outfile=imagePath, size=(plot_width,plot_height))
 
                     # Update the waveformsHandler
-                    self.waveformsHandler.set_WaveformImagePath(waveformID, imagePath)  
+                    self.waveformsHandler.setWaveformImagePath(waveformID, imagePath)  
 
                     # Update the Table
                     for row in range(self.selectionTable.rowCount()):
@@ -535,7 +535,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                     self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                     # Update the waveformsHandler
-                    self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
+                    self.waveformsHandler.setWaveformImagePath(waveformID, 'NO DATA AVAILABLE')
                     statusText = "No data available for %s" % waveformID
 
             else:
@@ -546,7 +546,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     statusText = message 
 
                 # Update the waveformsHandler
-                self.waveformsHandler.set_WaveformImagePath(waveformID, 'NO DATA AVAILABLE')
+                self.waveformsHandler.setWaveformImagePath(waveformID, 'NO DATA AVAILABLE')
 
                 # Update the Table
                 for row in range(self.selectionTable.rowCount()):
@@ -584,13 +584,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # The checkbox column is named 'Keep'
         row = item.row()
         col = item.column()
-        column_names = self.waveformsHandler.get_column_names()
+        column_names = self.waveformsHandler.getColumnNames()
         if col == column_names.index('Keep'):
             waveformID = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
             if item.checkState() == QtCore.Qt.Checked:
-                self.waveformsHandler.set_WaveformKeep(waveformID, True)
+                self.waveformsHandler.setWaveformKeep(waveformID, True)
             else:
-                self.waveformsHandler.set_WaveformKeep(waveformID, False)
+                self.waveformsHandler.setWaveformKeep(waveformID, False)
 
         return
 
@@ -613,7 +613,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadStatusLabel.setText(QtCore.QString("Calculating distances..."))
         self.downloadStatusLabel.repaint()
 
-        waveformsDF = self.waveformsHandler.create_waveformsDF(eventsDF, stationsDF)
+        waveformsDF = self.waveformsHandler.createWaveformsDF(eventsDF, stationsDF)
 
         self.downloadStatusLabel.setText(QtCore.QString(""))
         self.downloadStatusLabel.repaint()
@@ -687,8 +687,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Note:  Display information should be in the GUI code but needs to match
         # NOTE:  the columns which are created by the waveformsHandler.
-        hidden_column = self.waveformsHandler.get_column_hidden()
-        numeric_column = self.waveformsHandler.get_column_numeric()
+        hidden_column = self.waveformsHandler.getColumnHidden()
+        numeric_column = self.waveformsHandler.getColumnNumeric()
 
         # Clear existing contents
         self.selectionTable.clear() # This is important!
@@ -728,7 +728,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 elif waveformsDF.columns[j] == 'Keep':
                     checkBoxItem = QtGui.QTableWidgetItem()
                     checkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                    if self.waveformsHandler.get_WaveformKeep(waveformsDF.WaveformID.iloc[i]):
+                    if self.waveformsHandler.getWaveformKeep(waveformsDF.WaveformID.iloc[i]):
                         checkBoxItem.setCheckState(QtCore.Qt.Checked)
                     else:
                         checkBoxItem.setCheckState(QtCore.Qt.Unchecked)                        
@@ -877,7 +877,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
          
 
         # Find the first row of the selectionTable with an empty WaveformImagePath
-        column_names = self.waveformsHandler.get_column_names()
+        column_names = self.waveformsHandler.getColumnNames()
         for row in range(self.selectionTable.rowCount()):
             waveformImagePath = self.selectionTable.item(row,column_names.index('WaveformImagePath')).text()
             if waveformImagePath == '':

@@ -55,7 +55,7 @@ class WaveformsHandler(object):
         self.currentDF = None
                 
         
-    def create_waveformsDF(self, eventsDF, stationsDF):
+    def createWaveformsDF(self, eventsDF, stationsDF):
         """
         Create a dataframe of event-SNCL combinations.
         """
@@ -143,46 +143,46 @@ class WaveformsHandler(object):
         waveformsDF['Keep'] = True
         
         # Reorganize columns
-        waveformsDF = waveformsDF[self.get_column_names()]
+        waveformsDF = waveformsDF[self.getColumnNames()]
         
         # Save a copy internally
         self.currentDF = waveformsDF
     
         return(self.currentDF)
     
-    def get_WaveformImagePath(self, waveformID):
+    def getWaveformImagePath(self, waveformID):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         imagePath = self.currentDF.WaveformImagePath.iloc[index]
         return(imagePath)
     
-    def set_WaveformImagePath(self, waveformID, imagePath):
+    def setWaveformImagePath(self, waveformID, imagePath):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         self.currentDF.WaveformImagePath.iloc[index] = imagePath
         return
     
-    def get_WaveformKeep(self, waveformID):
+    def getWaveformKeep(self, waveformID):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         keep = self.currentDF.Keep.iloc[index]
         return(keep)
     
-    def set_WaveformKeep(self, waveformID, keep):
+    def setWaveformKeep(self, waveformID, keep):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         self.currentDF.Keep.iloc[index] = keep
         return
     
-    def get_column_names(self):
+    def getColumnNames(self):
         columnNames = ['Keep', 'SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
         return(columnNames)
     
-    def get_column_hidden(self):
+    def getColumnHidden(self):
         is_hidden =    [False,  False,  False,      False,       False,   False,  False,      True,        True,        True,      True,      True,      True,          True,          True,         True,                True]
         return(is_hidden)
     
-    def get_column_numeric(self):
+    def getColumnNumeric(self):
         is_numeric =   [False,  False,  True,       True,        True,    False,  False,      True,        True,        False,     False,     False,     True,          True,          False,        False,               False]
         return(is_numeric)
     
