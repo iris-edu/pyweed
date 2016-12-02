@@ -49,7 +49,7 @@ from MyDoubleValidator import MyDoubleValidator
 from MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from MyTableWidgetImageWidget import MyTableWidgetImageWidget
 from MyTextEditLoggingHandler import MyTextEditLoggingHandler
-from qt4mplcanvas import Qt4MplCanvas
+from MyQt4MplCanvas import MyQt4MplCanvas
 
 # Pyweed components
 

@@ -59,7 +59,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.mapFrame)
         self.verticalLayout_2.setMargin(2)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.map_canvas = Qt4MplCanvas(self.mapFrame)
+        self.map_canvas = MyQt4MplCanvas(self.mapFrame)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -118,4 +118,4 @@ class Ui_MainWindow(object):
         self.getStationsButton.setText(_translate("MainWindow", "Get Stations", None))
         self.getWaveformsButton.setText(_translate("MainWindow", "Get Waveforms", None))
 
-from qt4mplcanvas import Qt4MplCanvas
+from MyQt4MplCanvas import MyQt4MplCanvas
