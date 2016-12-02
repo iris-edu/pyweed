@@ -1,6 +1,6 @@
 # Display logging messages in a Qt textEdit widget
 #
-# based on http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
+# http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
 
 import logging
 

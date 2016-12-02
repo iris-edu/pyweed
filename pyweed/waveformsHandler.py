@@ -22,13 +22,14 @@ import pandas as pd
 #from Queue import Queue
 #from threading import Thread
 # Multi-processing
-import multiprocessing
+#import multiprocessing
 
 # ObsPy
 from obspy import UTCDateTime
 from obspy.taup import TauPyModel
 from obspy.clients import fdsn
 from obspy.geodetics import locations2degrees
+
 
 class WaveformsHandler(object):
     """
@@ -49,10 +50,14 @@ class WaveformsHandler(object):
         self.preferences = preferences
         
         # Important preferences
-        self.downloadDir = self.preferences.Waveforms.downloadDir
+        self.downloadDir = self.preferences.Waveforms.downloadDir        
+        self.dataCenter = "IRIS" # TODO:  dataCenter should be configurable
+        
+        # Instantiate a client
+        self.client = fdsn.Client(self.dataCenter)
         
         # Current state
-        self.currentDF = None
+        self.currentDF = None        
                 
         
     def createWaveformsDF(self, eventsDF, stationsDF):
@@ -149,6 +154,72 @@ class WaveformsHandler(object):
         self.currentDF = waveformsDF
     
         return(self.currentDF)
+    
+    
+    def handleWaveformRequest(self, request, secondsBefore, secondsAfter):
+        """
+        This funciton is invoked whenever the waveformRequestWatcherThread emits
+        a waveformRequestSignal. This means that a new waveform request has been
+        assembled and placed on the waveformRequestQueue. The GUI
+        WaveformDialog.handleWaveformRequest() function calls this function and
+        handles the return values.
+        """
+
+        # Pull elements from the request dictionary
+        task = request['task']
+        downloadDir = request['downloadDir']
+        source_time = request['time']
+        source_depth = request['source_depth']
+        source_lon = request['source_lon']
+        source_lat = request['source_lat']
+        SNCL = request['SNCL']
+        receiver_lon = request['receiver_lon']
+        receiver_lat = request['receiver_lat']
+        plot_width = request['plot_width']
+        plot_height = request['plot_height']
+        waveformID = request['waveformID']
+
+        self.logger.debug("waveformRequestSignal: %s -- %s", task, waveformID)
+
+        # Calculate arrival times
+        self.logger.debug("%s calculate travel time", SNCL)
+        try:
+            model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
+            tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
+        except Exception as e:
+            self.logger.error('%s', e)
+            return("ERROR", waveformID, "", str(e))
+
+        # TODO:  Are traveltimes always sorted by time?
+        # TODO:  Do we need to check the phase?
+        earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
+
+        starttime = earliest_arrival_time - secondsBefore
+        endtime = earliest_arrival_time + secondsAfter
+
+        # Download the waveform
+        self.logger.debug("%s download waveform", SNCL)    
+        (network, station, location, channel) = SNCL.split('.')
+        try:
+            st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
+        except Exception as e:
+            self.logger.error('%s', e)
+            return("ERROR", waveformID, "", str(e))
+
+        # Save the miniseed file
+        startstring = starttime.format_iris_web_service()
+        endstring = endtime.format_iris_web_service()
+        mseedFile = downloadDir + '/' + SNCL + '_' + startstring + '_' + endstring + ".MSEED"
+        self.logger.debug("%s save as MiniSEED", SNCL)
+        try:
+            st.write(mseedFile, format="MSEED")
+        except Exception as e:
+            self.logger.error('%s', e)
+            return("ERROR", waveformID, "", str(e))
+        
+        # Successful completion
+        return("MSEED_READY", waveformID, mseedFile, "")
+    
     
     def getWaveformImagePath(self, waveformID):
         waveformIDs = self.currentDF.WaveformID.tolist()

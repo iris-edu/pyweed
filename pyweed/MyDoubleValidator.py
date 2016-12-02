@@ -1,6 +1,6 @@
 # Custom QDoubleValidator that pays attention to ranges
 #
-# from https://gist.github.com/jirivrany/4473639
+# https://gist.github.com/jirivrany/4473639
 
 from sys import float_info
 
