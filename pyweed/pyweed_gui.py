@@ -28,8 +28,6 @@ import multiprocessing
 # ObsPy
 import obspy
 from obspy import UTCDateTime
-from obspy.taup import TauPyModel
-from obspy.clients import fdsn
 
 # PyQt4 packages
 from PyQt4 import QtCore
@@ -325,8 +323,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setWindowTitle('Waveforms')
 
         # Configured properties
-        self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformPath
-
+        self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformDirectory
 
         # Modify default GUI settings
         self.saveDirectoryPushButton.setText(self.waveformDirectory)
@@ -354,10 +351,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Set up queues to request waveform downloads and respond with a status
         self.waveformRequestQueue = multiprocessing.Queue()
         self.waveformResponseQueue = multiprocessing.Queue()
-
-        # NOTE:  Attempting to avert threading/process dysfunction by instantiating ObsPy fdsn.Client in the parent process
-        dataCenter = "IRIS" # TODO:  dataCenter should be configurable
-        self.client = fdsn.Client(dataCenter)
 
         # Selection table
         self.selectionTable.setSortingEnabled(True)
@@ -416,71 +409,20 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
             # Get the request    
             request = self.waveformRequestQueue.get()
-
-            # Pull elements from the request dictionary
-            task = request['task']
-            downloadDir = request['downloadDir']
-            source_time = request['time']
-            source_depth = request['source_depth']
-            source_lon = request['source_lon']
-            source_lat = request['source_lat']
-            SNCL = request['SNCL']
-            receiver_lon = request['receiver_lon']
-            receiver_lat = request['receiver_lat']
-            plot_width = request['plot_width']
-            plot_height = request['plot_height']
-            waveformID = request['waveformID']
-
-            self.logger.debug("waveformRequestSignal: %s -- %s", task, waveformID)
-
-            basename = SNCL + '_' + str(source_time)
-
-            # Calculate arrival times
-            self.logger.debug("%s calculate travel time", SNCL)
-            try:
-                model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
-                tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
-            except Exception as e:
-                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
-                self.logger.error('%s', e)
-                return
-
-            # TODO:  Are traveltimes always sorted by time?
-            # TODO:  Do we need to check the phase?
-            earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
-
-            starttime = earliest_arrival_time - self.secondsBeforeSpinBox.value()
-            endtime = earliest_arrival_time + self.secondsAfterSpinBox.value()
-
-            # Download the waveform
-            self.logger.debug("%s download waveform", SNCL)    
-            (network, station, location, channel) = SNCL.split('.')
-            try:
-                st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
-            except Exception as e:
-                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
-                self.logger.error('%s', e)
-                return
-
-            # Save the miniseed file
-            startstring = starttime.format_iris_web_service()
-            endstring = endtime.format_iris_web_service()
-            filename = downloadDir + '/' + SNCL + '_' + startstring + '_' + endstring + ".MSEED"
-            self.logger.debug("%s save as MiniSEED", SNCL)
-            try:
-                st.write(filename, format="MSEED")
-            except Exception as e:
-                self.waveformResponseQueue.put( {"status":"ERROR", "waveformID":waveformID, "mseedFile":"", "message":str(e)} )                
-                self.logger.error('%s', e)
-                return
+            
+            # Attempt to download a waveform
+            secondsBefore = self.secondsBeforeSpinBox.value()
+            secondsAfter = self.secondsAfterSpinBox.value()            
+            (status, waveformID, mseedFile, message) = self.waveformsHandler.handleWaveformRequest(request, secondsBefore, secondsAfter)
 
             # Update GUI
             QtGui.QApplication.processEvents()
 
-            # Announce that this file is ready for plotting
-            # TODO:  Maybe change the status and message to reflect "MSEED_READY". It's not up the the downloader to decide what happens next.
-            message = "Plotting %s" % basename
-            self.waveformResponseQueue.put( {"status":"MSEED_READY", "waveformID":waveformID, "mseedFile":filename, "message":message})
+            ## Announce that the downloaded mseedFile is ready for plotting
+            ## TODO:  Maybe change the status and message to reflect "MSEED_READY". It should not be up the the downloader to decide what happens next.
+            #message = "Plotting %s" % request['waveformID']
+            
+            self.waveformResponseQueue.put( {"status":status, "waveformID":waveformID, "mseedFile":mseedFile, "message":message})
 
         return
 
@@ -500,7 +442,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             # Get selectionTable column names
             column_names = self.waveformsHandler.getColumnNames()
 
-            # Get the message sent by the waveformsDownloader
+            # Get the message sent by handleWaveformRequest
             item = self.waveformResponseQueue.get()
             status = item['status']
             waveformID = item['waveformID']
@@ -514,6 +456,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
             # Handle different status results                
             if status == "MSEED_READY":
+
+                # Update the statusLabel before the potentially slow plotting
+                statusText = "Plotting %s" % waveformID
+                self.downloadStatusLabel.setText(statusText)
+                self.downloadStatusLabel.repaint()
+                QtGui.QApplication.processEvents()
 
                 try:
                     # Generate a plot
@@ -913,7 +861,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
             self.waveformRequestQueue.put(request)
 
-            statusText = "%s" % request['waveformID']
+            statusText = "Downloading %s" % request['waveformID']
 
         else:
 
@@ -945,7 +893,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
                 self.waveformRequestQueue.put(request)
 
-                statusText = "%s" % request['waveformID']                
+                statusText = "Downloading %s" % request['waveformID']                
 
             else:
                 self.waveformsDownloadComplete = True

@@ -1,3 +1,7 @@
+# Custom FigureCanvas for displaying Matplotlib output
+#
+# https://github.com/krischer/instaseis/blob/master/instaseis/gui/qt4mplcanvas.py
+
 from matplotlib import rc as matplotlibrc
 import matplotlib as mpl
 from matplotlib.figure import Figure
