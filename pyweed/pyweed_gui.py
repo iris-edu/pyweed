@@ -61,7 +61,7 @@ from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 __appName__ = "PYWEED"
-__version__ = "0.0.13"
+__version__ = "0.0.14"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -325,9 +325,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setWindowTitle('Waveforms')
 
         # Configured properties
-        self.secs_before = 60 # TODO:  get configurable plot properties from WaveformOptionsDialog
-        self.secs_after = 600 # TODO:  get configurable plot properties from WaveformOptionsDialog
-
         self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformPath
 
 
@@ -383,6 +380,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.selectionTable.itemClicked.connect(self.handleTableItemClicked)
+        
+        # Connect signals associated with spinBoxes
+        self.secondsBeforeSpinBox.valueChanged.connect(self.resetDownload)
+        self.secondsAfterSpinBox.valueChanged.connect(self.resetDownload)
 
         # Set up a thread to watch for waveform requests that lasts as long as this dialog is open
         self.logger.debug('Starting waveformRequestWatcherThread')
@@ -401,6 +402,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
     def handleWaveformRequest(self):
         """
+        This funciton is invoked whenever the waveformRequestWatcherThread emits
+        a waveformRequestSignal. This means that a new waveform request has been
+        assembled and placed on the waveformRequestQueue.
         """
         self.logger.debug("waveformRequestSignal")
 
@@ -445,8 +449,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             # TODO:  Do we need to check the phase?
             earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
 
-            starttime = earliest_arrival_time - self.secs_before
-            endtime = earliest_arrival_time + self.secs_after
+            starttime = earliest_arrival_time - self.secondsBeforeSpinBox.value()
+            endtime = earliest_arrival_time + self.secondsAfterSpinBox.value()
 
             # Download the waveform
             self.logger.debug("%s download waveform", SNCL)    
@@ -459,7 +463,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 return
 
             # Save the miniseed file
-            filename = downloadDir + '/' + SNCL + '_' + str(source_time) + ".MSEED"
+            startstring = starttime.format_iris_web_service()
+            endstring = endtime.format_iris_web_service()
+            filename = downloadDir + '/' + SNCL + '_' + startstring + '_' + endstring + ".MSEED"
             self.logger.debug("%s save as MiniSEED", SNCL)
             try:
                 st.write(filename, format="MSEED")
@@ -482,7 +488,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     def handleWaveformResponse(self):
         """
         This funciton is invoked whenever the waveformResponseWatcherThread emits
-        a waveformResponseSignal. This means that the separate waveformsDownloader process
+        a waveformResponseSignal. This means that handleWaveformRequest()
         has written a new .MSEED file to disk and it is available for processing.
         """
         if not self.waveformResponseQueue.empty():
@@ -970,6 +976,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         return
 
 
+    @QtCore.pyqtSlot()
+    def resetDownload(self):
+        """
+        This function is triggered whenever the values in secondsBeforeSpinBox or
+        secondsAfterSpinBox are changed. Any change means that we need to wipe out
+        all the downloads that have occurred and start over.
+        """
+        self.waveformsDownloadComplete = False
+        self.waveformsHandler.currentDF.WaveformImagePath = ''
+        self.loadSelectionTable(self.waveformsHandler.currentDF)
+        
+    
     @QtCore.pyqtSlot()
     def saveWaveformData(self):
         """
