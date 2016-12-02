@@ -55,11 +55,12 @@ from preferences import Preferences
 from eventsHandler import EventsHandler
 from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
-
 from seismap import Seismap
 
+from pyweed_utils import manageCache
+
 __appName__ = "PYWEED"
-__version__ = "0.0.14"
+__version__ = "0.0.15"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -336,11 +337,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Get references to MainWindow elements and methods
         self.logger = parent.logger
         self.statusBar = parent.statusBar
+        self.preferences = parent.preferences
 
         self.logger.debug('Initializing waveform dialog...')
 
         # Waveforms
-        self.waveformsHandler = WaveformsHandler(self.logger, parent.preferences)
+        self.waveformsHandler = WaveformsHandler(self.logger, self.preferences)
         self.waveformsDownloadComplete = False
         self.waveformsSaveComplete = False
 
@@ -399,7 +401,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         a waveformRequestSignal. This means that a new waveform request has been
         assembled and placed on the waveformRequestQueue.
         """
-        self.logger.debug("waveformRequestSignal")
 
         # NOTE:  The watcher should guarantee there is something in the queue
         # NOTE:  before emitting the waveformRequestSignal that is connected
@@ -1023,7 +1024,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.toggledSaveToolButton()
         self.saveGroupBox.setStyleSheet("QGroupBox { background-color: #e7e7e7 } ")
         
-        self.logger.debug('COMPLETED writing all waveforms')
+        self.logger.debug('COMPLETED saving all waveforms')
         
 
     @QtCore.pyqtSlot()
@@ -1127,10 +1128,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             print("Unable to load configuration preferences -- using defaults.\n%s" % e)
             pass
 
-        # TODO:  logging example   -- http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
-        # TODO:  logging example 2 -- http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
-
         # Logging
+        # see:  http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
+        # see:  http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
         self.logger = logging.getLogger()
         try:
             logLevel = getattr(logging, self.preferences.Logging.level)
@@ -1139,14 +1139,18 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.logger.setLevel(logging.DEBUG)
         self.loggingDialog = LoggingDialog(self, self.logger)
 
-        # Make sure the download directory exists
+        # Make sure the waveform download directory exists and isn't full
+        waveformDownloadDir = self.preferences.Waveforms.downloadDir
+        waveformCacheSize = float(self.preferences.Waveforms.cacheSize)
         self.logger.debug('Checking on download directory...')
-        if not os.path.exists(self.preferences.Waveforms.downloadDir):
+        if os.path.exists(waveformDownloadDir):
+            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)        
+        else:
             try:
-                os.makedirs(self.preferences.Waveforms.downloadDir, 0700)
+                os.makedirs(waveformDownloadDir, 0700)
             except Exception as e:
                 logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
-                SystemExit()       
+                SystemExit()
 
         # Get the Figure object from the map_canvas
         self.logger.debug('Setting up main map...')
@@ -1174,8 +1178,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Connect signals associated with table clicks
-        # NOTE:  http://zetcode.com/gui/pyqt4/eventsandsignals/
-        # NOTE:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
+        # see:  http://zetcode.com/gui/pyqt4/eventsandsignals/
+        # see:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
         QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClicked)
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
@@ -1483,7 +1487,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
 
     def closeApplication(self):
-        # TODO:  Careful shutdown
+        # Manage the waveform cache
+        waveformDownloadDir = self.preferences.Waveforms.downloadDir
+        waveformCacheSize = self.preferences.Waveforms.cacheSize
+        self.logger.debug('Managing the waveform cache...')
+        if os.path.exists(waveformDownloadDir):
+            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)        
+         
         self.logger.info('Closing application...')
         QtGui.QApplication.quit()
 

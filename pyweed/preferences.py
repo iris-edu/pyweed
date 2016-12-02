@@ -31,6 +31,7 @@ class Preferences(object):
 		
 		self.Waveforms = type("Waveforms", (object,), {})()
 		self.Waveforms.downloadDir = os.path.join(os.path.expanduser("~"), ".pyweed_downloads")
+		self.Waveforms.cacheSize = "50" # megabytes
 
 		self.Logging = type("Logging", (object,), {})()
 		self.Logging.level = "DEBUG"
@@ -125,10 +126,9 @@ class Preferences(object):
 			config = ConfigParser.SafeConfigParser()
 			config.readfp(f)
 	
-			# NOTE:  We need to know the types of expected properties while reading them in.
-			
 			# Read in preferences by section
 			self.set_option(config, 'Waveforms', 'downloadDir')
+			self.set_option(config, 'Waveforms', 'cacheSize')
 			
 			self.set_option(config, 'Logging', 'logLevel')
 			
