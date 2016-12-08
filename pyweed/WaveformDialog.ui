@@ -23,7 +23,16 @@
       <enum>QFrame::Plain</enum>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
-      <property name="margin">
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
        <number>2</number>
       </property>
       <item>
@@ -35,13 +44,31 @@
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_6">
-         <property name="margin">
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
+         <property name="topMargin">
+          <number>2</number>
+         </property>
+         <property name="rightMargin">
+          <number>2</number>
+         </property>
+         <property name="bottomMargin">
           <number>2</number>
          </property>
          <item alignment="Qt::AlignLeft">
           <widget class="QWidget" name="widget" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <property name="margin">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
              <number>2</number>
             </property>
             <item>
@@ -83,7 +110,16 @@
          <item alignment="Qt::AlignLeft">
           <widget class="QWidget" name="widget_2" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <property name="margin">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
              <number>2</number>
             </property>
             <item>
@@ -125,7 +161,16 @@
          <item>
           <widget class="QWidget" name="widget_5" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <property name="margin">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
              <number>2</number>
             </property>
             <item>
@@ -166,13 +211,31 @@
          <string>Save Waveforms</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
-         <property name="margin">
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
+         <property name="topMargin">
+          <number>2</number>
+         </property>
+         <property name="rightMargin">
+          <number>2</number>
+         </property>
+         <property name="bottomMargin">
           <number>2</number>
          </property>
          <item alignment="Qt::AlignLeft">
           <widget class="QWidget" name="widget_3" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <property name="margin">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
              <number>2</number>
             </property>
             <item>
@@ -208,7 +271,16 @@
          <item alignment="Qt::AlignLeft">
           <widget class="QWidget" name="widget_4" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <property name="margin">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
              <number>2</number>
             </property>
             <item>
@@ -240,11 +312,20 @@
          <item>
           <widget class="QWidget" name="widget_6" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <property name="margin">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
              <number>2</number>
             </property>
             <item>
-             <widget class="QToolButton" name="saveToolButton">
+             <widget class="QPushButton" name="savePushButton">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -256,9 +337,6 @@
               </property>
               <property name="checkable">
                <bool>true</bool>
-              </property>
-              <property name="popupMode">
-               <enum>QToolButton::InstantPopup</enum>
               </property>
              </widget>
             </item>
@@ -287,7 +365,16 @@
       </size>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
-      <property name="margin">
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
        <number>2</number>
       </property>
       <item>
@@ -296,7 +383,16 @@
          <string>Table Filters</string>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="3,1,1">
-         <property name="margin">
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
+         <property name="topMargin">
+          <number>2</number>
+         </property>
+         <property name="rightMargin">
+          <number>2</number>
+         </property>
+         <property name="bottomMargin">
           <number>2</number>
          </property>
          <item>
