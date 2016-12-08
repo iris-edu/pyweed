@@ -344,7 +344,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Waveforms
         self.waveformsHandler = WaveformsHandler(self.logger, self.preferences)
         self.waveformsDownloadComplete = False
-        self.waveformsSaveComplete = False
+        self.waveformsSaveComplete = ""
 
         # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
@@ -363,10 +363,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Resize contents after sort
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
 
-        # Connect the Download and Save buttons
+        # Connect the Download and Save GUI elements
         self.downloadToolButton.toggled.connect(self.toggledDownloadToolButton)
         self.saveToolButton.toggled.connect(self.toggledSaveToolButton)
         self.saveDirectoryPushButton.pressed.connect(self.getWaveformDirectory)
+        self.saveFormatComboBox.activated.connect(self.resetSave)
 
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
@@ -780,6 +781,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """
         Triggered after saveToolButton is toggled.
         """
+        
+        formatChoice = str(self.saveFormatComboBox.currentText())        
 
         # Saving down/on
         if self.saveToolButton.isChecked():
@@ -789,7 +792,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.saveDirectoryLabel.setStyleSheet('color: gray')
             self.saveFormatLabel.setStyleSheet('color: gray')
             if self.waveformsDownloadComplete:
-                if self.waveformsSaveComplete:
+                if self.waveformsSaveComplete.find(formatChoice) >= 0:
                     self.saveToolButton.setText('Save Finished')
                 else:
                     self.saveToolButton.setText('Saving...')
@@ -806,7 +809,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.saveDirectoryLabel.setStyleSheet('color: black')
             self.saveFormatLabel.setStyleSheet('color: black')
             if self.waveformsDownloadComplete:
-                if self.waveformsSaveComplete:
+                if self.waveformsSaveComplete.find(formatChoice) >= 0:
                     self.saveToolButton.setText('Save Finished')
                 else:
                     self.saveToolButton.setText('Save Stopped')
@@ -825,6 +828,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         all the downloads that have occurred and start over.
         """
         self.waveformsDownloadComplete = False
+        self.resetSave()
         self.waveformsHandler.currentDF.WaveformImagePath = ''
         self.loadSelectionTable(self.waveformsHandler.currentDF)
         
@@ -836,7 +840,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         saveFormat elements are changed. Any change means that we need to
         start saving from the beginning.
         """
-        self.waveformsSaveComplete = False
+        self.waveformsSaveComplete = ""
+        if self.waveformsDownloadComplete:
+            self.saveStatusLabel.setText("")
+        else:
+            self.saveStatusLabel.setText("Waiting for downloads to finish...")
         
     
     @QtCore.pyqtSlot()
@@ -1017,7 +1025,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     return
 
         # Toggle saveToolButton state
-        self.waveformsSaveComplete = True
+        self.waveformsSaveComplete += formatChoice + ","
         self.saveToolButton.setEnabled(True)
         self.saveToolButton.setChecked(False) # up/off
         self.saveToolButton.setDown(False) # up/off
@@ -1043,6 +1051,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         if newDirectory != '':
             self.waveformDirectory = newDirectory
             self.saveDirectoryPushButton.setText(self.waveformDirectory)
+            self.resetSave()
 
 
 
