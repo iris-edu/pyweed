@@ -61,7 +61,7 @@ from seismap import Seismap
 from pyweed_utils import manageCache
 
 __appName__ = "PYWEED"
-__version__ = "0.0.15"
+__version__ = "0.0.16"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
