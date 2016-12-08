@@ -27,48 +27,25 @@ class StationsHandler(object):
         self.logger = logger
         self.preferences = preferences
 
-        # TODO:  Historical stuff should be saved elsewhere so that the Events class 
-        # TODO:  will only have current state.
-        self.url_history = []
-        
         # Current state
         self.currentDF = None
         self.selectedIDs = []
         
-    def get_url(self, index=0):
-        return(self.url_history[index])
-    
     def load_data(self, parameters=None):
         """
         Make a webservice request for stations using the passed in options
         """
         # Sanity check
         if not parameters.has_key('starttime') or not parameters.has_key('endtime'):
-            raise('starttime or endtime is missing')
-                    
-        # Create stations webservice URL
-        url = build_url(parameters=parameters, output_format="text")
+            raise('starttime or endtime is missing')                   
         
         try:
+            # Create dataframe of stations metadata
+            url = build_url(parameters=parameters, output_format="text")
             self.logger.debug('Loading channels from: %s', url)
-            # Get stations dataframe and clean up column names
-            df = pd.read_csv(url, sep='|')
-            df.columns = df.columns.str.strip()
-            df.columns = df.columns.str.strip('#')   # take care of column named '#Network'
-            # Awkward conversion of 'Location' column from float to character
-            # NOTE:  Using [:,'colname'] syntax here because of the following warning:
-            # NOTE:  http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
-            df.loc[np.isnan(df['Location']),'Location'] = 999
-            df.loc[:,'Location'] = df.loc[:,'Location'].astype(int)
-            df.loc[:,'Location'] = df.loc[:,'Location'].astype(str)
-            df.loc[df['Location'] == '999','Location'] = '--'          # Could be represented as '' or '--'
-            df.loc[df['Location'] == '0','Location'] = '00'
-            # Add 'SNCL' column
-            sncls = df.apply(lambda x: '%s.%s.%s.%s' % (x['Network'],x['Station'],x['Location'],x['Channel']), axis=1)
-            df['SNCL'] = sncls.tolist()
+            df = build_dataframe(url)
             df = df[self.get_column_names()]
-            # Push items onto the stack (so the most recent is always in position 0)
-            self.url_history.insert(0, url)
+            
         except Exception as e:
             # TODO:  What type of exception should we trap? We should probably log it.
             self.logger.error('%s', e)
@@ -125,8 +102,29 @@ def build_url(base_url="http://service.iris.edu",
     # Add parameters
     url = "?".join((url, urllib.urlencode(parameters)))
     
-    return url
+    return(url)
 
+
+# build a stations dataframe (original IRIS version)
+def build_dataframe(url):
+    # Get stations dataframe and clean up column names
+    df = pd.read_csv(url, sep='|')
+    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip('#')   # take care of column named '#Network'
+    # Awkward conversion of 'Location' column from float to character
+    # NOTE:  Using [:,'colname'] syntax here because of the following warning:
+    # NOTE:  http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+    df.loc[np.isnan(df['Location']),'Location'] = 999
+    df.loc[:,'Location'] = df.loc[:,'Location'].astype(int)
+    df.loc[:,'Location'] = df.loc[:,'Location'].astype(str)
+    df.loc[df['Location'] == '999','Location'] = '--'          # Could be represented as '' or '--'
+    df.loc[df['Location'] == '0','Location'] = '00'
+    # Add 'SNCL' column
+    sncls = df.apply(lambda x: '%s.%s.%s.%s' % (x['Network'],x['Station'],x['Location'],x['Channel']), axis=1)
+    df['SNCL'] = sncls.tolist()
+    
+    return(df)
+    
 
 # ------------------------------------------------------------------------------
 # Main

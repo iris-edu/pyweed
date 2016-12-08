@@ -27,17 +27,10 @@ class EventsHandler(object):
         self.logger = logger
         self.preferences = preferences
         
-        # TODO:  Historical stuff should be saved elsewhere so that the Events class 
-        # TODO:  will only have current state.
-        self.url_history = []
-        
         # Current state
         self.currentDF = None
         self.selectedIDs = []
         
-    def get_url(self, index=0):
-        return(self.url_history[index])
-    
     def load_data(self, parameters=None):
         """
         Make a webservice request for events using the passed in options
@@ -45,22 +38,14 @@ class EventsHandler(object):
         # Sanity check
         if not parameters.has_key('starttime') or not parameters.has_key('endtime'):
             raise('starttime or endtime is missing')
-                    
-        # Create events webservice URL
-        url = build_url(parameters=parameters, output_format="text")
-                    
+                                   
         try:
+            # Create dataframe of events metadata
+            url = build_url(parameters=parameters, output_format="text")
             self.logger.debug('Loading events from: %s', url)
-            # Get events dataframe and clean up column names
-            df = pd.read_csv(url, sep='|')
-            df.columns = df.columns.str.strip()
-            df.columns = df.columns.str.lstrip('#') # remove '#' from '#EventID'
-            # Rearrange columns
+            df = build_dataframe(url)
             df = df[self.get_column_names()]
-            # Convert EventID to character
-            df['EventID'] = df['EventID'].astype(str)
-            # Push items onto the stack (so the most recent is always in position 0)
-            self.url_history.insert(0, url)
+
         except Exception as e:
             # TODO:  What type of exception should we trap? We should probably log it.
             self.logger.error('%s', e)
@@ -114,8 +99,19 @@ def build_url(base_url="http://service.iris.edu",
     # Add parameters
     url = "?".join((url, urllib.urlencode(parameters)))
     
-    return url
+    return(url)
 
+
+def build_dataframe(url):
+    # Get events dataframe and clean up column names
+    df = pd.read_csv(url, sep='|')
+    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.lstrip('#') # remove '#' from '#EventID'
+    # Convert EventID to character
+    df['EventID'] = df['EventID'].astype(str)
+    
+    return(df)
+    
 
 # ------------------------------------------------------------------------------
 # Main
