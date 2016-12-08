@@ -28,6 +28,7 @@ import multiprocessing
 # ObsPy
 import obspy
 from obspy import UTCDateTime
+from obspy.clients import fdsn
 
 # PyQt4 packages
 from PyQt4 import QtCore
@@ -323,6 +324,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
+        # Keep a reference to globally shared components
+        self.logger = parent.logger
+        self.preferences = parent.preferences
+        self.client = parent.client
+
         # Configured properties
         self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformDirectory
 
@@ -334,15 +340,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveFormatComboBox.addItems(['ASCII','GSE2','MSEED','SAC'])
         self.saveFormatComboBox.setCurrentIndex(2)
 
-        # Get references to MainWindow elements and methods
-        self.logger = parent.logger
-        self.statusBar = parent.statusBar
-        self.preferences = parent.preferences
-
         self.logger.debug('Initializing waveform dialog...')
 
         # Waveforms
-        self.waveformsHandler = WaveformsHandler(self.logger, self.preferences)
+        self.waveformsHandler = WaveformsHandler(self.logger, self.preferences, self.client)
         self.waveformsDownloadComplete = False
         self.waveformsSaveComplete = ""
 
@@ -1160,6 +1161,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             except Exception as e:
                 logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 SystemExit()
+                
+        # Set up the ObsPy FDSN client
+        # Important preferences
+        self.dataCenter = "IRIS" # TODO:  dataCenter should be configurable
+    
+        # Instantiate a client
+        self.logger.info("Creating ObsPy client for %s" % self.dataCenter)
+        self.client = fdsn.Client(self.dataCenter)       
 
         # Get the Figure object from the map_canvas
         self.logger.debug('Setting up main map...')
@@ -1173,7 +1182,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Events
         self.logger.debug('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)        
-        self.eventsHandler = EventsHandler(self.logger, self.preferences)        
+        self.eventsHandler = EventsHandler(self.logger, self.preferences, self.client)        
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -1181,7 +1190,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Stations
         self.logger.debug('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
-        self.stationsHandler = StationsHandler(self.logger, self.preferences)        
+        self.stationsHandler = StationsHandler(self.logger, self.preferences, self.client)        
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -1193,6 +1202,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
         # Waveforms
+        # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
         self.logger.debug('Setting up waveforms dialog...')
         self.waveformsDialog = WaveformDialog(self)
         self.getWaveformsButton.setEnabled(False)

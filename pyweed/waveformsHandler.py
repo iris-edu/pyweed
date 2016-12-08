@@ -41,20 +41,17 @@ class WaveformsHandler(object):
     of any filtering that is applied in the WaveformsDialog to reduce
     the size of the visible table. 
     """
-    def __init__(self, logger, preferences):
+    def __init__(self, logger, preferences, client):
         """
         Initialization.
         """
-        # Always keep a reference to global logger and preferences
+        # Keep a reference to globally shared components
         self.logger = logger
         self.preferences = preferences
+        self.client = client
         
         # Important preferences
         self.downloadDir = self.preferences.Waveforms.downloadDir        
-        self.dataCenter = "IRIS" # TODO:  dataCenter should be configurable
-        
-        # Instantiate a client
-        self.client = fdsn.Client(self.dataCenter)
         
         # Current state
         self.currentDF = None        
