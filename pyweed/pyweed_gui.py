@@ -164,13 +164,16 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         Return a dictionary containing everything specified in the EventQueryDialog.
         All dictionary values are properly formatted for use in building an event service URL.
         """
-        options = {}        
+        options = {}
+        
+        # NOTE:  Names of event options must match argument names defined here:
+        # NOTE:    https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_events.html
 
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
         options['endtime'] = str(self.endtimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
-        options['minmag'] = str(self.minmagLineEdit.text())
-        options['maxmag'] = str(self.maxmagLineEdit.text())
+        options['minmagnitude'] = str(self.minmagLineEdit.text())
+        options['maxmagnitude'] = str(self.maxmagLineEdit.text())
         options['mindepth'] = str(self.mindepthLineEdit.text())
         options['maxdepth'] = str(self.maxdepthLineEdit.text())
 
@@ -178,25 +181,25 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         #if str(self.catalogComboBox.currentText()) != 'All Catalogs':
             #options['catalog'] = str(self.type.currentText())
         if str(self.magtypeComboBox.currentText()) != 'All Types':
-            options['magtype'] = str(self.magtypeComboBox.currentText()) 
+            options['magnitudetype'] = str(self.magtypeComboBox.currentText()) 
         if self.locationRangeRadioButton.isChecked():         
             if str(self.locationRangeWestLineEdit.text()) != '':
-                options['minlon'] = str(self.locationRangeWestLineEdit.text())            
+                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())            
             if str(self.locationRangeEastLineEdit.text()) != '':
-                options['maxlon'] = str(self.locationRangeEastLineEdit.text())            
+                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())            
             if str(self.locationRangeSouthLineEdit.text()) != '':
-                options['minlat'] = str(self.locationRangeSouthLineEdit.text())            
+                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())            
             if str(self.locationRangeNorthLineEdit.text()) != '':
-                options['maxlat'] = str(self.locationRangeNorthLineEdit.text())
+                options['maxlatitude'] = str(self.locationRangeNorthLineEdit.text())
         if self.locationDistanceFromPointRadioButton.isChecked():         
             if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
                 options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())            
             if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
                 options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())            
             if str(self.distanceFromPointEastLineEdit.text()) != '':
-                options['lon'] = str(self.distanceFromPointEastLineEdit.text())            
+                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())            
             if str(self.distanceFromPointNorthLineEdit.text()) != '':
-                options['lat'] = str(self.distanceFromPointNorthLineEdit.text())
+                options['latitude'] = str(self.distanceFromPointNorthLineEdit.text())
 
         return options
 
@@ -282,6 +285,9 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         """
         options = {}        
 
+        # NOTE:  Names of event options must match argument names defined here:
+        # NOTE:    https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_stations.html
+
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
         options['endtime'] = str(self.endtimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
@@ -297,22 +303,22 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
             options['channel'] = str(self.channelLineEdit.text())            
         if self.locationRangeRadioButton.isChecked():         
             if str(self.locationRangeWestLineEdit.text()) != '':
-                options['minlon'] = str(self.locationRangeWestLineEdit.text())            
+                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())            
             if str(self.locationRangeEastLineEdit.text()) != '':
-                options['maxlon'] = str(self.locationRangeEastLineEdit.text())            
+                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())            
             if str(self.locationRangeSouthLineEdit.text()) != '':
-                options['minlat'] = str(self.locationRangeSouthLineEdit.text())            
+                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())            
             if str(self.locationRangeNorthLineEdit.text()) != '':
-                options['maxlat'] = str(self.locationRangeNorthLineEdit.text())
+                options['maxlatitude'] = str(self.locationRangeNorthLineEdit.text())
         if self.locationDistanceFromPointRadioButton.isChecked():         
             if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
                 options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())            
             if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
                 options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())            
             if str(self.distanceFromPointEastLineEdit.text()) != '':
-                options['lon'] = str(self.distanceFromPointEastLineEdit.text())            
+                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())            
             if str(self.distanceFromPointNorthLineEdit.text()) != '':
-                options['lat'] = str(self.distanceFromPointNorthLineEdit.text())
+                options['latitude'] = str(self.distanceFromPointNorthLineEdit.text())
 
         return options
 
