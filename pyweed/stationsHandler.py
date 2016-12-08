@@ -19,13 +19,14 @@ class StationsHandler(object):
     """
     Container for stations.
     """
-    def __init__(self, logger, preferences):
+    def __init__(self, logger, preferences, client):
         """
         Initialization.
         """
-        # Always keep a reference to global logger and preferences
+        # Keep a reference to globally shared components
         self.logger = logger
         self.preferences = preferences
+        self.client = client
 
         # Current state
         self.currentDF = None
@@ -41,10 +42,13 @@ class StationsHandler(object):
         
         try:
             # Create dataframe of stations metadata
-            url = build_url(parameters=parameters, output_format="text")
-            self.logger.debug('Loading channels from: %s', url)
-            df = build_dataframe(url)
-            df = df[self.get_column_names()]
+            #url = build_url(parameters=parameters, output_format="text")
+            #self.logger.debug('Loading channels from: %s', url)
+            #df = build_dataframe_OLD(url)
+            #df = df[self.get_column_names()]
+            self.logger.debug('Loading stations...')
+            df = build_dataframe_NEW(self.client, parameters)
+            df.columns = self.get_column_names()
             
         except Exception as e:
             # TODO:  What type of exception should we trap? We should probably log it.
@@ -105,8 +109,13 @@ def build_url(base_url="http://service.iris.edu",
     return(url)
 
 
-# build a stations dataframe (original IRIS version)
-def build_dataframe(url):
+# Build a stations dataframe (original IRIS version)
+def build_dataframe_OLD(url):
+    """
+    Parse and cleans up station data returned from IRIS with "format=text".
+    
+    A pandas dataframe is returned.
+    """
     # Get stations dataframe and clean up column names
     df = pd.read_csv(url, sep='|')
     df.columns = df.columns.str.strip()
@@ -124,6 +133,61 @@ def build_dataframe(url):
     df['SNCL'] = sncls.tolist()
     
     return(df)
+
+
+def build_dataframe_NEW(client, parameters):
+    """
+    Obtain station data as an ObsPy Inventory.
+    Then convert this into a pandas dataframe.
+    
+    A pandas dataframe is returned.
+    """
+    
+    # parameters.keys() = ['network', 'lon', 'station', 'location', 'starttime', 'lat', 'endtime', 'maxradius', 'channel', 'minradius']
+
+    try:
+        sncl_inventory = client.get_stations(starttime=parameters['starttime'],
+                                             endtime=parameters['endtime'],
+                                             network=parameters['network'],
+                                             station=parameters['station'],
+                                             location=parameters['location'],
+                                             channel=parameters['channel'],
+                                             includerestricted=None,
+                                             latitude=parameters['lat'],
+                                             longitude=parameters['lon'],
+                                             minradius=parameters['minradius'],
+                                             maxradius=parameters['maxradius'],                                                 
+                                             level='channel')
+        
+    except Exception as e:
+        raise
+
+
+    # Set up empty dataframe
+    df = pd.DataFrame(columns=("network", "station", "location", "channel",
+                               "latitude", "longitude", "elevation", "depth" ,
+                               "azimuth", "dip", "instrument",
+                               "scale", "scalefreq", "scaleunits", "samplerate",
+                               "starttime", "endtime", "snclId"))
+
+    # Walk through the Inventory object
+    for n in sncl_inventory.networks:
+        for s in n.stations:
+            for c in s.channels:
+                snclId = n.code + "." + s.code + "." + c.location_code + "." + c.code
+                # Append a row to the dataframe
+                df.loc[len(df)] = [n.code, s.code, c.location_code, c.code,
+                                   c.longitude, c.latitude, c.elevation, c.depth,
+                                   c.azimuth, c.dip, c.sensor.description,
+                                   None,     # TODO:  Figure out how to get instrument 'scale'
+                                   None,     # TODO:  Figure out how to get instrument 'scalefreq'
+                                   None,     # TODO:  Figure out how to get instrument 'scaleunits'
+                                   c.sample_rate,
+                                   c.start_date, c.end_date, snclId]
+                                   
+    return(df)
+
+    
     
 
 # ------------------------------------------------------------------------------

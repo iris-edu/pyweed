@@ -19,13 +19,14 @@ class EventsHandler(object):
     """
     Container for events.
     """
-    def __init__(self, logger, preferences):
+    def __init__(self, logger, preferences, client):
         """
         Initialization.
         """
-        # Always keep a reference to global logger and preferences
+        # Keep a reference to globally shared components
         self.logger = logger
         self.preferences = preferences
+        self.client = client
         
         # Current state
         self.currentDF = None
