@@ -1,8 +1,0 @@
-Placeholder
-
-# Compiling the UI
-
-cd pyweed
-pyuic4 MainWindow.ui -o MainWindow.py
-pyuic4 EventOptionsDialog.ui -o EventOptionsDialog.py
-

@@ -61,10 +61,13 @@ from seismap import Seismap
 from pyweed_utils import manageCache
 
 __appName__ = "PYWEED"
-__version__ = "0.0.16"
+__version__ = "0.1.0"
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
+    """
+    Dialog window displaying all logs.
+    """
     def __init__(self, parent=None, logger=None):
         super(self.__class__, self).__init__()
         self.setupUi(self)
@@ -81,7 +84,9 @@ class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
 
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
-    """Dialog window for event options used in creating a webservice query."""
+    """
+    Dialog window for event options used in creating a webservice query.
+    """
     def __init__(self, parent=None):
         super(self.__class__, self).__init__()
         self.setupUi(self)
@@ -162,12 +167,13 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
     def getOptions(self):
         """
         Return a dictionary containing everything specified in the EventQueryDialog.
-        All dictionary values are properly formatted for use in building an event service URL.
+        All dictionary values are properly formatted for use in querying event services.
+
+        Names of event options must match argument names defined here:
+          https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_events.html
         """
         options = {}
         
-        # NOTE:  Names of event options must match argument names defined here:
-        # NOTE:    https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_events.html
 
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
@@ -205,7 +211,9 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
 
 
 class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog):
-    """Dialog window for station options used in creating a webservice query."""
+    """
+    Dialog window for station options used in creating a webservice query.
+    """
     def __init__(self, parent=None, windowTitle='Start/End Time'):
         super(self.__class__, self).__init__()
         self.setupUi(self)
@@ -280,13 +288,13 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
     @QtCore.pyqtSlot()    
     def getOptions(self):
         """
-        Return a dictionary containing everything specified in the EventQueryDialog.
-        All dictionary values are properly formatted for use in building an event service URL.
-        """
-        options = {}        
-
+        Return a dictionary containing everything specified in the StationQueryDialog.
+        All dictionary values are properly formatted for use in querying station services.
+        
         # NOTE:  Names of event options must match argument names defined here:
         # NOTE:    https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_stations.html
+        """
+        options = {}        
 
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
@@ -324,7 +332,9 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
 
 
 class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
-    """Dialog window for selection and display of waveforms."""
+    """
+    Dialog window for selection and display of waveforms.
+    """
     def __init__(self, parent=None):
         super(self.__class__, self).__init__()
         self.setupUi(self)
@@ -544,17 +554,30 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     # NOTE:  http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
     # NOTE:  http://stackoverflow.com/questions/30462078/using-a-checkbox-in-pyqt
     def handleTableItemClicked(self, item):
+        """
+        Triggered whenever an item in the waveforms table is clicked.
+        """
         # The checkbox column is named 'Keep'
         row = item.row()
         col = item.column()
         column_names = self.waveformsHandler.getColumnNames()
-        if col == column_names.index('Keep'):
-            waveformID = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
-            if item.checkState() == QtCore.Qt.Checked:
-                self.waveformsHandler.setWaveformKeep(waveformID, True)
+        keepItem = self.selectionTable.item(row,column_names.index('Keep'))
+        
+        # If the user clicked on the checkBox then it was already toggled before
+        # invoking this function. Otherwise, we have to toggle the checkBox here:
+        if col != column_names.index('Keep'):
+            if keepItem.checkState() == QtCore.Qt.Checked:
+                keepItem.setCheckState(QtCore.Qt.Unchecked)
             else:
-                self.waveformsHandler.setWaveformKeep(waveformID, False)
-
+                keepItem.setCheckState(QtCore.Qt.Checked)
+            
+        waveformID = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
+        
+        if keepItem.checkState() == QtCore.Qt.Checked:
+            self.waveformsHandler.setWaveformKeep(waveformID, True)
+        else:
+            self.waveformsHandler.setWaveformKeep(waveformID, False)
+        
         return
 
 
@@ -1489,6 +1512,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         ###email = "adam@iris.washington.edu"
         license_link = "https://github.com/iris-edu-int/pyweed/blob/master/LICENSE"
         license_name = "MIT"
+        mazama_link = "http://mazamascience.com"
+        mazama_name = "Mazama Science"
+        iris_link = "http://ds.iris.edu/ds/nodes/dmc/"
+        iris_name = "IRIS"
 
         msgBox = QtGui.QMessageBox()
         msgBox.setWindowTitle(self.tr("About " + self.appName))
@@ -1502,8 +1529,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
                        "Pyweed is a cross-platform GUI application for retrieving event-based seismic data." +
                        "<br><br>" +
                        "<a href='{0}'>{0}</a><br><br>".format(website) +
-###                       "<a href='mailto:{0}'>{0}</a><br><br>".format(email) +
-"License: <a href='{0}'>{1}</a>".format(license_link, license_name))
+                       ###"<a href='mailto:{0}'>{0}</a><br><br>".format(email) +
+                       "License: <a href='{0}'>{1}</a>".format(license_link, license_name) +
+                       "<br><br>" +
+                       "Developed by <a href='{0}'>{1}</a>".format(mazama_link, mazama_name) +
+                       " for <a href='{0}'>{1}</a>".format(iris_link, iris_name) +
+                       ".") 
 
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
         msgBox.exec_()
