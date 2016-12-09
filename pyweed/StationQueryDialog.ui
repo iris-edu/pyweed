@@ -29,7 +29,7 @@
       <item row="0" column="2">
        <widget class="QLabel" name="locationLabel">
         <property name="text">
-         <string>Locaiotns</string>
+         <string>Locations</string>
         </property>
        </widget>
       </item>

@@ -209,7 +209,7 @@ class Ui_StationQueryDialog(object):
     def retranslateUi(self, StationQueryDialog):
         StationQueryDialog.setWindowTitle(_translate("StationQueryDialog", "Dialog", None))
         self.SNCLGroupBox.setTitle(_translate("StationQueryDialog", "SNCL", None))
-        self.locationLabel.setText(_translate("StationQueryDialog", "Locaiotns", None))
+        self.locationLabel.setText(_translate("StationQueryDialog", "Locations", None))
         self.networkLabel.setText(_translate("StationQueryDialog", "Networks", None))
         self.channelLabel.setText(_translate("StationQueryDialog", "Channels", None))
         self.stationLabel.setText(_translate("StationQueryDialog", "Stations", None))
