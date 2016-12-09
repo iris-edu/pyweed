@@ -108,22 +108,22 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.locationButtonGroup.addButton(self.locationDistanceFromStationsRadioButton,3)
 
         # Set validators for input fields # TODO:  What are appropriate valid ranges?
-        self.minmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.minmagLineEdit))        
-        self.maxmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.maxmagLineEdit))        
-        self.mindepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.mindepthLineEdit))        
-        self.maxdepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.maxdepthLineEdit))        
-        self.locationRangeWestLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeWestLineEdit))        
-        self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))        
-        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))        
+        self.minmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.minmagLineEdit))
+        self.maxmagLineEdit.setValidator(MyDoubleValidator(0.0,10.0,2,self.maxmagLineEdit))
+        self.mindepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.mindepthLineEdit))
+        self.maxdepthLineEdit.setValidator(MyDoubleValidator(0.0,6371.0,2,self.maxdepthLineEdit))
+        self.locationRangeWestLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeWestLineEdit))
+        self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))
+        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))
         self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))
-        self.distanceFromPointMinRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMinRadiusLineEdit))        
-        self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))        
-        self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
+        self.distanceFromPointMinRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMinRadiusLineEdit))
+        self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))
+        self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
 
         # Set tab order
         self.setTabOrder(self.minmagLineEdit, self.maxmagLineEdit)
-        self.setTabOrder(self.maxmagLineEdit, self.mindepthLineEdit)        
+        self.setTabOrder(self.maxmagLineEdit, self.mindepthLineEdit)
         self.setTabOrder(self.mindepthLineEdit, self.maxdepthLineEdit)
         self.setTabOrder(self.maxdepthLineEdit, self.locationRangeNorthLineEdit)
         self.setTabOrder(self.locationRangeNorthLineEdit, self.locationRangeWestLineEdit)
@@ -150,9 +150,9 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
 
         # Initialize the date selectors # TODO: using preferences
-        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        today = QtCore.QDateTime.currentDateTime()
+        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+        today = QtCore.QDateTime.currentDateTimeUtc()
         monthAgo = today.addMonths(-1)
         self.starttimeDateTimeEdit.setDateTime(monthAgo)
         self.endtimeDateTimeEdit.setDateTime(today)
@@ -163,7 +163,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
 
 
 
-    @QtCore.pyqtSlot()    
+    @QtCore.pyqtSlot()
     def getOptions(self):
         """
         Return a dictionary containing everything specified in the EventQueryDialog.
@@ -173,7 +173,7 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
           https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_events.html
         """
         options = {}
-        
+
 
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
@@ -187,23 +187,23 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         #if str(self.catalogComboBox.currentText()) != 'All Catalogs':
             #options['catalog'] = str(self.type.currentText())
         if str(self.magtypeComboBox.currentText()) != 'All Types':
-            options['magnitudetype'] = str(self.magtypeComboBox.currentText()) 
-        if self.locationRangeRadioButton.isChecked():         
+            options['magnitudetype'] = str(self.magtypeComboBox.currentText())
+        if self.locationRangeRadioButton.isChecked():
             if str(self.locationRangeWestLineEdit.text()) != '':
-                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())            
+                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())
             if str(self.locationRangeEastLineEdit.text()) != '':
-                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())            
+                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())
             if str(self.locationRangeSouthLineEdit.text()) != '':
-                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())            
+                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())
             if str(self.locationRangeNorthLineEdit.text()) != '':
                 options['maxlatitude'] = str(self.locationRangeNorthLineEdit.text())
-        if self.locationDistanceFromPointRadioButton.isChecked():         
+        if self.locationDistanceFromPointRadioButton.isChecked():
             if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
-                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())            
+                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())
             if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
-                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())            
+                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())
             if str(self.distanceFromPointEastLineEdit.text()) != '':
-                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())            
+                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())
             if str(self.distanceFromPointNorthLineEdit.text()) != '':
                 options['latitude'] = str(self.distanceFromPointNorthLineEdit.text())
 
@@ -235,18 +235,18 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.locationButtonGroup.addButton(self.locationDistanceFromEventsRadioButton,3)
 
         # Set validators for input fields # TODO:  What are appropriate valid ranges?
-        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeSouthLineEdit))        
-        self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))        
-        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))        
-        self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))        
-        self.distanceFromPointMinRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMinRadiusLineEdit))        
-        self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))        
-        self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))        
+        self.locationRangeWestLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeWestLineEdit))
+        self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))
+        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))
+        self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))
+        self.distanceFromPointMinRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMinRadiusLineEdit))
+        self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))
+        self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
 
         # Set tab order
         self.setTabOrder(self.networkLineEdit, self.stationLineEdit)
-        self.setTabOrder(self.stationLineEdit, self.locationLineEdit)        
+        self.setTabOrder(self.stationLineEdit, self.locationLineEdit)
         self.setTabOrder(self.locationLineEdit, self.channelLineEdit)
         self.setTabOrder(self.channelLineEdit, self.locationRangeNorthLineEdit)
         self.setTabOrder(self.locationRangeNorthLineEdit, self.locationRangeWestLineEdit)
@@ -273,9 +273,9 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
 
         # Initialize the date selectors # TODO: using preferences
-        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        today = QtCore.QDateTime.currentDateTime()
+        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+        today = QtCore.QDateTime.currentDateTimeUtc()
         monthAgo = today.addMonths(-1)
         self.starttimeDateTimeEdit.setDateTime(monthAgo)
         self.endtimeDateTimeEdit.setDateTime(today)
@@ -285,16 +285,16 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         getattr(self, prefs.selectedLocationButton).setChecked(True)
 
 
-    @QtCore.pyqtSlot()    
+    @QtCore.pyqtSlot()
     def getOptions(self):
         """
         Return a dictionary containing everything specified in the StationQueryDialog.
         All dictionary values are properly formatted for use in querying station services.
-        
+
         # NOTE:  Names of event options must match argument names defined here:
         # NOTE:    https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_stations.html
         """
-        options = {}        
+        options = {}
 
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
@@ -302,29 +302,29 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
 
         # SNCL and lat-lon ranges are optional
         if str(self.networkLineEdit.text()) != '':
-            options['network'] = str(self.networkLineEdit.text())            
+            options['network'] = str(self.networkLineEdit.text())
         if str(self.networkLineEdit.text()) != '':
-            options['station'] = str(self.stationLineEdit.text())            
+            options['station'] = str(self.stationLineEdit.text())
         if str(self.stationLineEdit.text()) != '':
-            options['location'] = str(self.locationLineEdit.text())            
+            options['location'] = str(self.locationLineEdit.text())
         if str(self.locationLineEdit.text()) != '':
-            options['channel'] = str(self.channelLineEdit.text())            
-        if self.locationRangeRadioButton.isChecked():         
+            options['channel'] = str(self.channelLineEdit.text())
+        if self.locationRangeRadioButton.isChecked():
             if str(self.locationRangeWestLineEdit.text()) != '':
-                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())            
+                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())
             if str(self.locationRangeEastLineEdit.text()) != '':
-                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())            
+                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())
             if str(self.locationRangeSouthLineEdit.text()) != '':
-                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())            
+                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())
             if str(self.locationRangeNorthLineEdit.text()) != '':
                 options['maxlatitude'] = str(self.locationRangeNorthLineEdit.text())
-        if self.locationDistanceFromPointRadioButton.isChecked():         
+        if self.locationDistanceFromPointRadioButton.isChecked():
             if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
-                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())            
+                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())
             if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
-                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())            
+                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())
             if str(self.distanceFromPointEastLineEdit.text()) != '':
-                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())            
+                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())
             if str(self.distanceFromPointNorthLineEdit.text()) != '':
                 options['latitude'] = str(self.distanceFromPointNorthLineEdit.text())
 
@@ -350,7 +350,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Modify default GUI settings
         self.saveDirectoryPushButton.setText(self.waveformDirectory)
-        self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)        
+        self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Fill the format combo box
         self.saveFormatComboBox.addItems(['ASCII','GSE2','MSEED','SAC'])
@@ -378,7 +378,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
 
         # Resize contents after sort
-        self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents) 
+        self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents)
 
         # Connect the Download and Save GUI elements
         self.downloadToolButton.toggled.connect(self.toggledDownloadToolButton)
@@ -393,7 +393,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.selectionTable.itemClicked.connect(self.handleTableItemClicked)
-        
+
         # Connect signals associated with spinBoxes
         self.secondsBeforeSpinBox.valueChanged.connect(self.resetDownload)
         self.secondsAfterSpinBox.valueChanged.connect(self.resetDownload)
@@ -426,12 +426,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         if not self.waveformRequestQueue.empty():
 
-            # Get the request    
+            # Get the request
             request = self.waveformRequestQueue.get()
-            
+
             # Attempt to download a waveform
             secondsBefore = self.secondsBeforeSpinBox.value()
-            secondsAfter = self.secondsAfterSpinBox.value()            
+            secondsAfter = self.secondsAfterSpinBox.value()
             (status, waveformID, mseedFile, message) = self.waveformsHandler.handleWaveformRequest(request, secondsBefore, secondsAfter)
 
             # Update GUI
@@ -440,7 +440,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             ## Announce that the downloaded mseedFile is ready for plotting
             ## TODO:  Maybe change the status and message to reflect "MSEED_READY". It should not be up the the downloader to decide what happens next.
             #message = "Plotting %s" % request['waveformID']
-            
+
             self.waveformResponseQueue.put( {"status":status, "waveformID":waveformID, "mseedFile":mseedFile, "message":message})
 
         return
@@ -472,15 +472,15 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
             # WaveformDialog status text
             statusText = ''
-            
+
             # Find selectionTable row
             row = 0
             for row in range(self.selectionTable.rowCount()):
                 if self.selectionTable.item(row,column_names.index('WaveformID')).text() == waveformID:
                     break
-            
 
-            # Handle different status results                
+
+            # Handle different status results
             if status == "MSEED_READY":
 
                 # Update the statusLabel before the potentially slow plotting
@@ -498,13 +498,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     st.plot(outfile=imagePath, size=(plot_width,plot_height))
 
                     # Update the waveformsHandler
-                    self.waveformsHandler.setWaveformImagePath(waveformID, imagePath)  
+                    self.waveformsHandler.setWaveformImagePath(waveformID, imagePath)
 
                     # Update the Table
                     # Add imagePath to the WaveformImagePath table cell
                     self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem(imagePath))
                     # Add a pixmap to the Waveform table cell
-                    imageItem = MyTableWidgetImageWidget(self, imagePath)                    
+                    imageItem = MyTableWidgetImageWidget(self, imagePath)
                     self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
 
                 except Exception as e:
@@ -520,7 +520,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 if message.find("No data available") >= 0:
                     statusText = "No data available for %s" % waveformID
                 else:
-                    statusText = message 
+                    statusText = message
 
                 # Update the waveformsHandler
                 self.waveformsHandler.setWaveformImagePath(waveformID, 'NO DATA AVAILABLE')
@@ -538,13 +538,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             QtGui.QApplication.processEvents()
 
             if self.downloadToolButton.isChecked():
-                # Update status text       
+                # Update status text
                 self.downloadStatusLabel.setText(statusText)
                 self.downloadStatusLabel.repaint()
                 # Request more data
                 self.downloadWaveformData()
             else:
-                # Update status text       
+                # Update status text
                 self.downloadStatusLabel.setText('')
                 self.downloadStatusLabel.repaint()
 
@@ -562,7 +562,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         col = item.column()
         column_names = self.waveformsHandler.getColumnNames()
         keepItem = self.selectionTable.item(row,column_names.index('Keep'))
-        
+
         # If the user clicked on the checkBox then it was already toggled before
         # invoking this function. Otherwise, we have to toggle the checkBox here:
         if col != column_names.index('Keep'):
@@ -570,18 +570,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 keepItem.setCheckState(QtCore.Qt.Unchecked)
             else:
                 keepItem.setCheckState(QtCore.Qt.Checked)
-            
+
         waveformID = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
-        
+
         if keepItem.checkState() == QtCore.Qt.Checked:
             self.waveformsHandler.setWaveformKeep(waveformID, True)
         else:
             self.waveformsHandler.setWaveformKeep(waveformID, False)
-        
+
         return
 
 
-    @QtCore.pyqtSlot()    
+    @QtCore.pyqtSlot()
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
         """
         Fill the selectionTable with all SNCL-Event combinations selected in the MainWindow.
@@ -611,7 +611,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()        
+        self.selectionTable.resizeRowsToContents()
 
         # Add unique events to the eventComboBox -------------------------------
 
@@ -641,7 +641,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.stationComboBox.addItem(station)
 
         self.logger.debug('Finished loading waveform choices')
-        
+
         # Initialize saveToolButton to OFF/UP
         self.saveToolButton.setEnabled(True)
         self.saveToolButton.setChecked(False)
@@ -658,7 +658,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
 
 
-    @QtCore.pyqtSlot()    
+    @QtCore.pyqtSlot()
     def loadSelectionTable(self, waveformsDF):
         """
         Add event-SNCL combintations to the selection table
@@ -717,7 +717,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     if self.waveformsHandler.getWaveformKeep(waveformsDF.WaveformID.iloc[i]):
                         checkBoxItem.setCheckState(QtCore.Qt.Checked)
                     else:
-                        checkBoxItem.setCheckState(QtCore.Qt.Unchecked)                        
+                        checkBoxItem.setCheckState(QtCore.Qt.Unchecked)
                     self.selectionTable.setItem(i, j, checkBoxItem)
 
                 else:
@@ -811,8 +811,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """
         Triggered after saveToolButton is toggled.
         """
-        
-        formatChoice = str(self.saveFormatComboBox.currentText())        
+
+        formatChoice = str(self.saveFormatComboBox.currentText())
 
         # Saving down/on
         if self.saveToolButton.isChecked():
@@ -830,7 +830,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             else:
                 self.saveToolButton.setText('Save Scheduled')
                 self.saveStatusLabel.setText("Wating for downloads to finish...")
-            
+
         # Saving up/off
         else:
             # Enable GUI elements
@@ -846,7 +846,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             else:
                 self.saveToolButton.setText('No Save Scheduled')
                 self.saveStatusLabel.setText("")
-    
+
         return
 
 
@@ -861,8 +861,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.resetSave()
         self.waveformsHandler.currentDF.WaveformImagePath = ''
         self.loadSelectionTable(self.waveformsHandler.currentDF)
-        
-    
+
+
     @QtCore.pyqtSlot()
     def resetSave(self):
         """
@@ -875,8 +875,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.saveStatusLabel.setText("")
         else:
             self.saveStatusLabel.setText("Waiting for downloads to finish...")
-        
-    
+
+
     @QtCore.pyqtSlot()
     def downloadWaveformData(self):
         """
@@ -894,7 +894,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # WaveformDialog status text
         statusText = ''
-         
+
 
         # Find the first row of the selectionTable with an empty WaveformImagePath
         column_names = self.waveformsHandler.getColumnNames()
@@ -924,7 +924,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             request['plot_height'] = 200 # TODO:  This should be in preferences
 
             # Publish the request
-            self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
+            self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])
             self.waveformRequestQueue.put(request)
 
             statusText = "Downloading %s" % request['waveformID']
@@ -956,10 +956,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 request['plot_height'] = 200 # TODO:  This should be in preferences
 
                 # Publish the request
-                self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])        
+                self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])
                 self.waveformRequestQueue.put(request)
 
-                statusText = "Downloading %s" % request['waveformID']                
+                statusText = "Downloading %s" % request['waveformID']
 
             else:
                 self.waveformsDownloadComplete = True
@@ -970,20 +970,20 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.logger.debug('COMPLETED all downloads')
 
                 statusText = "Completed all downloads"
-                
+
 
         # Update GUI
         QtGui.QApplication.processEvents()
 
-        # Update status text       
+        # Update status text
         self.downloadStatusLabel.setText(statusText)
         self.downloadStatusLabel.repaint()
-        
+
         # Save data if appropriate
         if self.waveformsDownloadComplete:
             if self.saveToolButton.isChecked():
                 self.saveWaveformData()
-                
+
 
         return
 
@@ -1049,7 +1049,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.saveStatusLabel.setText("Saved %d / %d waveforms as %s" % (savedCount,totalCount,formatChoice))
                 self.saveStatusLabel.repaint()
                 QtGui.QApplication.processEvents() # update GUI
-                
+
                 # Return early if the user has toggled off the saveToolButton
                 if not self.saveToolButton.isChecked():
                     return
@@ -1061,9 +1061,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveToolButton.setDown(False) # up/off
         self.toggledSaveToolButton()
         self.saveGroupBox.setStyleSheet("QGroupBox { background-color: #e7e7e7 } ")
-        
+
         self.logger.debug('COMPLETED saving all waveforms')
-        
+
 
     @QtCore.pyqtSlot()
     def getWaveformDirectory(self):
@@ -1151,7 +1151,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Set MainWindow properties
         self.appName = __appName__
-        self.version = __version__        
+        self.version = __version__
         self.setWindowTitle('%s version %s' % (self.appName, self.version))
 
         # Create StatusBar
@@ -1183,21 +1183,21 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         waveformCacheSize = float(self.preferences.Waveforms.cacheSize)
         self.logger.debug('Checking on download directory...')
         if os.path.exists(waveformDownloadDir):
-            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)        
+            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)
         else:
             try:
                 os.makedirs(waveformDownloadDir, 0700)
             except Exception as e:
                 logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 SystemExit()
-                
+
         # Set up the ObsPy FDSN client
         # Important preferences
         self.dataCenter = "IRIS" # TODO:  dataCenter should be configurable
-    
+
         # Instantiate a client
         self.logger.info("Creating ObsPy client for %s" % self.dataCenter)
-        self.client = fdsn.Client(self.dataCenter)       
+        self.client = fdsn.Client(self.dataCenter)
 
         # Get the Figure object from the map_canvas
         self.logger.debug('Setting up main map...')
@@ -1210,8 +1210,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Events
         self.logger.debug('Setting up event options dialog...')
-        self.eventQueryDialog = EventQueryDialog(self)        
-        self.eventsHandler = EventsHandler(self.logger, self.preferences, self.client)        
+        self.eventQueryDialog = EventQueryDialog(self)
+        self.eventsHandler = EventsHandler(self.logger, self.preferences, self.client)
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -1219,7 +1219,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Stations
         self.logger.debug('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
-        self.stationsHandler = StationsHandler(self.logger, self.preferences, self.client)        
+        self.stationsHandler = StationsHandler(self.logger, self.preferences, self.client)
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -1255,7 +1255,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         quitAction = QtGui.QAction("&Quit", self)
         quitAction.setShortcut("Ctrl+Q")
-        quitAction.triggered.connect(self.closeApplication)        
+        quitAction.triggered.connect(self.closeApplication)
         fileMenu.addAction(quitAction)
 
         optionsMenu = mainMenu.addMenu('Options')
@@ -1270,7 +1270,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         helpMenu = mainMenu.addMenu('Help')
 
         aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
-        aboutPyweedAction.triggered.connect(self.aboutPyweed)        
+        aboutPyweedAction.triggered.connect(self.aboutPyweed)
         helpMenu.addAction(aboutPyweedAction)
         helpMenu.addSeparator()
         loggingDialogAction = QtGui.QAction("Show Logs", self)
@@ -1278,7 +1278,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         helpMenu.addAction(loggingDialogAction)
 
         # Display MainWindow
-        self.show()        
+        self.show()
 
 
     @QtCore.pyqtSlot()
@@ -1439,7 +1439,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.logger.debug('%d events currently selected', len(rows))
 
-        # Get lons, lats and 
+        # Get lons, lats and
         # TODO:  Automatically detect column indexes
         lons = []
         lats = []
@@ -1485,8 +1485,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Update the stationsHandler with the latest selection information
         self.stationsHandler.set_selected_ids(SNCLs)
 
-        self.seismap.add_stations_highlighting(lons, lats)  
-        
+        self.seismap.add_stations_highlighting(lons, lats)
+
         self.manageGetWaveformsButton()
 
 
@@ -1498,13 +1498,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # http://stackoverflow.com/questions/3345785/getting-number-of-elements-in-an-iterator-in-python
         selectedEventsCount = sum(1 for idx in self.eventsTable.selectionModel().selectedRows() )
         selectedStationsCount = sum(1 for idx in self.stationsTable.selectionModel().selectedRows() )
-        
+
         if selectedEventsCount > 0 and selectedStationsCount > 0:
             self.getWaveformsButton.setEnabled(True)
         else:
             self.getWaveformsButton.setEnabled(False)
-        
-    
+
+
     def aboutPyweed(self):
         """Display About message box."""
         # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox
@@ -1534,7 +1534,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
                        "<br><br>" +
                        "Developed by <a href='{0}'>{1}</a>".format(mazama_link, mazama_name) +
                        " for <a href='{0}'>{1}</a>".format(iris_link, iris_name) +
-                       ".") 
+                       ".")
 
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
         msgBox.exec_()
@@ -1548,8 +1548,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         waveformCacheSize = self.preferences.Waveforms.cacheSize
         self.logger.debug('Managing the waveform cache...')
         if os.path.exists(waveformDownloadDir):
-            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)        
-         
+            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)
+
         self.logger.info('Closing application...')
         QtGui.QApplication.quit()
 
