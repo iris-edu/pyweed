@@ -150,8 +150,8 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
 
         # Initialize the date selectors # TODO: using preferences
-        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
-        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+        #self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
+        #self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
         today = QtCore.QDateTime.currentDateTimeUtc()
         monthAgo = today.addMonths(-1)
         self.starttimeDateTimeEdit.setDateTime(monthAgo)
@@ -173,7 +173,6 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
           https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_events.html
         """
         options = {}
-
 
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
@@ -233,6 +232,8 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.locationButtonGroup.addButton(self.locationRangeRadioButton,1)
         self.locationButtonGroup.addButton(self.locationDistanceFromPointRadioButton,2)
         self.locationButtonGroup.addButton(self.locationDistanceFromEventsRadioButton,3)
+        self.locationButtonGroup.buttonClicked['int'].connect(self.onLocationButtonClicked)
+
 
         # Set validators for input fields # TODO:  What are appropriate valid ranges?
         self.locationRangeWestLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeWestLineEdit))
@@ -273,8 +274,8 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
 
         # Initialize the date selectors # TODO: using preferences
-        self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
-        self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+        #self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+        #self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
         today = QtCore.QDateTime.currentDateTimeUtc()
         monthAgo = today.addMonths(-1)
         self.starttimeDateTimeEdit.setDateTime(monthAgo)
@@ -284,6 +285,15 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         getattr(self, prefs.selectedTimeButton).setChecked(True)
         getattr(self, prefs.selectedLocationButton).setChecked(True)
 
+    @QtCore.pyqtSlot(int)
+    def onLocationButtonClicked(self, button_id):
+        def enableItem(item, enabled):
+            if isinstance(item, QtGui.QLayout):
+                for i in range(item.count()):
+                    enableItem(item.itemAt(i), enabled)
+            elif hasattr(item, 'setEnabled'):
+                item.setEnabled(enabled)
+        enableItem(self.locationRangeLayout, button_id == 1)
 
     @QtCore.pyqtSlot()
     def getOptions(self):
