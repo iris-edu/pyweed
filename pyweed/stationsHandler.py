@@ -78,6 +78,9 @@ class StationsHandler(object):
         A pandas dataframe is returned.
         """
         
+        # TODO:  Optimize interaction with IRIS by restoring the previous version with 
+        # TODO:  requests for format="text" and simple pandas import.
+        
         # NOTE:  The parameters dictionary is created by StationsQueryDialog.getOptions()
         # NOTE:  and will be passed as **kwargs to client.get_stations:
         # NOTE:
