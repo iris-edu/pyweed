@@ -60,11 +60,8 @@ groupBox.setStyleSheet("QGroupBox { background-color: \
 
 QGroupBox::title {
     subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 3px 0 3px;
-    font: bold 14px;
+    font-size: 12px;
 }
-
 
 /* ----- Waveforms Dialog ----------------------------------------------------*/
 

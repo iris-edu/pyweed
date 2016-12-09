@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created: Thu Dec  8 16:59:56 2016
+#      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -25,7 +26,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(850, 922)
+        MainWindow.resize(1085, 922)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
@@ -45,9 +46,6 @@ class Ui_MainWindow(object):
         self.getWaveformsButton = QtGui.QPushButton(self.getButtonsWidget)
         self.getWaveformsButton.setObjectName(_fromUtf8("getWaveformsButton"))
         self.horizontalLayout_2.addWidget(self.getWaveformsButton)
-        self.getWaveformsButton.raise_()
-        self.getEventsButton.raise_()
-        self.getStationsButton.raise_()
         self.verticalLayout.addWidget(self.getButtonsWidget)
         self.splitter = QtGui.QSplitter(self.centralwidget)
         self.splitter.setOrientation(QtCore.Qt.Vertical)
@@ -108,6 +106,18 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.stationsFrame)
         self.verticalLayout.addWidget(self.splitter)
         MainWindow.setCentralWidget(self.centralwidget)
+        self.dockWidget = QtGui.QDockWidget(MainWindow)
+        self.dockWidget.setObjectName(_fromUtf8("dockWidget"))
+        self.dockWidgetContents = QtGui.QWidget()
+        self.dockWidgetContents.setObjectName(_fromUtf8("dockWidgetContents"))
+        self.dockWidget.setWidget(self.dockWidgetContents)
+        MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
+        self.dockWidget_2 = QtGui.QDockWidget(MainWindow)
+        self.dockWidget_2.setObjectName(_fromUtf8("dockWidget_2"))
+        self.dockWidgetContents_2 = QtGui.QWidget()
+        self.dockWidgetContents_2.setObjectName(_fromUtf8("dockWidgetContents_2"))
+        self.dockWidget_2.setWidget(self.dockWidgetContents_2)
+        MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget_2)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
