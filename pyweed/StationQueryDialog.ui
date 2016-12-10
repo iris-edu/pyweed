@@ -11,20 +11,6 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true">QGroupBox {
-    background-color: #e7e7e7;
-    border: 1px solid lightGray;
-    border-radius: 3px;
-	margin-top: 1em;
-}
-
-QGroupBox::title {
-	subcontrol-origin: margin;
-    font-size: 12px;
-}
-</string>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="SNCLGroupBox">
@@ -36,68 +22,75 @@ QGroupBox::title {
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="3">
-         <widget class="QLabel" name="channelLabel">
-          <property name="text">
-           <string>Channels</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="locationLabel">
-          <property name="text">
-           <string>Locations</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLineEdit" name="channelLineEdit">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>?HZ</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLineEdit" name="locationLineEdit">
-          <property name="text">
-           <string>*</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="networkLabel">
-          <property name="text">
-           <string>Networks</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLineEdit" name="networkLineEdit">
-          <property name="text">
-           <string>_GSN</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="stationLabel">
-          <property name="text">
-           <string>Stations</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="stationLineEdit">
-          <property name="text">
-           <string>*</string>
-          </property>
-         </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_13">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="networkLabel">
+            <property name="text">
+             <string>Networks</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="networkLineEdit">
+            <property name="text">
+             <string>_GSN</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="stationLineEdit">
+            <property name="text">
+             <string>*</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="locationLabel">
+            <property name="text">
+             <string>Locations</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="locationLineEdit">
+            <property name="text">
+             <string>*</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="channelLabel">
+            <property name="text">
+             <string>Channels</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="channelLineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>?HZ</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="stationLabel">
+            <property name="text">
+             <string>Stations</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -129,21 +122,11 @@ QGroupBox::title {
          <number>0</number>
         </property>
         <property name="leftMargin">
-         <number>12</number>
+         <number>24</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QLabel" name="starttimeLabel">
-            <property name="text">
-             <string>start</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
+         <layout class="QFormLayout" name="formLayout_2">
+          <item row="0" column="1">
            <widget class="QDateTimeEdit" name="starttimeDateTimeEdit">
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -159,7 +142,7 @@ QGroupBox::title {
             </property>
            </widget>
           </item>
-          <item>
+          <item row="1" column="0">
            <widget class="QLabel" name="endtimeLabel">
             <property name="text">
              <string>end</string>
@@ -169,7 +152,7 @@ QGroupBox::title {
             </property>
            </widget>
           </item>
-          <item>
+          <item row="1" column="1">
            <widget class="QDateTimeEdit" name="endtimeDateTimeEdit">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -188,6 +171,16 @@ QGroupBox::title {
             </property>
             <property name="timeSpec">
              <enum>Qt::UTC</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="starttimeLabel">
+            <property name="text">
+             <string>start</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -240,7 +233,7 @@ QGroupBox::title {
          <number>0</number>
         </property>
         <property name="leftMargin">
-         <number>12</number>
+         <number>24</number>
         </property>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -390,40 +383,21 @@ QGroupBox::title {
          <number>0</number>
         </property>
         <property name="leftMargin">
-         <number>12</number>
+         <number>24</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_11">
-          <item>
+         <layout class="QFormLayout" name="formLayout_3">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>between</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
              <widget class="QLineEdit" name="distanceFromPointMinRadiusLineEdit">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_10">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>-</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="distanceFromPointMaxRadiusLineEdit">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -447,21 +421,58 @@ QGroupBox::title {
             </item>
            </layout>
           </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>and</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QLabel" name="label_6">
+             <widget class="QLineEdit" name="distanceFromPointMaxRadiusLineEdit">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_10">
               <property name="enabled">
                <bool>true</bool>
               </property>
               <property name="text">
-               <string>from</string>
+               <string>degrees</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>from</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
             <item>
              <widget class="QLineEdit" name="distanceFromPointEastLineEdit">
               <property name="enabled">
@@ -476,18 +487,29 @@ QGroupBox::title {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_8">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
+             <widget class="QLabel" name="label_4">
               <property name="text">
                <string>E</string>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
              </widget>
             </item>
+           </layout>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>and</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
             <item>
              <widget class="QLineEdit" name="distanceFromPointNorthLineEdit">
               <property name="enabled">
@@ -502,10 +524,7 @@ QGroupBox::title {
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_9">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
+             <widget class="QLabel" name="label_7">
               <property name="text">
                <string>N</string>
               </property>
@@ -546,58 +565,80 @@ QGroupBox::title {
          <number>0</number>
         </property>
         <property name="leftMargin">
-         <number>12</number>
+         <number>24</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11">
-          <item>
-           <widget class="QLineEdit" name="distanceFromEventsMinradiusLineEdit">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_3">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
+         <layout class="QFormLayout" name="formLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_9">
             <property name="text">
-             <string>-</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <string>between</string>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QLineEdit" name="distanceFromEventsMaxradiusLineEdit">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_11">
+            <item>
+             <widget class="QLineEdit" name="distanceFromEventsMinradiusLineEdit">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string>degrees</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
-          <item>
-           <widget class="QLabel" name="label_5">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_12">
             <property name="text">
-             <string>degrees</string>
+             <string>and</string>
             </property>
            </widget>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_12">
+            <item>
+             <widget class="QLineEdit" name="distanceFromEventsMaxradiusLineEdit">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string>degrees</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -623,9 +664,6 @@ QGroupBox::title {
  </widget>
  <tabstops>
   <tabstop>timeDuringEventsRadioButton</tabstop>
-  <tabstop>distanceFromPointMinRadiusLineEdit</tabstop>
-  <tabstop>distanceFromPointMaxRadiusLineEdit</tabstop>
-  <tabstop>distanceFromPointNorthLineEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>
