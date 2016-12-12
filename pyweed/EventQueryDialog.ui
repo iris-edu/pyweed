@@ -56,6 +56,15 @@
            <height>24</height>
           </rect>
          </property>
+         <property name="displayFormat">
+          <string>yyyy-MM-dd hh:mm:ss</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpec">
+          <enum>Qt::UTC</enum>
+         </property>
         </widget>
         <widget class="QDateTimeEdit" name="starttimeDateTimeEdit">
          <property name="geometry">
@@ -68,6 +77,15 @@
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+         <property name="displayFormat">
+          <string>yyyy-MM-dd hh:mm:ss</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpec">
+          <enum>Qt::UTC</enum>
          </property>
         </widget>
         <widget class="QLabel" name="starttimeLabel">

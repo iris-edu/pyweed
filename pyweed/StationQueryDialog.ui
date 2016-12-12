@@ -2,12 +2,6 @@
 <ui version="4.0">
  <class>StationQueryDialog</class>
  <widget class="QDialog" name="StationQueryDialog">
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
@@ -92,6 +86,19 @@
           </item>
          </layout>
         </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
       </item>
      </layout>
@@ -147,9 +154,6 @@
             <property name="text">
              <string>end</string>
             </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
            </widget>
           </item>
           <item row="1" column="1">
@@ -178,9 +182,6 @@
            <widget class="QLabel" name="starttimeLabel">
             <property name="text">
              <string>start</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -663,7 +664,27 @@
   </layout>
  </widget>
  <tabstops>
+  <tabstop>networkLineEdit</tabstop>
+  <tabstop>stationLineEdit</tabstop>
+  <tabstop>locationLineEdit</tabstop>
+  <tabstop>channelLineEdit</tabstop>
+  <tabstop>timeBetweenRadioButton</tabstop>
+  <tabstop>starttimeDateTimeEdit</tabstop>
+  <tabstop>endtimeDateTimeEdit</tabstop>
   <tabstop>timeDuringEventsRadioButton</tabstop>
+  <tabstop>locationRangeRadioButton</tabstop>
+  <tabstop>locationRangeNorthLineEdit</tabstop>
+  <tabstop>locationRangeEastLineEdit</tabstop>
+  <tabstop>locationRangeWestLineEdit</tabstop>
+  <tabstop>locationRangeSouthLineEdit</tabstop>
+  <tabstop>locationDistanceFromPointRadioButton</tabstop>
+  <tabstop>distanceFromPointMinRadiusLineEdit</tabstop>
+  <tabstop>distanceFromPointMaxRadiusLineEdit</tabstop>
+  <tabstop>distanceFromPointEastLineEdit</tabstop>
+  <tabstop>distanceFromPointNorthLineEdit</tabstop>
+  <tabstop>locationDistanceFromEventsRadioButton</tabstop>
+  <tabstop>distanceFromEventsMinradiusLineEdit</tabstop>
+  <tabstop>distanceFromEventsMaxradiusLineEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

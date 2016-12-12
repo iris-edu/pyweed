@@ -246,17 +246,17 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
 
         # Set tab order
-        self.setTabOrder(self.networkLineEdit, self.stationLineEdit)
-        self.setTabOrder(self.stationLineEdit, self.locationLineEdit)
-        self.setTabOrder(self.locationLineEdit, self.channelLineEdit)
-        self.setTabOrder(self.channelLineEdit, self.locationRangeNorthLineEdit)
-        self.setTabOrder(self.locationRangeNorthLineEdit, self.locationRangeWestLineEdit)
-        self.setTabOrder(self.locationRangeWestLineEdit, self.locationRangeEastLineEdit)
-        self.setTabOrder(self.locationRangeEastLineEdit, self.locationRangeSouthLineEdit)
-        self.setTabOrder(self.locationRangeSouthLineEdit, self.distanceFromPointMinRadiusLineEdit)
-        self.setTabOrder(self.distanceFromPointMinRadiusLineEdit, self.distanceFromPointMaxRadiusLineEdit)
-        self.setTabOrder(self.distanceFromPointMaxRadiusLineEdit, self.distanceFromPointEastLineEdit)
-        self.setTabOrder(self.distanceFromPointEastLineEdit, self.distanceFromPointNorthLineEdit)
+#         self.setTabOrder(self.networkLineEdit, self.stationLineEdit)
+#         self.setTabOrder(self.stationLineEdit, self.locationLineEdit)
+#         self.setTabOrder(self.locationLineEdit, self.channelLineEdit)
+#         self.setTabOrder(self.channelLineEdit, self.locationRangeNorthLineEdit)
+#         self.setTabOrder(self.locationRangeNorthLineEdit, self.locationRangeWestLineEdit)
+#         self.setTabOrder(self.locationRangeWestLineEdit, self.locationRangeEastLineEdit)
+#         self.setTabOrder(self.locationRangeEastLineEdit, self.locationRangeSouthLineEdit)
+#         self.setTabOrder(self.locationRangeSouthLineEdit, self.distanceFromPointMinRadiusLineEdit)
+#         self.setTabOrder(self.distanceFromPointMinRadiusLineEdit, self.distanceFromPointMaxRadiusLineEdit)
+#         self.setTabOrder(self.distanceFromPointMaxRadiusLineEdit, self.distanceFromPointEastLineEdit)
+#         self.setTabOrder(self.distanceFromPointEastLineEdit, self.distanceFromPointNorthLineEdit)
 
         # Initialize input fields using preferences
         prefs = parent.preferences.StationOptions
@@ -1198,7 +1198,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             try:
                 os.makedirs(waveformDownloadDir, 0700)
             except Exception as e:
-                logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
+                self.logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 SystemExit()
 
         # Set up the ObsPy FDSN client
@@ -1567,7 +1567,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
-    app.setStyleSheet(stylesheet)
+    pixmap = QtGui.QPixmap("splash.png")
+    splash = QtGui.QSplashScreen(pixmap)
+    splash.show()
+    splash.showMessage("Initializing...")
+    QtGui.QApplication.processEvents()
+    # app.processEvents()
+    # app.setStyleSheet(stylesheet)
     GUI = MainWindow()
+    splash.finish(GUI)
     sys.exit(app.exec_())
 
