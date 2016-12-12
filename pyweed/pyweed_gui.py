@@ -1245,6 +1245,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.logger.info('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)
         self.eventsHandler = EventsHandler(self.logger, self.preferences, self.client)
+        self.eventsHandler.loaded.connect(self.on_events_loaded)
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -1269,7 +1270,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.waveformsDialog = WaveformDialog(self)
         self.getWaveformsButton.setEnabled(False)
 
-        self.logger.debug('Setting up main window...')
+        self.logger.info('Setting up main window...')
 
         # Connect the main window buttons
         self.getEventsButton.pressed.connect(self.getEvents)
@@ -1311,7 +1312,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         helpMenu.addAction(loggingDialogAction)
 
         # Display MainWindow
+        self.logger.info('Showing main window...')
         self.show()
+
         splashScreenHandler.close()
 
     @QtCore.pyqtSlot()
@@ -1325,7 +1328,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Get events and subset to desired columns
         parameters = self.eventQueryDialog.getOptions()
         # TODO:  handle errors when querying events
-        eventsDF = self.eventsHandler.load_data(parameters=parameters)
+        self.eventsHandler.load_data(parameters=parameters)
+
+    def on_events_loaded(self):
+
+        eventsDF = self.eventsHandler.currentDF
+
         # NOTE:  Here is the list of all column names:
         # NOTE:         ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
         hidden_column = [ False,  False,       False,       False,      False,      False,     False,               True,     True,      True,          True,            True,        True]
