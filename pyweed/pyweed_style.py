@@ -34,10 +34,12 @@ QTableView {
 
 /* Tighten up all frames */
 
+/*
 QFrame {
     margin: 0px;
     padding: 0px;
 }
+*/
 
 /* Increase 'disabled' contrast */
 
