@@ -1094,8 +1094,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.resetSave()
 
 
-
-
 # ----- Request/Response watchers ----------------------------------------------
 
 # NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
@@ -1150,24 +1148,33 @@ class waveformRequestWatcherThread(QtCore.QThread):
                 self.waveformRequestSignal.emit()
 
 
+# ----- Splash Screen ------------------------------------------------------------
+
+class SplashScreenHandler(logging.Handler):
+
+    def __init__(self, mainWidget):
+        super(SplashScreenHandler, self).__init__(level=logging.INFO)
+        self.mainWidget = mainWidget
+        pixmap = QtGui.QPixmap("splash.png")
+        self.splash = QtGui.QSplashScreen(pixmap)
+        self.splash.show()
+        # self.splash.finish(mainWidget)
+
+    def emit(self, record):
+        msg = self.format(record)
+        self.splash.showMessage(msg)
+        QtGui.QApplication.processEvents()
+
+    def close(self):
+        super(SplashScreenHandler, self).close()
+        self.splash.finish(self.mainWidget)
+
+
 # ----- Main Window ------------------------------------------------------------
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     def __init__(self,parent=None):
-
-        super(self.__class__, self).__init__()
-        self.setupUi(self)
-
-        # Set MainWindow properties
-        self.appName = __appName__
-        self.version = __version__
-        self.setWindowTitle('%s version %s' % (self.appName, self.version))
-
-        # Create StatusBar
-        sb = QtGui.QStatusBar()
-        sb.setFixedHeight(18)
-        self.setStatusBar(sb)
 
         # Load configurable preferences from ~/.pyweed/config.ini
         self.preferences = Preferences()
@@ -1188,17 +1195,33 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.logger.setLevel(logging.DEBUG)
         self.loggingDialog = LoggingDialog(self, self.logger)
 
+        splashScreenHandler = SplashScreenHandler(self)
+        self.logger.addHandler(splashScreenHandler)
+
+        super(self.__class__, self).__init__()
+        self.setupUi(self)
+
+        # Set MainWindow properties
+        self.appName = __appName__
+        self.version = __version__
+        self.setWindowTitle('%s version %s' % (self.appName, self.version))
+
+        # Create StatusBar
+        sb = QtGui.QStatusBar()
+        sb.setFixedHeight(18)
+        self.setStatusBar(sb)
+
         # Make sure the waveform download directory exists and isn't full
         waveformDownloadDir = self.preferences.Waveforms.downloadDir
         waveformCacheSize = float(self.preferences.Waveforms.cacheSize)
-        self.logger.debug('Checking on download directory...')
+        self.logger.info('Checking on download directory...')
         if os.path.exists(waveformDownloadDir):
             manageCache(waveformDownloadDir, waveformCacheSize, self.logger)
         else:
             try:
                 os.makedirs(waveformDownloadDir, 0700)
             except Exception as e:
-                self.logger.debug("Creation of download directory failed with" + " error: \"%s\'""" % e)
+                self.logger.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 SystemExit()
 
         # Set up the ObsPy FDSN client
@@ -1210,7 +1233,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.client = fdsn.Client(self.dataCenter)
 
         # Get the Figure object from the map_canvas
-        self.logger.debug('Setting up main map...')
+        self.logger.info('Setting up main map...')
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
@@ -1219,7 +1242,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_figure.canvas.draw()
 
         # Events
-        self.logger.debug('Setting up event options dialog...')
+        self.logger.info('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)
         self.eventsHandler = EventsHandler(self.logger, self.preferences, self.client)
         self.eventsTable.setSortingEnabled(True)
@@ -1227,7 +1250,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Stations
-        self.logger.debug('Setting up station options dialog...')
+        self.logger.info('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
         self.stationsHandler = StationsHandler(self.logger, self.preferences, self.client)
         self.stationsTable.setSortingEnabled(True)
@@ -1242,7 +1265,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
-        self.logger.debug('Setting up waveforms dialog...')
+        self.logger.info('Setting up waveforms dialog...')
         self.waveformsDialog = WaveformDialog(self)
         self.getWaveformsButton.setEnabled(False)
 
@@ -1289,7 +1312,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Display MainWindow
         self.show()
-
+        splashScreenHandler.close()
 
     @QtCore.pyqtSlot()
     def getEvents(self):
@@ -1567,14 +1590,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
-    pixmap = QtGui.QPixmap("splash.png")
-    splash = QtGui.QSplashScreen(pixmap)
-    splash.show()
-    splash.showMessage("Initializing...")
-    QtGui.QApplication.processEvents()
-    # app.processEvents()
     # app.setStyleSheet(stylesheet)
     GUI = MainWindow()
-    splash.finish(GUI)
     sys.exit(app.exec_())
 
