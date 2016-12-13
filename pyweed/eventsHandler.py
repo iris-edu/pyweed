@@ -24,16 +24,16 @@ class EventsLoader(QtCore.QThread):
     """
     finished = QtCore.pyqtSignal(object)
     log = QtCore.pyqtSignal(str)
+    error = QtCore.pyqtSignal(str)
     parameters = None
 
-    def __init__(self, logger, preferences, client):
+    def __init__(self, client, column_names):
         """
         Initialization.
         """
         # Keep a reference to globally shared components
-        self.logger = logger
-        self.preferences = preferences
         self.client = client
+        self.column_names = column_names
         QtCore.QThread.__init__(self)
 
     def run(self):
@@ -43,24 +43,18 @@ class EventsLoader(QtCore.QThread):
         A pandas dataframe is stored in self.currentDF and is also returned.
         """
         # Sanity check
-        if not self.parameters.has_key('starttime') or not self.parameters.has_key('endtime'):
-            raise('starttime or endtime is missing')
-
         try:
+            if not self.parameters.has_key('starttime') or not self.parameters.has_key('endtime'):
+                raise ValueError('starttime or endtime is missing')
+
             # Create dataframe of station metadata
             self.log.emit('Loading events...')
             df = self.build_dataframe(self.parameters)
+            self.finished.emit(df)
 
         except Exception as e:
             # TODO:  What type of exception should we trap?
-            self.log.emit('%s', e)
-            raise
-
-        self.finished.emit(df)
-
-    def get_column_names(self):
-        columnNames = ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
-        return(columnNames)
+            self.error.emit('%s', e)
 
     def build_dataframe(self, parameters):
         """
@@ -104,7 +98,7 @@ class EventsLoader(QtCore.QThread):
         self.log.emit("Creating events dataframe")
 
         # Set up empty dataframe
-        df = pd.DataFrame(columns=self.get_column_names())
+        df = pd.DataFrame(columns=self.column_names)
 
         for event in event_catalog:
             origin = event.preferred_origin()
@@ -154,13 +148,14 @@ class EventsLoader(QtCore.QThread):
         return(df)
 
 
-
 class EventsHandler(QtCore.QObject):
     """
     Container for events.
     """
-
-    loaded = QtCore.pyqtSignal()
+    finished = QtCore.pyqtSignal()
+    log = QtCore.pyqtSignal(str)
+    error = QtCore.pyqtSignal(str)
+    parameters = None
 
     def __init__(self, logger, preferences, client):
         """

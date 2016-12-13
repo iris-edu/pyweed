@@ -31,23 +31,6 @@
         <number>2</number>
        </property>
        <item>
-        <widget class="QPushButton" name="getEventsButton">
-         <property name="text">
-          <string>Get Events</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="getStationsButton">
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="text">
-          <string>Get Stations</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="getWaveformsButton">
          <property name="text">
           <string>Get Waveforms</string>
@@ -55,9 +38,6 @@
         </widget>
        </item>
       </layout>
-      <zorder>getWaveformsButton</zorder>
-      <zorder>getEventsButton</zorder>
-      <zorder>getStationsButton</zorder>
      </widget>
     </item>
     <item>
@@ -139,6 +119,13 @@
             <number>2</number>
            </property>
            <item>
+            <widget class="QPushButton" name="getEventsButton">
+             <property name="text">
+              <string>Get Events</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QTableWidget" name="eventsTable">
              <property name="styleSheet">
               <string notr="true"/>
@@ -175,6 +162,16 @@
            <property name="bottomMargin">
             <number>2</number>
            </property>
+           <item>
+            <widget class="QPushButton" name="getStationsButton">
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>Get Stations</string>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="QTableWidget" name="stationsTable">
              <property name="styleSheet">
