@@ -53,7 +53,7 @@ from MyQt4MplCanvas import MyQt4MplCanvas
 # Pyweed components
 
 from preferences import Preferences
-from eventsHandler import EventsHandler
+from events import EventsManager
 from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
 from seismap import Seismap
@@ -1244,8 +1244,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Events
         self.logger.info('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)
-        self.eventsHandler = EventsHandler(self.logger, self.preferences, self.client)
-        self.eventsHandler.loaded.connect(self.on_events_loaded)
+        self.eventsHandler = EventsManager(self.client)
+        self.eventsHandler.done.connect(self.on_events_loaded)
+        self.eventsHandler.log.connect(self.log)
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -1273,7 +1274,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.logger.info('Setting up main window...')
 
         # Connect the main window buttons
-        self.getEventsButton.pressed.connect(self.getEvents)
+        self.getEventsButton.clicked.connect(self.getEvents)
         self.getStationsButton.pressed.connect(self.getStations)
         self.getWaveformsButton.pressed.connect(self.getWaveforms)
 
@@ -1317,11 +1318,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         splashScreenHandler.close()
 
+    def log(self, msg):
+        self.logger.info(msg)
+
     @QtCore.pyqtSlot()
     def getEvents(self):
         """
         Get events dataframe from IRIS.
         """
+        self.getEventsButton.setEnabled(False)
         self.logger.info('Loading events...')
         self.statusBar().showMessage('Loading events...')
 
@@ -1330,9 +1335,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # TODO:  handle errors when querying events
         self.eventsHandler.load_data(parameters=parameters)
 
-    def on_events_loaded(self):
+    def on_events_loaded(self, eventsDF):
 
-        eventsDF = self.eventsHandler.currentDF
+        self.getEventsButton.setEnabled(True)
+
+        if isinstance(eventsDF, Exception):
+            msg = "Error loading events: %s" % eventsDF
+            self.logger.error(msg)
+            self.statusBar().showMessage(msg)
+            return
 
         # NOTE:  Here is the list of all column names:
         # NOTE:         ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
@@ -1390,7 +1401,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.logger.info('Loaded %d events', eventsDF.shape[0])
         self.statusBar().showMessage('Loaded %d events' % (eventsDF.shape[0]))
-
 
     @QtCore.pyqtSlot()
     def getStations(self):
