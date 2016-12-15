@@ -372,6 +372,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsHandler = WaveformsHandler(self.logger, self.preferences, self.client)
         self.waveformsDownloadComplete = False
         self.waveformsSaveComplete = ""
+        self.waveformsHandler.log.connect(self.on_log)
+        self.waveformsHandler.progress.connect(self.on_waveform_downloaded)
+        self.waveformsHandler.done.connect(self.on_all_downloaded)
 
         # Get references to the Events and Stations objects
         self.eventsHandler = parent.eventsHandler
@@ -380,6 +383,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Set up queues to request waveform downloads and respond with a status
         self.waveformRequestQueue = multiprocessing.Queue()
         self.waveformResponseQueue = multiprocessing.Queue()
+
+        # Displayed waveforms
+        self.visibleWaveformsDF = pd.DataFrame()
 
         # Selection table
         self.selectionTable.setSortingEnabled(True)
@@ -676,6 +682,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Loading waveform selection table...')
 
+        self.visibleWaveformsDF = waveformsDF
+
         # NOTE:  You must disable sorting before populating the table. Otherwise rows get
         # NOTE:  sorted as soon as the sortable column gets filled in, thus invalidating
         # NOTE:  the row number
@@ -905,81 +913,38 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # WaveformDialog status text
         statusText = ''
 
+        secondsBefore = self.secondsBeforeSpinBox.value()
+        secondsAfter = self.secondsAfterSpinBox.value()
 
-        # Find the first row of the selectionTable with an empty WaveformImagePath
-        column_names = self.waveformsHandler.getColumnNames()
-        for row in range(self.selectionTable.rowCount()):
-            waveformImagePath = self.selectionTable.item(row,column_names.index('WaveformImagePath')).text()
-            if waveformImagePath == '':
-                break
+        # Priority is given to waveforms shown on the screen
+        priority_waveforms = self.visibleWaveformsDF
+        all_waveforms = self.waveformsHandler.currentDF
+        other_waveforms = all_waveforms[~all_waveforms.WaveformID.isin(self.priority_waveforms)]
 
-        # NOTE:  At this point, we have either stopped at the first row where waveformImagePath ==''
-        # NOTE:    --OR --
-        # NOTE:  we have finished the loop without encountering any missing waveforms.
+        self.waveformsHandler.download_waveforms(
+            priority_waveforms.WaveformID, other_waveforms.WaveformID,
+            secondsBefore, secondsAfter)
 
-        if waveformImagePath == '':
-            # Create a DOWNLOAD_WAVEFORM request with data from this row
-            request = {}
-            request['task'] = 'DOWNLOAD_WAVEFORM'
-            request['downloadDir'] = self.waveformsHandler.downloadDir
-            request['time'] = str(self.selectionTable.item(row,column_names.index('Time')).text())
-            request['source_depth'] = float(self.selectionTable.item(row,column_names.index('Depth')).text())
-            request['source_lon'] = float(self.selectionTable.item(row,column_names.index('Event_Lon')).text())
-            request['source_lat'] = float(self.selectionTable.item(row,column_names.index('Event_Lat')).text())
-            request['SNCL'] = str(self.selectionTable.item(row,column_names.index('SNCL')).text())
-            request['receiver_lon'] = float(self.selectionTable.item(row,column_names.index('Station_Lon')).text())
-            request['receiver_lat'] = float(self.selectionTable.item(row,column_names.index('Station_Lat')).text())
-            request['waveformID'] = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
-            request['plot_width'] = 600 # TODO:  This should be in preferences
-            request['plot_height'] = 200 # TODO:  This should be in preferences
+    def on_log(self, msg):
+        self.logger.debug(msg)
 
-            # Publish the request
-            self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])
-            self.waveformRequestQueue.put(request)
+    def on_waveform_downloaded(self, result):
 
-            statusText = "Downloading %s" % request['waveformID']
-
+        waveform_id = result.waveform_id
+        if isinstance(result.result, Exception):
+            self.logger.error("Error retrieving %s: %s", waveform_id, result.result)
         else:
+            pass
 
-            # After exhausing the all rows in the currently visible selectionTable we should
-            # go through the rows of waveformsHandler.currentDF until that is also exhausted.
+    def on_all_downloaded(self, result):
+        self.waveformsDownloadComplete = True
+        self.downloadToolButton.setEnabled(True) # TODO:  set this to False
+        self.downloadToolButton.setChecked(False) # up/off
+        self.downloadToolButton.setDown(False) # up/off
+        self.toggledDownloadToolButton()
+        self.logger.debug('COMPLETED all downloads')
 
-            for row in range(self.waveformsHandler.currentDF.shape[0]):
-                waveformImagePath = self.waveformsHandler.currentDF.WaveformImagePath.iloc[row]
-                if waveformImagePath == '':
-                    break
-
-            if waveformImagePath == '':
-                # Create a DOWNLOAD_WAVEFORM request with data from this row
-                request = {}
-                request['task'] = 'DOWNLOAD_WAVEFORM'
-                request['downloadDir'] = self.waveformsHandler.downloadDir
-                request['time'] = str(self.waveformsHandler.currentDF.Time.iloc[row])
-                request['source_depth'] = float(self.waveformsHandler.currentDF.Depth.iloc[row])
-                request['source_lon'] = float(self.waveformsHandler.currentDF.Event_Lon.iloc[row])
-                request['source_lat'] = float(self.waveformsHandler.currentDF.Event_Lat.iloc[row])
-                request['SNCL'] = str(self.waveformsHandler.currentDF.SNCL.iloc[row])
-                request['receiver_lon'] = float(self.waveformsHandler.currentDF.Station_Lon.iloc[row])
-                request['receiver_lat'] = float(self.waveformsHandler.currentDF.Station_Lat.iloc[row])
-                request['waveformID'] = str(self.waveformsHandler.currentDF.WaveformID.iloc[row])
-                request['plot_width'] = 600 # TODO:  This should be in preferences
-                request['plot_height'] = 200 # TODO:  This should be in preferences
-
-                # Publish the request
-                self.logger.debug('DOWNLOAD_WAVEFORM request for %s' % request['waveformID'])
-                self.waveformRequestQueue.put(request)
-
-                statusText = "Downloading %s" % request['waveformID']
-
-            else:
-                self.waveformsDownloadComplete = True
-                self.downloadToolButton.setEnabled(True) # TODO:  set this to False
-                self.downloadToolButton.setChecked(False) # up/off
-                self.downloadToolButton.setDown(False) # up/off
-                self.toggledDownloadToolButton()
-                self.logger.debug('COMPLETED all downloads')
-
-                statusText = "Completed all downloads"
+        statusText = "Completed all downloads"
 
 
         # Update GUI
@@ -993,7 +958,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         if self.waveformsDownloadComplete:
             if self.saveToolButton.isChecked():
                 self.saveWaveformData()
-
 
         return
 
