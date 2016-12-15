@@ -29,18 +29,111 @@ from obspy import UTCDateTime
 from obspy.taup import TauPyModel
 from obspy.clients import fdsn
 from obspy.geodetics import locations2degrees
+from signals import SignalingThread, SignalingObject
+from Queue import PriorityQueue
+import collections
+from PyQt4 import QtCore
+import obspy
 
 
-class WaveformsHandler(object):
+class WaveformResult(object):
+    """
+    Container for a waveform result to be passed as a signal, includes the waveform ID so that
+    the result can be correctly handled.
+    """
+    def __init__(self, waveform_id, result):
+        self.waveform_id = waveform_id
+        self.result = result
+
+
+class WaveformLoader(SignalingThread):
+    """
+    Thread to handle event requests
+    """
+
+    def __init__(self, client, waveform, preferences, secondsBefore, secondsAfter):
+        """
+        Initialization.
+        """
+        # Keep a reference to globally shared components
+        self.client = client
+        self.waveform = waveform
+        self.downloadDir = preferences.Waveforms.downloadDir
+        # TODO:  plot_width, plot_height should come from preferences
+        self.plot_width = 600
+        self.plot_height = 200
+        self.secondsBefore = secondsBefore
+        self.secondsAfter = secondsAfter
+        super(WaveformLoader, self).__init__()
+
+    def run(self):
+        """
+        Make a webservice request for events using the passed in options.
+        """
+        try:
+            waveform_id = self.waveform.waveformID
+
+            self.log.emit("Loading waveform: %s" % waveform_id)
+
+            # Calculate arrival times
+            self.log.emit("%s calculate travel time" % self.waveform.SNCL)
+            model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
+            tt = model.get_travel_times_geo(
+                self.waveform.Depth,
+                self.waveform.Event_Lat,
+                self.waveform.Event_Lon,
+                self.waveform.Station_Lat,
+                self.waveform.Station_Lon)
+
+            # TODO:  Are traveltimes always sorted by time?
+            # TODO:  Do we need to check the phase?
+            earliest_arrival_time = UTCDateTime(self.waveform.Time) + tt[0].time
+
+            starttime = earliest_arrival_time - self.secondsBefore
+            endtime = earliest_arrival_time + self.secondsAfter
+
+            startstring = starttime.format_iris_web_service()
+            endstring = endtime.format_iris_web_service()
+            mseedFile = "%s/%s_%s_%s.MSEED" % (self.downloadDir, self.waveform.SNCL, startstring, endstring)
+            self.log.emit("%s save as MiniSEED" % waveform_id)
+
+            # Load data from disk or network as appropriate
+            if os.path.exists(mseedFile):
+                self.log.emit("Loading data for %s" % waveform_id)
+                st = obspy.core.read(mseedFile)
+            else:
+                self.log.emit("Retrieving data for %s" % waveform_id)
+                (network, station, location, channel) = self.waveform.SNCL.split('.')
+                st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
+                # Write to file
+                st.write(mseedFile, format="MSEED")
+
+            # Generate image if necessary
+            imageFile = mseedFile.replace('MSEED','png')
+            if not os.path.exists(imageFile):
+                self.log.emit('plotting %s' % imageFile)
+                st.plot(outfile=imageFile, size=(self.plot_width, self.plot_height))
+
+            self.done.emit(WaveformResult(waveform_id, imageFile))
+
+        except Exception as e:
+            self.done.emit(WaveformResult(waveform_id, e))
+            return
+
+
+class WaveformsHandler(SignalingObject):
     """
     Container for waveforms metadata.
-    
+
     The contents of self.currentDF is determined by the user selections
     in the main GUI events and SNCL tables. There will be a separate
     entry in self.currentDF for each event-SNCL combination regardless
     of any filtering that is applied in the WaveformsDialog to reduce
-    the size of the visible table. 
+    the size of the visible table.
     """
+
+    progress = QtCore.pyqtSignal(object)
+
     def __init__(self, logger, preferences, client):
         """
         Initialization.
@@ -49,41 +142,51 @@ class WaveformsHandler(object):
         self.logger = logger
         self.preferences = preferences
         self.client = client
-        
+
         # Important preferences
-        self.downloadDir = self.preferences.Waveforms.downloadDir        
-        
+        self.downloadDir = self.preferences.Waveforms.downloadDir
+
+        # Queue of pending waveforms
+        self.queue = collections.deque()
+        # Active threads indexed by waveformID
+        self.threads = {}
+        # Number of threads to track
+        self.num_threads = 5
+
+        self.seconds_before = 0
+        self.seconds_after = 0
+
         # Current state
-        self.currentDF = None        
-                
-        
+        self.currentDF = None
+
+
     def createWaveformsDF(self, eventsDF, stationsDF):
         """
         Create a dataframe of event-SNCL combinations.
         """
-        
-        self.logger.debug('Generating event-station combined dataframe...')
-        
+
+        self.log.emit('Generating event-station combined dataframe...')
+
         #eventsDF.columns
         #Index([u'Time', u'Magnitude', u'Longitude', u'Latitude', u'Depth/km',
                #u'MagType', u'EventLocationName', u'Author', u'Catalog', u'Contributor',
                #u'ContributorID', u'MagAuthor', u'EventID'],
-              #dtype='object')  
+              #dtype='object')
         #stationsDF.columns
         #Index([u'Network', u'Station', u'Location', u'Channel', u'Longitude',
                #u'Latitude', u'Elevation', u'Depth', u'Azimuth', u'Dip',
                #u'SensorDescription', u'Scale', u'ScaleFreq', u'ScaleUnits',
                #u'SampleRate', u'StartTime', u'EndTime', u'SNCL'],
               #dtype='object')
-              
+
         # Subset eventsDF for pertinent information
         eventsDF = eventsDF[['Time','Magnitude','Depth/km','Longitude','Latitude','EventID']]
         eventsDF.columns = ['Time','Magnitude','Depth','Event_Lon','Event_Lat','EventID']
-        
+
         #  Subset stationsDF for pertinent information
         stationsDF = stationsDF[['SNCL','Network','Station','Longitude','Latitude']]
         stationsDF.columns = ['SNCL','Network','Station','Station_Lon','Station_Lat']
-        
+
         # For each unique SNCL, add columns of SNCL info to eventsDF
         waveformDFs = []
         for i in range(stationsDF.shape[0]):
@@ -94,18 +197,18 @@ class WaveformsHandler(object):
             df['Station_Lon'] = stationsDF.Station_Lon.iloc[i]
             df['Station_Lat'] = stationsDF.Station_Lat.iloc[i]
             waveformDFs.append(df)
-            
+
         # Now combine all SNCL-specific eventsDFs
         waveformsDF = pd.concat(waveformDFs)
-        
+
         # Add waveformID, and WaveformStationID
         waveformsDF['WaveformID'] = waveformsDF.SNCL + '_' + waveformsDF.EventID
         waveformsDF['WaveformStationID'] = waveformsDF.Network + '.' + waveformsDF.Station + '_' + waveformsDF.EventID
-        
+
         # BEGIN event-station distance -----------------------------------------
-        
-        self.logger.debug('Calculating %d event-station distances...', len(waveformsDF.WaveformStationID.unique()))
-        
+
+        self.log.emit('Calculating %d event-station distances...' % len(waveformsDF.WaveformStationID.unique()))
+
         # NOTE:  Save time by only calculating on distance per station rather than per channel
         waveformsDF['Distance'] = np.nan
         i = 0
@@ -113,9 +216,9 @@ class WaveformsHandler(object):
         distance = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
                                            waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
                          ndigits=2)
-        
+
         waveformsDF.Distance.iloc[i] = distance
-        
+
         # Now loop through all waveforms, calculating new distances only when necessary
         for i in range(waveformsDF.shape[0]):
             waveformStationID = waveformsDF.WaveformStationID.iloc[i]
@@ -123,140 +226,150 @@ class WaveformsHandler(object):
                 old_waveformStationID = waveformStationID
                 distance = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
                                                    waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
-                                 ndigits=2)            
+                                 ndigits=2)
             waveformsDF.Distance.iloc[i] = distance
-        
-        self.logger.debug('Finished claculating distances')
-        
+
+        self.log.emit('Finished calculating distances')
+
         # END event-station distance -------------------------------------------
-        
+
         # Add columns to track downloads and display waveforms
         waveformsDF['Waveform'] = ""
         waveformsDF['WaveformImagePath'] = ""
-        
+
         # Look to see if any have already been downloaded
         for i in range(waveformsDF.shape[0]):
             filename = waveformsDF.SNCL.iloc[i] + '_' + waveformsDF.Time.iloc[i] + ".png"
             imagePath = os.path.join(self.downloadDir, filename)
             if os.path.exists(imagePath):
                 waveformsDF.WaveformImagePath.iloc[i] = imagePath
-        
+
         # Add a Keep column for checkboxes
         waveformsDF['Keep'] = True
-        
+
         # Reorganize columns
         waveformsDF = waveformsDF[self.getColumnNames()]
-        
+
         # Save a copy internally
         self.currentDF = waveformsDF
-    
+
         return(self.currentDF)
-    
-    
-    def handleWaveformRequest(self, request, secondsBefore, secondsAfter):
+
+    def clear_downloads(self):
         """
-        This funciton is invoked whenever the waveformRequestWatcherThread emits
-        a waveformRequestSignal. This means that a new waveform request has been
-        assembled and placed on the waveformRequestQueue. The GUI
-        WaveformDialog.handleWaveformRequest() function calls this function and
-        handles the return values.
+        Clear the download queue and release any active threads
         """
+        self.log.emit('Clearing existing downloads')
+        for thread in self.threads.values():
+            thread.quit()
+        self.threads = {}
+        self.queue.clear()
 
-        # Pull elements from the request dictionary
-        task = request['task']
-        downloadDir = request['downloadDir']
-        source_time = request['time']
-        source_depth = request['source_depth']
-        source_lon = request['source_lon']
-        source_lat = request['source_lat']
-        SNCL = request['SNCL']
-        receiver_lon = request['receiver_lon']
-        receiver_lat = request['receiver_lat']
-        plot_width = request['plot_width']
-        plot_height = request['plot_height']
-        waveformID = request['waveformID']
+    def download_waveforms(self, priority_ids, other_ids, seconds_before, seconds_after):
+        """
+        Initiate a download of all the given waveforms
+        """
+        self.clear_downloads()
+        self.log.emit('Downloading waveforms')
+        self.seconds_before = seconds_before
+        self.seconds_after = seconds_after
+        self.queue.extend(priority_ids)
+        self.queue.extend(other_ids)
+        for _ in range(self.num_threads):
+            self.download_next_waveform()
 
-        self.logger.debug("waveformRequestSignal: %s -- %s", task, waveformID)
+    def download_next_waveform(self):
+        """
+        Start downloading the next waveform on the queue
+        """
+        while True:
+            try:
+                waveform_id = self.queue.popleft()
+            except IndexError:
+                self.done.emit(None)
+                return
+            try:
+                self.download_waveform(waveform_id)
+                return
+            except IndexError:
+                pass
 
-        # Calculate arrival times
-        self.logger.debug("%s calculate travel time", SNCL)
+    def download_waveform(self, waveform_id):
+        """
+        Start download of a particular waveform
+        """
+        waveform = self.get_waveform(waveform_id)
+        if not waveform:
+            raise IndexError("No such waveform %s", waveform_id)
+        thread = WaveformLoader(self.client, waveform, self.seconds_before, self.seconds_after)
+        thread.done.connect(self.on_downloaded)
+        thread.log.connect(self.on_log)
+        self.threads[waveform.waveformID] = thread
+        thread.start()
+
+    def on_downloaded(self, result):
+        if result.waveform_id in self.threads:
+            del self.threads[result.waveform_id]
+        if isinstance(result.result, str):
+            # Successful download, returned the path to the saved waveform image
+            waveform = self.get_waveform(result.waveform_id)
+            if waveform:
+                waveform.WaveformImagePath = result.result
+        self.progress.emit(result)
+        self.download_next_waveform()
+
+    def on_log(self, msg):
+        self.log.emit(msg)
+
+    def get_waveform(self, waveform_id):
+        """
+        Retrieve the Series for the given waveform
+        """
         try:
-            model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
-            tt = model.get_travel_times_geo(source_depth, source_lat, source_lon, receiver_lat, receiver_lon)
-        except Exception as e:
-            self.logger.error('%s', e)
-            return("ERROR", waveformID, "", str(e))
+            return self.currentDF[self.currentDF.WaveformID == waveform_id].iloc[0]
+        except IndexError:
+            return None
 
-        # TODO:  Are traveltimes always sorted by time?
-        # TODO:  Do we need to check the phase?
-        earliest_arrival_time = UTCDateTime(source_time) + tt[0].time
-
-        starttime = earliest_arrival_time - secondsBefore
-        endtime = earliest_arrival_time + secondsAfter
-
-        # Download the waveform
-        self.logger.debug("%s download waveform", SNCL)    
-        (network, station, location, channel) = SNCL.split('.')
-        try:
-            st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
-        except Exception as e:
-            self.logger.error('%s', e)
-            return("ERROR", waveformID, "", str(e))
-
-        # Save the miniseed file
-        startstring = starttime.format_iris_web_service()
-        endstring = endtime.format_iris_web_service()
-        mseedFile = downloadDir + '/' + SNCL + '_' + startstring + '_' + endstring + ".MSEED"
-        self.logger.debug("%s save as MiniSEED", SNCL)
-        try:
-            st.write(mseedFile, format="MSEED")
-        except Exception as e:
-            self.logger.error('%s', e)
-            return("ERROR", waveformID, "", str(e))
-        
-        # Successful completion
-        return("MSEED_READY", waveformID, mseedFile, "")
-    
-    
     def getWaveformImagePath(self, waveformID):
-        waveformIDs = self.currentDF.WaveformID.tolist()
-        index = waveformIDs.index(waveformID)
-        imagePath = self.currentDF.WaveformImagePath.iloc[index]
-        return(imagePath)
-    
+        waveform = self.get_waveform(waveformID)
+        if waveform:
+            return waveform.WaveformImagePath
+        else:
+            return None
+
     def setWaveformImagePath(self, waveformID, imagePath):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         self.currentDF.WaveformImagePath.iloc[index] = imagePath
         return
-    
+
     def getWaveformKeep(self, waveformID):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         keep = self.currentDF.Keep.iloc[index]
         return(keep)
-    
+
     def setWaveformKeep(self, waveformID, keep):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
         self.currentDF.Keep.iloc[index] = keep
         return
-    
+
     def getColumnNames(self):
         columnNames = ['Keep', 'SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
         return(columnNames)
-    
+
     def getColumnHidden(self):
         is_hidden =    [False,  False,  False,      False,       False,   False,  False,      True,        True,        True,      True,      True,      True,          True,          True,         True,                True]
         return(is_hidden)
-    
+
     def getColumnNumeric(self):
         is_numeric =   [False,  False,  True,       True,        True,    False,  False,      True,        True,        False,     False,     False,     True,          True,          False,        False,               False]
         return(is_numeric)
-    
-    
-    
-        
+
+
+
+
 # ------------------------------------------------------------------------------
 # Helper functions
 # ------------------------------------------------------------------------------
