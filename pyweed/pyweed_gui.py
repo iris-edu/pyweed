@@ -53,7 +53,7 @@ from MyQt4MplCanvas import MyQt4MplCanvas
 # Pyweed components
 
 from preferences import Preferences
-from events import EventsManager
+from eventsHandler import EventsHandler
 from stationsHandler import StationsHandler
 from waveformsHandler import WaveformsHandler
 from seismap import Seismap
@@ -1244,7 +1244,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Events
         self.logger.info('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)
-        self.eventsHandler = EventsManager(self.client)
+        self.eventsHandler = EventsHandler(self.client)
         self.eventsHandler.done.connect(self.on_events_loaded)
         self.eventsHandler.log.connect(self.log)
         self.eventsTable.setSortingEnabled(True)
