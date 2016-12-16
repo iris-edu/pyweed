@@ -34,6 +34,9 @@ from Queue import PriorityQueue
 import collections
 from PyQt4 import QtCore
 import obspy
+from logging import getLogger
+
+LOGGER = getLogger(__name__)
 
 
 class WaveformResult(object):
@@ -71,7 +74,7 @@ class WaveformLoader(SignalingThread):
         Make a webservice request for events using the passed in options.
         """
         try:
-            waveform_id = self.waveform.waveformID
+            waveform_id = self.waveform.WaveformID
 
             self.log.emit("Loading waveform: %s" % waveform_id)
 
@@ -99,10 +102,10 @@ class WaveformLoader(SignalingThread):
 
             # Load data from disk or network as appropriate
             if os.path.exists(mseedFile):
-                self.log.emit("Loading data for %s" % waveform_id)
+                self.log.emit("Loading waveform data for %s from %s" % (waveform_id, mseedFile))
                 st = obspy.core.read(mseedFile)
             else:
-                self.log.emit("Retrieving data for %s" % waveform_id)
+                self.log.emit("Retrieving waveform data for %s" % waveform_id)
                 (network, station, location, channel) = self.waveform.SNCL.split('.')
                 st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
                 # Write to file
@@ -111,14 +114,13 @@ class WaveformLoader(SignalingThread):
             # Generate image if necessary
             imageFile = mseedFile.replace('MSEED','png')
             if not os.path.exists(imageFile):
-                self.log.emit('plotting %s' % imageFile)
+                self.log.emit('Plotting waveform image to %s' % imageFile)
                 st.plot(outfile=imageFile, size=(self.plot_width, self.plot_height))
 
             self.done.emit(WaveformResult(waveform_id, imageFile))
 
         except Exception as e:
             self.done.emit(WaveformResult(waveform_id, e))
-            return
 
 
 class WaveformsHandler(SignalingObject):
@@ -138,6 +140,8 @@ class WaveformsHandler(SignalingObject):
         """
         Initialization.
         """
+        super(WaveformsHandler, self).__init__()
+
         # Keep a reference to globally shared components
         self.logger = logger
         self.preferences = preferences
@@ -201,6 +205,8 @@ class WaveformsHandler(SignalingObject):
         # Now combine all SNCL-specific eventsDFs
         waveformsDF = pd.concat(waveformDFs)
 
+        waveformsDF.reset_index(drop=True, inplace=True)
+
         # Add waveformID, and WaveformStationID
         waveformsDF['WaveformID'] = waveformsDF.SNCL + '_' + waveformsDF.EventID
         waveformsDF['WaveformStationID'] = waveformsDF.Network + '.' + waveformsDF.Station + '_' + waveformsDF.EventID
@@ -209,25 +215,18 @@ class WaveformsHandler(SignalingObject):
 
         self.log.emit('Calculating %d event-station distances...' % len(waveformsDF.WaveformStationID.unique()))
 
-        # NOTE:  Save time by only calculating on distance per station rather than per channel
         waveformsDF['Distance'] = np.nan
-        i = 0
-        old_waveformStationID = waveformsDF.WaveformStationID.iloc[i]
-        distance = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
-                                           waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
-                         ndigits=2)
-
-        waveformsDF.Distance.iloc[i] = distance
-
         # Now loop through all waveforms, calculating new distances only when necessary
+        # NOTE:  Save time by only calculating on distance per station rather than per channel
+        old_waveformStationID = None
         for i in range(waveformsDF.shape[0]):
             waveformStationID = waveformsDF.WaveformStationID.iloc[i]
-            if (waveformStationID != old_waveformStationID):
+            if not old_waveformStationID or waveformStationID != old_waveformStationID:
                 old_waveformStationID = waveformStationID
                 distance = round(locations2degrees(waveformsDF.Event_Lat.iloc[i], waveformsDF.Event_Lon.iloc[i],
                                                    waveformsDF.Station_Lat.iloc[i], waveformsDF.Station_Lon.iloc[i]),
                                  ndigits=2)
-            waveformsDF.Distance.iloc[i] = distance
+            waveformsDF.loc[i, 'Distance'] = distance
 
         self.log.emit('Finished calculating distances')
 
@@ -239,7 +238,7 @@ class WaveformsHandler(SignalingObject):
 
         # Look to see if any have already been downloaded
         for i in range(waveformsDF.shape[0]):
-            filename = waveformsDF.SNCL.iloc[i] + '_' + waveformsDF.Time.iloc[i] + ".png"
+            filename = "%s_%s.png" % (waveformsDF.SNCL.iloc[i], waveformsDF.Time.iloc[i])
             imagePath = os.path.join(self.downloadDir, filename)
             if os.path.exists(imagePath):
                 waveformsDF.WaveformImagePath.iloc[i] = imagePath
@@ -260,9 +259,9 @@ class WaveformsHandler(SignalingObject):
         Clear the download queue and release any active threads
         """
         self.log.emit('Clearing existing downloads')
-        for thread in self.threads.values():
-            thread.quit()
-        self.threads = {}
+        #for thread in self.threads.values():
+        #    thread.quit()
+        # self.threads = {}
         self.queue.clear()
 
     def download_waveforms(self, priority_ids, other_ids, seconds_before, seconds_after):
@@ -271,6 +270,8 @@ class WaveformsHandler(SignalingObject):
         """
         self.clear_downloads()
         self.log.emit('Downloading waveforms')
+        LOGGER.debug("Priority IDs: %s" % (priority_ids.tolist(),))
+        LOGGER.debug("Other IDs: %s" % (other_ids.tolist(),))
         self.seconds_before = seconds_before
         self.seconds_after = seconds_after
         self.queue.extend(priority_ids)
@@ -286,34 +287,43 @@ class WaveformsHandler(SignalingObject):
             try:
                 waveform_id = self.queue.popleft()
             except IndexError:
-                self.done.emit(None)
+                LOGGER.debug("Download queue is empty")
+                if len(self.threads) == 0:
+                    self.done.emit(None)
                 return
             try:
                 self.download_waveform(waveform_id)
                 return
-            except IndexError:
-                pass
+            except Exception as e:
+                LOGGER.error(e)
 
     def download_waveform(self, waveform_id):
         """
         Start download of a particular waveform
         """
+        if waveform_id in self.threads:
+            raise Exception("Already a thread downloading %s" % waveform_id)
         waveform = self.get_waveform(waveform_id)
-        if not waveform:
-            raise IndexError("No such waveform %s", waveform_id)
-        thread = WaveformLoader(self.client, waveform, self.seconds_before, self.seconds_after)
+        if waveform.empty:
+            raise Exception("No such waveform %s" % waveform_id)
+        if waveform.WaveformImagePath:
+            raise Exception("Waveform %s already has an image" % waveform_id)
+        LOGGER.debug("Spawning download thread for waveform %s", waveform_id)
+        thread = WaveformLoader(self.client, waveform, self.preferences, self.seconds_before, self.seconds_after)
         thread.done.connect(self.on_downloaded)
         thread.log.connect(self.on_log)
-        self.threads[waveform.waveformID] = thread
+        self.threads[waveform.WaveformID] = thread
         thread.start()
 
     def on_downloaded(self, result):
+        LOGGER.debug("Downloaded waveform %s", result.waveform_id)
         if result.waveform_id in self.threads:
             del self.threads[result.waveform_id]
-        if isinstance(result.result, str):
+        if not isinstance(result.result, Exception):
             # Successful download, returned the path to the saved waveform image
             waveform = self.get_waveform(result.waveform_id)
-            if waveform:
+            if not waveform.empty:
+                LOGGER.debug("Setting image path")
                 waveform.WaveformImagePath = result.result
         self.progress.emit(result)
         self.download_next_waveform()
@@ -328,11 +338,11 @@ class WaveformsHandler(SignalingObject):
         try:
             return self.currentDF[self.currentDF.WaveformID == waveform_id].iloc[0]
         except IndexError:
-            return None
+            return pd.Series()
 
     def getWaveformImagePath(self, waveformID):
         waveform = self.get_waveform(waveformID)
-        if waveform:
+        if not waveform.empty:
             return waveform.WaveformImagePath
         else:
             return None
@@ -352,7 +362,7 @@ class WaveformsHandler(SignalingObject):
     def setWaveformKeep(self, waveformID, keep):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
-        self.currentDF.Keep.iloc[index] = keep
+        self.currentDF.loc[index, 'Keep'] = keep
         return
 
     def getColumnNames(self):
