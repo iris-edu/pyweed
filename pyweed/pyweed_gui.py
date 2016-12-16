@@ -31,6 +31,11 @@ from obspy import UTCDateTime
 from obspy.clients import fdsn
 
 # PyQt4 packages
+import os
+os.environ['QT_API'] = 'pyqt'
+import sip
+sip.setapi("QString", 2)
+sip.setapi("QVariant", 2)
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
@@ -59,6 +64,7 @@ from waveformsHandler import WaveformsHandler
 from seismap import Seismap
 
 from pyweed_utils import manageCache
+from console import ConsoleDialog
 
 __appName__ = "PYWEED"
 __version__ = "0.1.0"
@@ -612,12 +618,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         eventsDF = self.eventsHandler.get_selected_dataframe()
         stationsDF = self.stationsHandler.get_selected_dataframe()
 
-        self.downloadStatusLabel.setText(QtCore.QString("Calculating distances..."))
+        self.downloadStatusLabel.setText("Calculating distances...")
         self.downloadStatusLabel.repaint()
 
         waveformsDF = self.waveformsHandler.createWaveformsDF(eventsDF, stationsDF)
 
-        self.downloadStatusLabel.setText(QtCore.QString(""))
+        self.downloadStatusLabel.setText("")
         self.downloadStatusLabel.repaint()
 
         self.logger.debug('Finished building dataframe for %d waveforms', waveformsDF.shape[0])
@@ -1275,6 +1281,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         loggingDialogAction = QtGui.QAction("Show Logs", self)
         QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
         helpMenu.addAction(loggingDialogAction)
+
+        console = ConsoleDialog(self)
+        console.show()
 
         # Display MainWindow
         self.logger.info('Showing main window...')
