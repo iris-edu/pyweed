@@ -8,12 +8,12 @@ from PyQt4 import QtGui
 class MyNumericTableWidgetItem (QtGui.QTableWidgetItem):
     """
     Custom QTableWidgetItem that forces numerical sorting
-    
+
     http://stackoverflow.com/questions/25533140/sorting-qtablewidget-items-numerically
     """
 
     def __init__ (self, value):
-        super(MyNumericTableWidgetItem, self).__init__(QtCore.QString('%s' % value))
+        super(MyNumericTableWidgetItem, self).__init__('%s' % value)
 
     def __lt__ (self, other):
         if (isinstance(other, MyNumericTableWidgetItem)):
