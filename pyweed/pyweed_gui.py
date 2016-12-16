@@ -422,15 +422,15 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Set up a thread to watch for waveform requests that lasts as long as this dialog is open
         self.logger.debug('Starting waveformRequestWatcherThread')
-        self.waveformRequestWatcher = waveformRequestWatcherThread(self.waveformRequestQueue)
-        self.waveformRequestWatcher.waveformRequestSignal.connect(self.handleWaveformRequest)
-        self.waveformRequestWatcher.start()
+        #self.waveformRequestWatcher = waveformRequestWatcherThread(self.waveformRequestQueue)
+        #self.waveformRequestWatcher.waveformRequestSignal.connect(self.handleWaveformRequest)
+        #self.waveformRequestWatcher.start()
 
         # Set up a thread to watch for waveforms that lasts as long as this dialog is open
         self.logger.debug('Starting waveformWatcher thread')
-        self.waveformResponseWatcher = waveformResponseWatcherThread(self.waveformResponseQueue)
-        self.waveformResponseWatcher.waveformResponseSignal.connect(self.handleWaveformResponse)
-        self.waveformResponseWatcher.start()
+        #self.waveformResponseWatcher = waveformResponseWatcherThread(self.waveformResponseQueue)
+        #self.waveformResponseWatcher.waveformResponseSignal.connect(self.handleWaveformResponse)
+        #self.waveformResponseWatcher.start()
 
         self.logger.debug('Finished initializing waveform dialog')
 
@@ -757,6 +757,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.logger.debug('Finished loading waveform selection table')
 
+        self.downloadWaveformData()
+
         return
 
 
@@ -925,7 +927,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Priority is given to waveforms shown on the screen
         priority_waveforms = self.visibleWaveformsDF
         all_waveforms = self.waveformsHandler.currentDF
-        other_waveforms = all_waveforms[~all_waveforms.WaveformID.isin(self.priority_waveforms)]
+        other_waveforms = all_waveforms[~all_waveforms.WaveformID.isin(priority_waveforms.WaveformID)]
 
         self.waveformsHandler.download_waveforms(
             priority_waveforms.WaveformID, other_waveforms.WaveformID,
@@ -934,13 +936,41 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     def on_log(self, msg):
         self.logger.debug(msg)
 
-    def on_waveform_downloaded(self, result):
+    def get_table_row(self, waveform_id):
+        column_names = self.waveformsHandler.getColumnNames()
+        row = 0
+        for row in range(self.selectionTable.rowCount()):
+            if self.selectionTable.item(row, column_names.index('WaveformID')).text() == waveform_id:
+                return row
+        return None
 
+    def on_waveform_downloaded(self, result):
         waveform_id = result.waveform_id
+        self.logger.debug("Ready to display waveform %s", waveform_id)
+
+        row = self.get_table_row(waveform_id)
+        if row is None:
+            self.logger.error("Couldn't find a row for waveform %s", waveform_id)
+            return
+
+        column_names = self.waveformsHandler.getColumnNames()
+
         if isinstance(result.result, Exception):
             self.logger.error("Error retrieving %s: %s", waveform_id, result.result)
+            self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+            self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
         else:
-            pass
+            image_path = result.result
+            self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem(image_path))
+            # Add a pixmap to the Waveform table cell
+            imageItem = MyTableWidgetImageWidget(self, image_path)
+            self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
+
+        self.logger.debug("Displayed waveform %s", waveform_id)
+
+        # Tighten up the table
+        self.selectionTable.resizeColumnsToContents()
+        self.selectionTable.resizeRowsToContents()
 
     def on_all_downloaded(self, result):
         self.waveformsDownloadComplete = True
@@ -1167,6 +1197,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         splashScreenHandler = SplashScreenHandler(self)
         self.logger.addHandler(splashScreenHandler)
+        self.logger.addHandler(logging.StreamHandler())
 
         super(self.__class__, self).__init__()
         self.setupUi(self)
@@ -1580,6 +1611,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
 if __name__ == "__main__":
 
+    pd.set_option('mode.chained_assignment','raise')
     app = QtGui.QApplication(sys.argv)
     # app.setStyleSheet(stylesheet)
     GUI = MainWindow()
