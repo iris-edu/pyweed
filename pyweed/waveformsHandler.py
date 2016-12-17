@@ -115,7 +115,12 @@ class WaveformLoader(SignalingThread):
             imageFile = mseedFile.replace('MSEED','png')
             if not os.path.exists(imageFile):
                 self.log.emit('Plotting waveform image to %s' % imageFile)
-                st.plot(outfile=imageFile, size=(self.plot_width, self.plot_height))
+                # In order to really customize the plotting, we need to return the figure and modify it
+                h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
+                # Tighten the layout
+                h.tight_layout(pad=0, rect=(0, 0, 1, .85))
+                # Save with transparency
+                h.savefig(imageFile, transparent=True)
 
             self.done.emit(WaveformResult(waveform_id, imageFile))
 
@@ -184,8 +189,8 @@ class WaveformsHandler(SignalingObject):
               #dtype='object')
 
         # Subset eventsDF for pertinent information
-        eventsDF = eventsDF[['Time','Magnitude','Depth/km','Longitude','Latitude','EventID']]
-        eventsDF.columns = ['Time','Magnitude','Depth','Event_Lon','Event_Lat','EventID']
+        eventsDF = eventsDF[['Time','Magnitude','MagType','Depth/km','Longitude','Latitude','EventID']]
+        eventsDF.columns = ['Time','Magnitude','MagType','Depth','Event_Lon','Event_Lat','EventID']
 
         #  Subset stationsDF for pertinent information
         stationsDF = stationsDF[['SNCL','Network','Station','Longitude','Latitude']]
@@ -205,11 +210,15 @@ class WaveformsHandler(SignalingObject):
         # Now combine all SNCL-specific eventsDFs
         waveformsDF = pd.concat(waveformDFs)
 
-        waveformsDF.reset_index(drop=True, inplace=True)
+        # Generate an event name
+        waveformsDF['EventName'] = waveformsDF.MagType + ' ' + waveformsDF.Magnitude.map(str) + ' ' + waveformsDF.Time
 
         # Add waveformID, and WaveformStationID
         waveformsDF['WaveformID'] = waveformsDF.SNCL + '_' + waveformsDF.EventID
         waveformsDF['WaveformStationID'] = waveformsDF.Network + '.' + waveformsDF.Station + '_' + waveformsDF.EventID
+
+        # Set the index to integers
+        waveformsDF.reset_index(drop=True, inplace=True)
 
         # BEGIN event-station distance -----------------------------------------
 
@@ -317,14 +326,14 @@ class WaveformsHandler(SignalingObject):
 
     def on_downloaded(self, result):
         LOGGER.debug("Downloaded waveform %s", result.waveform_id)
-        if result.waveform_id in self.threads:
-            del self.threads[result.waveform_id]
         if not isinstance(result.result, Exception):
             # Successful download, returned the path to the saved waveform image
             waveform = self.get_waveform(result.waveform_id)
             if not waveform.empty:
-                LOGGER.debug("Setting image path")
-                waveform.WaveformImagePath = result.result
+                LOGGER.debug("Setting image path for %s", result.waveform_id)
+                self.setWaveformImagePath(result.waveform_id, result.result)
+        if result.waveform_id in self.threads:
+            del self.threads[result.waveform_id]
         self.progress.emit(result)
         self.download_next_waveform()
 
@@ -350,7 +359,7 @@ class WaveformsHandler(SignalingObject):
     def setWaveformImagePath(self, waveformID, imagePath):
         waveformIDs = self.currentDF.WaveformID.tolist()
         index = waveformIDs.index(waveformID)
-        self.currentDF.WaveformImagePath.iloc[index] = imagePath
+        self.currentDF.loc[index, 'WaveformImagePath'] = imagePath
         return
 
     def getWaveformKeep(self, waveformID):
@@ -366,15 +375,17 @@ class WaveformsHandler(SignalingObject):
         return
 
     def getColumnNames(self):
-        columnNames = ['Keep', 'SNCL', 'Distance', 'Magnitude', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
+        columnNames = ['Keep', 'EventName', 'SNCL', 'Distance', 'Magnitude', 'MagType', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
         return(columnNames)
 
     def getColumnHidden(self):
-        is_hidden =    [False,  False,  False,      False,       False,   False,  False,      True,        True,        True,      True,      True,      True,          True,          True,         True,                True]
+        shown = ['Keep', 'EventName', 'Distance', 'SNCL', 'Waveform']
+        is_hidden = [(c not in shown) for c in self.getColumnNames()]
         return(is_hidden)
 
     def getColumnNumeric(self):
-        is_numeric =   [False,  False,  True,       True,        True,    False,  False,      True,        True,        False,     False,     False,     True,          True,          False,        False,               False]
+        numeric = ['Distance', 'Magnitude', 'Depth', 'Event_Lon', 'Event_Lat', 'Station_Lon', 'Station_Lat']
+        is_numeric = [(c in numeric) for c in self.getColumnNames()]
         return(is_numeric)
 
 
