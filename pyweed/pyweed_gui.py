@@ -772,11 +772,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         network = self.networkComboBox.currentText()
         station = self.stationComboBox.currentText()
         self.logger.debug('Filtering waveformsDF...')
-        if not time.startsWith('All'):
+        if not time.startswith('All'):
             waveformsDF = waveformsDF[waveformsDF.Time == time]
-        if not network.startsWith('All'):
+        if not network.startswith('All'):
             waveformsDF = waveformsDF[waveformsDF.Network == network]
-        if not station.startsWith('All'):
+        if not station.startswith('All'):
             waveformsDF = waveformsDF[waveformsDF.Station == station]
         self.logger.debug('Finished filtering waveformsDF')
         self.loadSelectionTable(waveformsDF)
