@@ -17,8 +17,8 @@ class MyNumericTableWidgetItem (QtGui.QTableWidgetItem):
 
     def __lt__ (self, other):
         if (isinstance(other, MyNumericTableWidgetItem)):
-            selfDataValue  = float(self.data(QtCore.Qt.EditRole).toString())
-            otherDataValue = float(other.data(QtCore.Qt.EditRole).toString())
+            selfDataValue  = float(self.data(QtCore.Qt.EditRole))
+            otherDataValue = float(other.data(QtCore.Qt.EditRole))
             return selfDataValue < otherDataValue
         else:
             return QtGui.QTableWidgetItem.__lt__(self, other)
