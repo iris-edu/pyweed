@@ -117,8 +117,8 @@ class WaveformLoader(SignalingThread):
                 self.log.emit('Plotting waveform image to %s' % imageFile)
                 # In order to really customize the plotting, we need to return the figure and modify it
                 h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
-                # Tighten the layout
-                h.tight_layout(pad=0, rect=(0, 0, 1, .85))
+                # Resize the subplot to a hard size, because otherwise it will do it inconsistently
+                h.subplots_adjust(bottom=.1, left=.1, right=.95, top=.85)
                 # Save with transparency
                 h.savefig(imageFile, transparent=True)
 

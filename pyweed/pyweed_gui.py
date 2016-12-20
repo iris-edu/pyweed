@@ -52,6 +52,7 @@ from pyweed_style import stylesheet
 from MyDoubleValidator import MyDoubleValidator
 from MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from MyTableWidgetImageWidget import MyTableWidgetImageWidget
+from MyTableWidgetImageItem import MyTableWidgetImageItem
 from MyTextEditLoggingHandler import MyTextEditLoggingHandler
 from MyQt4MplCanvas import MyQt4MplCanvas
 
@@ -68,6 +69,9 @@ from console import ConsoleDialog
 
 __appName__ = "PYWEED"
 __version__ = "0.1.0"
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
@@ -397,6 +401,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setSortingEnabled(True)
         self.selectionTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.selectionTable.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
         self.selectionTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
 
         # Resize contents after sort
@@ -553,7 +558,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
 
             # Tighten up the table
-            self.selectionTable.resizeColumnsToContents()
+            # self.selectionTable.resizeColumnsToContents()
             self.selectionTable.resizeRowsToContents()
 
             # Update GUI
@@ -583,22 +588,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         row = item.row()
         col = item.column()
         column_names = self.waveformsHandler.getColumnNames()
-        keepItem = self.selectionTable.item(row,column_names.index('Keep'))
+        keepItem = self.selectionTable.item(row, column_names.index('Keep'))
 
-        # If the user clicked on the checkBox then it was already toggled before
-        # invoking this function. Otherwise, we have to toggle the checkBox here:
-        if col != column_names.index('Keep'):
-            if keepItem.checkState() == QtCore.Qt.Checked:
-                keepItem.setCheckState(QtCore.Qt.Unchecked)
-            else:
-                keepItem.setCheckState(QtCore.Qt.Checked)
+        LOGGER.debug("Clicked on table row")
 
+        # Toggle the and Keep state
         waveformID = str(self.selectionTable.item(row,column_names.index('WaveformID')).text())
-
         if keepItem.checkState() == QtCore.Qt.Checked:
-            self.waveformsHandler.setWaveformKeep(waveformID, True)
-        else:
+            keepItem.setCheckState(QtCore.Qt.Unchecked)
             self.waveformsHandler.setWaveformKeep(waveformID, False)
+        else:
+            keepItem.setCheckState(QtCore.Qt.Checked)
+            self.waveformsHandler.setWaveformKeep(waveformID, True)
 
         return
 
@@ -633,7 +634,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
+        self.selectionTable.horizontalHeader().setStretchLastSection(True)
 
         # Add unique events to the eventComboBox -------------------------------
 
@@ -732,12 +733,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                         self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                     else:
                         imagePath = waveformsDF.WaveformImagePath.iloc[i]
-                        imageItem = MyTableWidgetImageWidget(self, imagePath)
-                        self.selectionTable.setCellWidget(i, j, imageItem)
+                        imageItem = MyTableWidgetImageItem(imagePath)
+                        self.selectionTable.setItem(i, j, imageItem)
 
                 elif waveformsDF.columns[j] == 'Keep':
                     checkBoxItem = QtGui.QTableWidgetItem()
-                    checkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                    checkBoxItem.setFlags(QtCore.Qt.ItemIsEnabled)
                     if self.waveformsHandler.getWaveformKeep(waveformsDF.WaveformID.iloc[i]):
                         checkBoxItem.setCheckState(QtCore.Qt.Checked)
                     else:
@@ -749,7 +750,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
 
         # Tighten up the table
-        self.selectionTable.resizeColumnsToContents()
+        # self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
 
         # Restore table sorting
@@ -782,8 +783,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.loadSelectionTable(waveformsDF)
 
         # Tighten up the table
-        self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
+        #self.selectionTable.resizeColumnsToContents()
+        #self.selectionTable.resizeRowsToContents()
 
         return
 
