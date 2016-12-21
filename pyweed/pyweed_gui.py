@@ -13,13 +13,15 @@ from __future__ import (absolute_import, division, print_function)
 # Basic packages
 import sys
 import logging
-import time # TODO:  remove?
 
-# Vectors and dataframes
-import numpy as np
+# For debugging, raise an exception on attempted chained assignment
+# See http://pandas.pydata.org/pandas-docs/version/0.19.1/indexing.html#returning-a-view-versus-a-copy
 import pandas as pd
+pd.set_option('mode.chained_assignment', 'raise')
 
-# PyQt4 packages
+# Configure PyQt4 -- in order for the Python console to work, we need to load a particular
+# version of some internal libraries. This must be done before the first import of the PyQt4 libraries.
+# See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
 import os
 os.environ['QT_API'] = 'pyqt'
 import sip
@@ -30,6 +32,7 @@ from PyQt4 import QtGui
 
 # Pyweed UI components
 from gui.MainWindow import MainWindow
+from preferences import Preferences
 
 
 __appName__ = "PYWEED"
@@ -39,71 +42,50 @@ __version__ = "0.1.0"
 LOGGER = logging.getLogger(__name__)
 
 
+class NoConsoleLoggingFilter(logging.Filter):
+    def filter(self, record):
+        return not record.name.startswith('ipykernel')
 
-# ----- Request/Response watchers ----------------------------------------------
 
-# NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
-class waveformResponseWatcherThread(QtCore.QThread):
-    """
-    This thread is started when the WaveformsDialog initializes.
+class PyWEED(object):
 
-    When a message appears on the waveformResponseQueue, this thread
-    emits a waveformResponseSignal which then triggers waveformResponseHandler().
-    """
-    waveformResponseSignal = QtCore.pyqtSignal()
+    def __init__(self, app):
+        self.app = app
+        self.configure_logging()
+        self.preferences = self.get_preferences()
 
-    def __init__(self, waveformResponseQueue):
-        QtCore.QThread.__init__(self)
-        self.waveformResponseQueue = waveformResponseQueue
+    def get_preferences(self):
+        # Load configurable preferences from ~/.pyweed/config.ini
+        preferences = Preferences()
+        try:
+            preferences.load()
+        except Exception as e:
+            LOGGER.error("Unable to load configuration preferences -- using defaults.\n%s", e)
+        return preferences
 
-    def run(self):
+    def configure_logging(self):
         """
-        Wait for entries to appear on the queue and then signal the main
-        thread that data are available.
+        Configure the root logger
         """
-        while True:
-            # NOTE:  A small sleep gives the main thread a chance to respond to GUI events
-            time.sleep(0.2)
-            if not self.waveformResponseQueue.empty():
-                self.waveformResponseSignal.emit()
+        logger = logging.getLogger()
+        try:
+            log_level = getattr(logging, self.preferences.Logging.level)
+            logger.setLevel(log_level)
+        except Exception as e:
+            logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        handler.setFormatter(formatter)
+        handler.addFilter(NoConsoleLoggingFilter())
+        logger.addHandler(handler)
 
-
-# NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt
-class waveformRequestWatcherThread(QtCore.QThread):
-    """
-    This thread is started when the WaveformsDialog initializes.
-
-    When a message appears on the waveformRequestQueue, this thread
-    emits a waveformRequestSignal which then triggers waveformRequestHandler().
-    """
-    waveformRequestSignal = QtCore.pyqtSignal()
-
-    def __init__(self, waveformRequestQueue):
-        QtCore.QThread.__init__(self)
-        self.waveformRequestQueue = waveformRequestQueue
-
-    def run(self):
-        """
-        Wait for entries to appear on the queue and then signal the main
-        thread that a request has been made.
-        """
-        while True:
-            # NOTE:  A small sleep gives the main thread a chance to respond to GUI events
-            time.sleep(0.2)
-            if not self.waveformRequestQueue.empty():
-                self.waveformRequestSignal.emit()
-
-
-# ----- Splash Screen ------------------------------------------------------------
-
-# ----- Main Window ------------------------------------------------------------
-
+    def start_gui(self):
+        self.gui = MainWindow(__appName__, __version__, self.preferences)
 
 
 if __name__ == "__main__":
-    pd.set_option('mode.chained_assignment','raise')
     app = QtGui.QApplication(sys.argv)
-    # app.setStyleSheet(stylesheet)
-    GUI = MainWindow(__appName__, __version__)
+    pyweed = PyWEED(app)
+    pyweed.start_gui()
     sys.exit(app.exec_())
 

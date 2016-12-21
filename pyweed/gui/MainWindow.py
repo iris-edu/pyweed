@@ -17,33 +17,20 @@ from gui.ConsoleDialog import ConsoleDialog
 import numpy as np
 from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 
+LOGGER = logging.getLogger(__name__)
+
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
-    def __init__(self, appName='PyWEED', version='0.0', parent=None):
+    def __init__(self, appName, version, preferences, parent=None):
 
-        # Load configurable preferences from ~/.pyweed/config.ini
-        self.preferences = Preferences()
-        try:
-            self.preferences.load()
-        except Exception as e:
-            print("Unable to load configuration preferences -- using defaults.\n%s" % e)
-            pass
+        self.preferences = preferences
 
         # Logging
         # see:  http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
         # see:  http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
-        self.logger = logging.getLogger()
-        try:
-            logLevel = getattr(logging, self.preferences.Logging.level)
-            self.logger.setLevel(logLevel)
-        except Exception as e:
-            self.logger.setLevel(logging.DEBUG)
-        self.loggingDialog = LoggingDialog(self, self.logger)
-
+        self.loggingDialog = LoggingDialog(self)
         splashScreenHandler = SplashScreenHandler(self)
-        self.logger.addHandler(splashScreenHandler)
-        self.logger.addHandler(logging.StreamHandler())
 
         super(self.__class__, self).__init__()
         self.setupUi(self)
@@ -61,14 +48,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Make sure the waveform download directory exists and isn't full
         waveformDownloadDir = self.preferences.Waveforms.downloadDir
         waveformCacheSize = float(self.preferences.Waveforms.cacheSize)
-        self.logger.info('Checking on download directory...')
+        LOGGER.info('Checking on download directory...')
         if os.path.exists(waveformDownloadDir):
-            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)
+            manageCache(waveformDownloadDir, waveformCacheSize)
         else:
             try:
                 os.makedirs(waveformDownloadDir, 0700)
             except Exception as e:
-                self.logger.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
+                LOGGER.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 SystemExit()
 
         # Set up the ObsPy FDSN client
@@ -76,11 +63,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.dataCenter = "IRIS" # TODO:  dataCenter should be configurable
 
         # Instantiate a client
-        self.logger.info("Creating ObsPy client for %s" % self.dataCenter)
+        LOGGER.info("Creating ObsPy client for %s", self.dataCenter)
         self.client = fdsn.Client(self.dataCenter)
 
         # Get the Figure object from the map_canvas
-        self.logger.info('Setting up main map...')
+        LOGGER.info('Setting up main map...')
         self.map_figure = self.map_canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
@@ -89,19 +76,18 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_figure.canvas.draw()
 
         # Events
-        self.logger.info('Setting up event options dialog...')
+        LOGGER.info('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)
         self.eventsHandler = EventsHandler(self.client)
         self.eventsHandler.done.connect(self.on_events_loaded)
-        self.eventsHandler.log.connect(self.log)
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 
         # Stations
-        self.logger.info('Setting up station options dialog...')
+        LOGGER.info('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
-        self.stationsHandler = StationsHandler(self.logger, self.preferences, self.client)
+        self.stationsHandler = StationsHandler(LOGGER, self.preferences, self.client)
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -114,11 +100,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
-        self.logger.info('Setting up waveforms dialog...')
+        LOGGER.info('Setting up waveforms dialog...')
         self.waveformsDialog = WaveformDialog(self)
         self.getWaveformsButton.setEnabled(False)
 
-        self.logger.info('Setting up main window...')
+        LOGGER.info('Setting up main window...')
 
         # Connect the main window buttons
         self.getEventsButton.clicked.connect(self.getEvents)
@@ -163,13 +149,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         console.show()
 
         # Display MainWindow
-        self.logger.info('Showing main window...')
+        LOGGER.info('Showing main window...')
         self.show()
 
         splashScreenHandler.close()
-
-    def log(self, msg):
-        self.logger.info(msg)
 
     @QtCore.pyqtSlot()
     def getEvents(self):
@@ -177,7 +160,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         Get events dataframe from IRIS.
         """
         self.getEventsButton.setEnabled(False)
-        self.logger.info('Loading events...')
+        LOGGER.info('Loading events...')
         self.statusBar().showMessage('Loading events...')
 
         # Get events and subset to desired columns
@@ -191,7 +174,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         if isinstance(eventsDF, Exception):
             msg = "Error loading events: %s" % eventsDF
-            self.logger.error(msg)
+            LOGGER.error(msg)
             self.statusBar().showMessage(msg)
             return
 
@@ -202,7 +185,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Add events to the events table ---------------------------------------
 
-        self.logger.debug('Received %d events, ', eventsDF.shape[0])
+        LOGGER.debug('Received %d events, ', eventsDF.shape[0])
 
         # Clear existing contents
         self.eventsTable.clearSelection() # This is important!
@@ -249,7 +232,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.eventQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_events_toroid(n, e, minradius, maxradius)
 
-        self.logger.info('Loaded %d events', eventsDF.shape[0])
+        LOGGER.info('Loaded %d events', eventsDF.shape[0])
         self.statusBar().showMessage('Loaded %d events' % (eventsDF.shape[0]))
 
     @QtCore.pyqtSlot()
@@ -257,7 +240,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Get stations dataframe from IRIS.
         """
-        self.logger.info('Loading channels...')
+        LOGGER.info('Loading channels...')
         self.statusBar().showMessage('Loading channels...')
 
         # Get stations and subset to desired columns
@@ -271,7 +254,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Add stations to the stations table -----------------------------------
 
-        self.logger.debug('Received %d channels, ', stationsDF.shape[0])
+        LOGGER.debug('Received %d channels, ', stationsDF.shape[0])
 
         # Clear existing contents
         self.stationsTable.clearSelection() # This is important!
@@ -318,7 +301,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             maxradius = float(self.stationQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_stations_toroid(n, e, minradius, maxradius)
 
-        self.logger.info('Loaded %d channels', stationsDF.shape[0])
+        LOGGER.info('Loaded %d channels', stationsDF.shape[0])
         self.statusBar().showMessage('Loaded %d channels' % (stationsDF.shape[0]))
 
 
@@ -338,7 +321,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.eventsTable.selectionModel().selectedRows():
             rows.append(idx.row())
 
-        self.logger.debug('%d events currently selected', len(rows))
+        LOGGER.debug('%d events currently selected', len(rows))
 
         # Get lons, lats and
         # TODO:  Automatically detect column indexes
@@ -368,7 +351,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.stationsTable.selectionModel().selectedRows():
             rows.append(idx.row())
 
-        self.logger.debug('%d stations currently selected', len(rows))
+        LOGGER.debug('%d stations currently selected', len(rows))
 
         # Get lons and lats
         # TODO:  Automatically detect longitude and latitude columns
@@ -447,9 +430,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Manage the waveform cache
         waveformDownloadDir = self.preferences.Waveforms.downloadDir
         waveformCacheSize = self.preferences.Waveforms.cacheSize
-        self.logger.debug('Managing the waveform cache...')
+        LOGGER.debug('Managing the waveform cache...')
         if os.path.exists(waveformDownloadDir):
-            manageCache(waveformDownloadDir, waveformCacheSize, self.logger)
+            manageCache(waveformDownloadDir, waveformCacheSize)
 
-        self.logger.info('Closing application...')
+        LOGGER.info('Closing application...')
         QtGui.QApplication.quit()

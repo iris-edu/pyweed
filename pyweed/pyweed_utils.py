@@ -12,8 +12,12 @@ from __future__ import (absolute_import, division, print_function)
 
 # Basic packages
 import os
+import logging
 
-def manageCache(downloadDir, cacheSize, logger):
+LOGGER = logging.getLogger(__name__)
+
+
+def manageCache(downloadDir, cacheSize):
     """
     Maintain a cache directory at a certain size (MB) by removing the oldest files.
     """
@@ -48,11 +52,11 @@ def manageCache(downloadDir, cacheSize, logger):
             # remove the file from the stats list
             stats.pop(0)
             deletionCount = deletionCount + 1
-            
-        logger.debug('Removed %d files to keep %s below %.0f megabytes' % (deletionCount, downloadDir, cacheSize))
-            
+
+        LOGGER.debug('Removed %d files to keep %s below %.0f megabytes' % (deletionCount, downloadDir, cacheSize))
+
 
     except Exception, e:
-        logger.error(str(e))
-        
+        LOGGER.error(str(e))
+
 

@@ -8,12 +8,8 @@ class SignalingThread(QtCore.QThread):
     """
     # Signal to indicate success
     done = QtCore.pyqtSignal(object)
-    # Signal to log activity
-    log = QtCore.pyqtSignal(str)
 
 
 class SignalingObject(QtCore.QObject):
     # Signal to indicate success
     done = QtCore.pyqtSignal(object)
-    # Signal to log activity
-    log = QtCore.pyqtSignal(str)

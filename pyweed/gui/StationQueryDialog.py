@@ -13,7 +13,6 @@ class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog
         self.setWindowTitle('Station Query Options')
 
         # Get references to MainWindow elements
-        self.logger = parent.logger
         self.seismap = parent.seismap
         self.map_figure = parent.map_figure
 
