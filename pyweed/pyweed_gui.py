@@ -40,28 +40,27 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 # Pyweed UI components
-import LoggingDialog
-import EventQueryDialog
-import StationQueryDialog
-import WaveformDialog
-import MainWindow
+from gui import LoggingDialog
+from gui import EventQueryDialog
+from gui import StationQueryDialog
+from gui import WaveformDialog
+from gui import MainWindow
 
 from pyweed_style import stylesheet
 
 # Pyweed PyQt4 enhancements
-from MyDoubleValidator import MyDoubleValidator
-from MyNumericTableWidgetItem import MyNumericTableWidgetItem
-from MyTableWidgetImageWidget import MyTableWidgetImageWidget
-from MyTableWidgetImageItem import MyTableWidgetImageItem
-from MyTextEditLoggingHandler import MyTextEditLoggingHandler
-from MyQt4MplCanvas import MyQt4MplCanvas
+from gui.MyDoubleValidator import MyDoubleValidator
+from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
+from gui.MyTableWidgetImageWidget import MyTableWidgetImageWidget
+from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
+from gui.MyTextEditLoggingHandler import MyTextEditLoggingHandler
 
 # Pyweed components
 
 from preferences import Preferences
-from eventsHandler import EventsHandler
-from stationsHandler import StationsHandler
-from waveformsHandler import WaveformsHandler
+from events_handler import EventsHandler
+from stations_handler import StationsHandler
+from waveforms_handler import WaveformsHandler
 from seismap import Seismap
 
 from pyweed_utils import manageCache
@@ -524,7 +523,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     self.logger.debug('plotting %s', imagePath)
                     st.plot(outfile=imagePath, size=(plot_width,plot_height))
 
-                    # Update the waveformsHandler
+                    # Update the waveforms_handler
                     self.waveformsHandler.setWaveformImagePath(waveformID, imagePath)
 
                     # Update the Table
@@ -538,7 +537,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     # Update the selectionTable
                     self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
                     self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
-                    # Update the waveformsHandler
+                    # Update the waveforms_handler
                     self.waveformsHandler.setWaveformImagePath(waveformID, 'NO DATA AVAILABLE')
                     statusText = "No data available for %s" % waveformID
 
@@ -549,7 +548,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 else:
                     statusText = message
 
-                # Update the waveformsHandler
+                # Update the waveforms_handler
                 self.waveformsHandler.setWaveformImagePath(waveformID, 'NO DATA AVAILABLE')
 
                 # Update the Table
@@ -697,7 +696,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.setSortingEnabled(False)
 
         # Note:  Display information should be in the GUI code but needs to match
-        # NOTE:  the columns which are created by the waveformsHandler.
+        # NOTE:  the columns which are created by the waveforms_handler.
         hidden_column = self.waveformsHandler.getColumnHidden()
         numeric_column = self.waveformsHandler.getColumnNumeric()
 
@@ -1508,7 +1507,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             eventID = str(self.eventsTable.item(row,12).text())
             eventIDs.append(eventID)
 
-        # Update the eventsHandler with the latest selection information
+        # Update the events_handler with the latest selection information
         self.eventsHandler.set_selected_ids(eventIDs)
 
         self.seismap.add_events_highlighting(lons, lats)
@@ -1538,7 +1537,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             SNCL = str(self.stationsTable.item(row,17).text())
             SNCLs.append(SNCL)
 
-        # Update the stationsHandler with the latest selection information
+        # Update the stations_handler with the latest selection information
         self.stationsHandler.set_selected_ids(SNCLs)
 
         self.seismap.add_stations_highlighting(lons, lats)
