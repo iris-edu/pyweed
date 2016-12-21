@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Thu Dec  8 16:59:56 2016
-#      by: PyQt4 UI code generator 4.10.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -36,13 +35,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.getButtonsWidget)
         self.horizontalLayout_2.setMargin(2)
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.getEventsButton = QtGui.QPushButton(self.getButtonsWidget)
-        self.getEventsButton.setObjectName(_fromUtf8("getEventsButton"))
-        self.horizontalLayout_2.addWidget(self.getEventsButton)
-        self.getStationsButton = QtGui.QPushButton(self.getButtonsWidget)
-        self.getStationsButton.setStyleSheet(_fromUtf8(""))
-        self.getStationsButton.setObjectName(_fromUtf8("getStationsButton"))
-        self.horizontalLayout_2.addWidget(self.getStationsButton)
         self.getWaveformsButton = QtGui.QPushButton(self.getButtonsWidget)
         self.getWaveformsButton.setObjectName(_fromUtf8("getWaveformsButton"))
         self.horizontalLayout_2.addWidget(self.getWaveformsButton)
@@ -79,6 +71,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.eventsFrame)
         self.verticalLayout_3.setMargin(2)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
+        self.getEventsButton = QtGui.QPushButton(self.eventsFrame)
+        self.getEventsButton.setObjectName(_fromUtf8("getEventsButton"))
+        self.verticalLayout_3.addWidget(self.getEventsButton)
         self.eventsTable = QtGui.QTableWidget(self.eventsFrame)
         self.eventsTable.setStyleSheet(_fromUtf8(""))
         self.eventsTable.setShowGrid(False)
@@ -95,6 +90,10 @@ class Ui_MainWindow(object):
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.stationsFrame)
         self.verticalLayout_4.setMargin(2)
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
+        self.getStationsButton = QtGui.QPushButton(self.stationsFrame)
+        self.getStationsButton.setStyleSheet(_fromUtf8(""))
+        self.getStationsButton.setObjectName(_fromUtf8("getStationsButton"))
+        self.verticalLayout_4.addWidget(self.getStationsButton)
         self.stationsTable = QtGui.QTableWidget(self.stationsFrame)
         self.stationsTable.setStyleSheet(_fromUtf8(""))
         self.stationsTable.setShowGrid(False)
@@ -124,8 +123,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
+        self.getWaveformsButton.setText(_translate("MainWindow", "Get Waveforms", None))
         self.getEventsButton.setText(_translate("MainWindow", "Get Events", None))
         self.getStationsButton.setText(_translate("MainWindow", "Get Stations", None))
-        self.getWaveformsButton.setText(_translate("MainWindow", "Get Waveforms", None))
 
 from MyQt4MplCanvas import MyQt4MplCanvas
