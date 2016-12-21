@@ -30,6 +30,10 @@ sip.setapi("QVariant", 2)
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+# Configure matplotlib backend
+import matplotlib
+matplotlib.use('AGG')
+
 # Pyweed UI components
 from gui.MainWindow import MainWindow
 from preferences import Preferences
