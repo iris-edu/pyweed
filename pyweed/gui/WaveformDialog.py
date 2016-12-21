@@ -24,7 +24,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setWindowTitle('Waveforms')
 
         # Keep a reference to globally shared components
-        self.logger = parent.logger
         self.preferences = parent.preferences
         self.client = parent.client
 
@@ -39,13 +38,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveFormatComboBox.addItems(['ASCII','GSE2','MSEED','SAC'])
         self.saveFormatComboBox.setCurrentIndex(2)
 
-        self.logger.debug('Initializing waveform dialog...')
+        LOGGER.debug('Initializing waveform dialog...')
 
         # Waveforms
-        self.waveformsHandler = WaveformsHandler(self.logger, self.preferences, self.client)
+        self.waveformsHandler = WaveformsHandler(LOGGER, self.preferences, self.client)
         self.waveformsDownloadComplete = False
         self.waveformsSaveComplete = ""
-        self.waveformsHandler.log.connect(self.on_log)
         self.waveformsHandler.progress.connect(self.on_waveform_downloaded)
         self.waveformsHandler.done.connect(self.on_all_downloaded)
 
@@ -89,18 +87,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.secondsAfterSpinBox.valueChanged.connect(self.resetDownload)
 
         # Set up a thread to watch for waveform requests that lasts as long as this dialog is open
-        self.logger.debug('Starting waveformRequestWatcherThread')
+        LOGGER.debug('Starting waveformRequestWatcherThread')
         #self.waveformRequestWatcher = waveformRequestWatcherThread(self.waveformRequestQueue)
         #self.waveformRequestWatcher.waveformRequestSignal.connect(self.handleWaveformRequest)
         #self.waveformRequestWatcher.start()
 
         # Set up a thread to watch for waveforms that lasts as long as this dialog is open
-        self.logger.debug('Starting waveformWatcher thread')
+        LOGGER.debug('Starting waveformWatcher thread')
         #self.waveformResponseWatcher = waveformResponseWatcherThread(self.waveformResponseQueue)
         #self.waveformResponseWatcher.waveformResponseSignal.connect(self.handleWaveformResponse)
         #self.waveformResponseWatcher.start()
 
-        self.logger.debug('Finished initializing waveform dialog')
+        LOGGER.debug('Finished initializing waveform dialog')
 
 
     def handleWaveformRequest(self):
@@ -158,7 +156,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             mseedFile = item['mseedFile']
             message = item['message']
 
-            self.logger.debug("waveformResponseSignal: %s -- %s", status, waveformID)
+            LOGGER.debug("waveformResponseSignal: %s -- %s", status, waveformID)
 
             # WaveformDialog status text
             statusText = ''
@@ -182,9 +180,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 try:
                     # Generate a plot
                     imagePath = mseedFile.replace('MSEED','png')
-                    self.logger.debug('reading %s', mseedFile)
+                    LOGGER.debug('reading %s', mseedFile)
                     st = obspy.core.read(mseedFile)
-                    self.logger.debug('plotting %s', imagePath)
+                    LOGGER.debug('plotting %s', imagePath)
                     st.plot(outfile=imagePath, size=(plot_width,plot_height))
 
                     # Update the waveforms_handler
@@ -274,7 +272,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         This funciton is triggered whenever the "Get Waveforms" button in the MainWindow is clicked.
         """
 
-        self.logger.debug('Loading waveform choices...')
+        LOGGER.debug('Loading waveform choices...')
 
         self.waveformsDownloadComplete = False
 
@@ -290,7 +288,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadStatusLabel.setText("")
         self.downloadStatusLabel.repaint()
 
-        self.logger.debug('Finished building dataframe for %d waveforms', waveformsDF.shape[0])
+        LOGGER.debug('Finished building dataframe for %d waveforms', waveformsDF.shape[0])
 
         # Add event-SNCL combintations to the selection table
         self.loadSelectionTable(waveformsDF)
@@ -326,7 +324,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         for station in stationsDF.Station.unique().tolist():
             self.stationComboBox.addItem(station)
 
-        self.logger.debug('Finished loading waveform choices')
+        LOGGER.debug('Finished loading waveform choices')
 
         # Initialize saveToolButton to OFF/UP
         self.saveToolButton.setEnabled(True)
@@ -350,7 +348,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         Add event-SNCL combintations to the selection table
         """
 
-        self.logger.debug('Loading waveform selection table...')
+        LOGGER.debug('Loading waveform selection table...')
 
         self.visibleWaveformsDF = waveformsDF
 
@@ -419,7 +417,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Restore table sorting
         self.selectionTable.setSortingEnabled(True)
 
-        self.logger.debug('Finished loading waveform selection table')
+        LOGGER.debug('Finished loading waveform selection table')
 
         self.downloadWaveformData()
 
@@ -435,14 +433,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         time = self.eventComboBox.currentText()
         network = self.networkComboBox.currentText()
         station = self.stationComboBox.currentText()
-        self.logger.debug('Filtering waveformsDF...')
+        LOGGER.debug('Filtering waveformsDF...')
         if not time.startswith('All'):
             waveformsDF = waveformsDF[waveformsDF.Time == time]
         if not network.startswith('All'):
             waveformsDF = waveformsDF[waveformsDF.Network == network]
         if not station.startswith('All'):
             waveformsDF = waveformsDF[waveformsDF.Station == station]
-        self.logger.debug('Finished filtering waveformsDF')
+        LOGGER.debug('Finished filtering waveformsDF')
         self.loadSelectionTable(waveformsDF)
 
         # Tighten up the table
@@ -598,7 +596,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             secondsBefore, secondsAfter)
 
     def on_log(self, msg):
-        self.logger.debug(msg)
+        LOGGER.error("Uh oh, called WaveformDialog.on_log: %s", msg)
 
     def get_table_row(self, waveform_id):
         column_names = self.waveformsHandler.getColumnNames()
@@ -610,17 +608,17 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
     def on_waveform_downloaded(self, result):
         waveform_id = result.waveform_id
-        self.logger.debug("Ready to display waveform %s", waveform_id)
+        LOGGER.debug("Ready to display waveform %s", waveform_id)
 
         row = self.get_table_row(waveform_id)
         if row is None:
-            self.logger.error("Couldn't find a row for waveform %s", waveform_id)
+            LOGGER.error("Couldn't find a row for waveform %s", waveform_id)
             return
 
         column_names = self.waveformsHandler.getColumnNames()
 
         if isinstance(result.result, Exception):
-            self.logger.error("Error retrieving %s: %s", waveform_id, result.result)
+            LOGGER.error("Error retrieving %s: %s", waveform_id, result.result)
             self.selectionTable.setItem(row, column_names.index('WaveformImagePath'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
             self.selectionTable.setItem(row, column_names.index('Waveform'), QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
         else:
@@ -630,7 +628,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             imageItem = MyTableWidgetImageWidget(self, image_path)
             self.selectionTable.setCellWidget(row, column_names.index('Waveform'), imageItem)
 
-        self.logger.debug("Displayed waveform %s", waveform_id)
+        LOGGER.debug("Displayed waveform %s", waveform_id)
 
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
@@ -642,7 +640,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadToolButton.setChecked(False) # up/off
         self.downloadToolButton.setDown(False) # up/off
         self.toggledDownloadToolButton()
-        self.logger.debug('COMPLETED all downloads')
+        LOGGER.debug('COMPLETED all downloads')
 
         statusText = "Completed all downloads"
 
@@ -686,7 +684,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             outputFormat = 'SAC'
             extension = 'sac'
         else:
-            self.logger.error('Output format "%s" not recognized' % formatChoice)
+            LOGGER.error('Output format "%s" not recognized' % formatChoice)
             self.saveStatusLabel.setText('Output format "%s" not recognized' % formatChoice)
             self.saveStatusLabel.repaint()
             return
@@ -714,9 +712,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 # Don't repeat any work that has already been done
                 if not os.path.exists(outputPath):
                     statusText = "Saving %s " % (outputFile)
-                    self.logger.debug('reading %s', mseedFile)
+                    LOGGER.debug('reading %s', mseedFile)
                     st = obspy.core.read(mseedPath)
-                    self.logger.debug('writing %s', outputPath)
+                    LOGGER.debug('writing %s', outputPath)
                     st.write(outputPath, format=outputFormat)
 
                 savedCount += 1
@@ -736,7 +734,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.toggledSaveToolButton()
         self.saveGroupBox.setStyleSheet("QGroupBox { background-color: #e7e7e7 } ")
 
-        self.logger.debug('COMPLETED saving all waveforms')
+        LOGGER.debug('COMPLETED saving all waveforms')
 
 
     @QtCore.pyqtSlot()

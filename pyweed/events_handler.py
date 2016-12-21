@@ -13,6 +13,9 @@ from __future__ import (absolute_import, division, print_function)
 import re
 import pandas as pd
 from signals import SignalingThread, SignalingObject
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EventsLoader(SignalingThread):
@@ -40,7 +43,7 @@ class EventsLoader(SignalingThread):
                 raise ValueError('starttime or endtime is missing')
 
             # Create dataframe of station metadata
-            self.log.emit('Loading events...')
+            LOGGER.info('Loading events...')
             event_catalog = self.client.get_events(**self.parameters)
             df = self.build_dataframe(event_catalog)
             self.done.emit(df)
@@ -83,7 +86,7 @@ class EventsLoader(SignalingThread):
 
         # TODO:  Each of these is a big trial-and-error task
 
-        self.log.emit("Creating events dataframe")
+        LOGGER.info("Creating events dataframe")
 
         # Set up empty dataframe
         df = pd.DataFrame(columns=self.column_names)
@@ -158,16 +161,12 @@ class EventsHandler(SignalingObject):
     def load_data(self, parameters=None):
         self.loader = EventsLoader(self.client, self.get_column_names(), parameters)
         self.loader.done.connect(self.on_loader_done)
-        self.loader.log.connect(self.on_loader_log)
         self.loader.start()
 
     def on_loader_done(self, df):
         if not isinstance(df, Exception):
             self.currentDF = df
         self.done.emit(df)
-
-    def on_loader_log(self, msg):
-        self.log.emit(msg)
 
     def get_selected_ids(self):
         return(self.selectedIDs)

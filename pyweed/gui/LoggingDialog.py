@@ -8,7 +8,7 @@ class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
     """
     Dialog window displaying all logs.
     """
-    def __init__(self, parent=None, logger=None):
+    def __init__(self, parent=None):
         super(self.__class__, self).__init__()
         self.setupUi(self)
         self.setWindowTitle('Logs')
@@ -20,6 +20,7 @@ class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
         loggingHandler = MyTextEditLoggingHandler(widget=self.loggingPlainTextEdit)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         loggingHandler.setFormatter(formatter)
-        logger.addHandler(loggingHandler)
+
+        logging.getLogger().addHandler(loggingHandler)
 
 

@@ -76,10 +76,10 @@ class WaveformLoader(SignalingThread):
         try:
             waveform_id = self.waveform.WaveformID
 
-            self.log.emit("Loading waveform: %s" % waveform_id)
+            LOGGER.debug("Loading waveform: %s", waveform_id)
 
             # Calculate arrival times
-            self.log.emit("%s calculate travel time" % self.waveform.SNCL)
+            LOGGER.debug("%s calculate travel time", self.waveform.SNCL)
             model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
             tt = model.get_travel_times_geo(
                 self.waveform.Depth,
@@ -98,14 +98,14 @@ class WaveformLoader(SignalingThread):
             startstring = starttime.format_iris_web_service()
             endstring = endtime.format_iris_web_service()
             mseedFile = "%s/%s_%s_%s.MSEED" % (self.downloadDir, self.waveform.SNCL, startstring, endstring)
-            self.log.emit("%s save as MiniSEED" % waveform_id)
+            LOGGER.debug("%s save as MiniSEED", waveform_id)
 
             # Load data from disk or network as appropriate
             if os.path.exists(mseedFile):
-                self.log.emit("Loading waveform data for %s from %s" % (waveform_id, mseedFile))
+                LOGGER.info("Loading waveform data for %s from %s", waveform_id, mseedFile)
                 st = obspy.core.read(mseedFile)
             else:
-                self.log.emit("Retrieving waveform data for %s" % waveform_id)
+                LOGGER.info("Retrieving waveform data for %s", waveform_id)
                 (network, station, location, channel) = self.waveform.SNCL.split('.')
                 st = self.client.get_waveforms(network, station, location, channel, starttime, endtime)
                 # Write to file
@@ -114,7 +114,7 @@ class WaveformLoader(SignalingThread):
             # Generate image if necessary
             imageFile = mseedFile.replace('MSEED','png')
             if not os.path.exists(imageFile):
-                self.log.emit('Plotting waveform image to %s' % imageFile)
+                LOGGER.info('Plotting waveform image to %s', imageFile)
                 # In order to really customize the plotting, we need to return the figure and modify it
                 h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
                 # Resize the subplot to a hard size, because otherwise it will do it inconsistently
@@ -148,7 +148,6 @@ class WaveformsHandler(SignalingObject):
         super(WaveformsHandler, self).__init__()
 
         # Keep a reference to globally shared components
-        self.logger = logger
         self.preferences = preferences
         self.client = client
 
@@ -174,7 +173,7 @@ class WaveformsHandler(SignalingObject):
         Create a dataframe of event-SNCL combinations.
         """
 
-        self.log.emit('Generating event-station combined dataframe...')
+        LOGGER.info('Generating event-station combined dataframe...')
 
         #eventsDF.columns
         #Index([u'Time', u'Magnitude', u'Longitude', u'Latitude', u'Depth/km',
@@ -222,7 +221,7 @@ class WaveformsHandler(SignalingObject):
 
         # BEGIN event-station distance -----------------------------------------
 
-        self.log.emit('Calculating %d event-station distances...' % len(waveformsDF.WaveformStationID.unique()))
+        LOGGER.debug('Calculating %d event-station distances...', len(waveformsDF.WaveformStationID.unique()))
 
         waveformsDF['Distance'] = np.nan
         # Now loop through all waveforms, calculating new distances only when necessary
@@ -237,7 +236,7 @@ class WaveformsHandler(SignalingObject):
                                  ndigits=2)
             waveformsDF.loc[i, 'Distance'] = distance
 
-        self.log.emit('Finished calculating distances')
+        LOGGER.debug('Finished calculating distances')
 
         # END event-station distance -------------------------------------------
 
@@ -267,7 +266,7 @@ class WaveformsHandler(SignalingObject):
         """
         Clear the download queue and release any active threads
         """
-        self.log.emit('Clearing existing downloads')
+        LOGGER.info('Clearing existing downloads')
         #for thread in self.threads.values():
         #    thread.quit()
         # self.threads = {}
@@ -278,7 +277,7 @@ class WaveformsHandler(SignalingObject):
         Initiate a download of all the given waveforms
         """
         self.clear_downloads()
-        self.log.emit('Downloading waveforms')
+        LOGGER.info('Downloading waveforms')
         LOGGER.debug("Priority IDs: %s" % (priority_ids.tolist(),))
         LOGGER.debug("Other IDs: %s" % (other_ids.tolist(),))
         self.seconds_before = seconds_before
@@ -320,7 +319,6 @@ class WaveformsHandler(SignalingObject):
         LOGGER.debug("Spawning download thread for waveform %s", waveform_id)
         thread = WaveformLoader(self.client, waveform, self.preferences, self.seconds_before, self.seconds_after)
         thread.done.connect(self.on_downloaded)
-        thread.log.connect(self.on_log)
         self.threads[waveform.WaveformID] = thread
         thread.start()
 
@@ -336,9 +334,6 @@ class WaveformsHandler(SignalingObject):
             del self.threads[result.waveform_id]
         self.progress.emit(result)
         self.download_next_waveform()
-
-    def on_log(self, msg):
-        self.log.emit(msg)
 
     def get_waveform(self, waveform_id):
         """

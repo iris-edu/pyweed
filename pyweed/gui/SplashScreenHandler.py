@@ -9,6 +9,11 @@ class SplashScreenHandler(logging.Handler):
         self.mainWidget = mainWidget
         pixmap = QtGui.QPixmap("splash.png")
         self.splash = QtGui.QSplashScreen(pixmap)
+
+        # Attach as handler to the root logger
+        logger = logging.getLogger()
+        logger.addHandler(self)
+
         self.splash.show()
         # self.splash.finish(mainWidget)
 

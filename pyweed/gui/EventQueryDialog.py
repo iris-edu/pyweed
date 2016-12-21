@@ -1,6 +1,9 @@
 from PyQt4 import QtGui, QtCore
 from gui.uic import EventQueryDialog
 from gui.MyDoubleValidator import MyDoubleValidator
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
@@ -13,7 +16,6 @@ class EventQueryDialog(QtGui.QDialog, EventQueryDialog.Ui_EventQueryDialog):
         self.setWindowTitle('Event Query Options')
 
         # Get references to MainWindow elements
-        self.logger = parent.logger
         self.seismap = parent.seismap
         self.map_figure = parent.map_figure
 
