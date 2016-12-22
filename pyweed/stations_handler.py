@@ -13,65 +13,50 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 import pandas as pd
 import logging
+from signals import SignalingThread, SignalingObject
 
 LOGGER = logging.getLogger(__name__)
 
 
-class StationsHandler(object):
+class StationsLoader(SignalingThread):
     """
-    Container for stations.
+    Thread to handle station requests
     """
-    def __init__(self, logger, preferences, client):
+
+    def __init__(self, client, column_names, parameters):
         """
         Initialization.
         """
         # Keep a reference to globally shared components
-        self.preferences = preferences
         self.client = client
+        self.column_names = column_names
+        self.parameters = parameters
+        super(StationsLoader, self).__init__()
 
-        # Current state
-        self.currentDF = None
-        self.selectedIDs = []
-
-    def get_selected_ids(self):
-        return(self.selectedIDs)
-
-    def set_selected_ids(self, IDs):
-        self.selectedIDs = IDs
-
-    def get_selected_dataframe(self):
-        df = self.currentDF.loc[self.currentDF['SNCL'].isin(self.selectedIDs)]
-        return(df)
-
-    def get_column_names(self):
-        columnNames = ['Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL']
-        return(columnNames)
-
-    def load_data(self, parameters=None):
+    def run(self):
         """
-        Make a webservice request for stations using the passed in options.
-
-        A pandas dataframe is stored in self.currentDF and is also returned.
+        Make a webservice request for events using the passed in options.
         """
+        # Add level='channel'
+        self.parameters['level'] = 'channel'
+
         # Sanity check
-        if not parameters.has_key('starttime') or not parameters.has_key('endtime'):
-            raise('starttime or endtime is missing')
-
         try:
+            if not self.parameters.has_key('starttime') or not self.parameters.has_key('endtime'):
+                raise ValueError('starttime or endtime is missing')
+
             # Create dataframe of station metadata
-            LOGGER.debug('Loading stations...')
-            df = self.build_dataframe(parameters)
+            LOGGER.info('Loading stations...')
+            inventory = self.client.get_stations(**self.parameters)
+            df = self.build_dataframe(inventory)
+            self.done.emit(df)
 
         except Exception as e:
             # TODO:  What type of exception should we trap?
-            LOGGER.error('%s', e)
+            self.done.emit(e)
             raise
 
-        self.currentDF = df
-
-        return(df)
-
-    def build_dataframe(self, parameters):
+    def build_dataframe(self, inventory):
         """
         Obtain station data as an ObsPy Inventory.
         Then convert this into a pandas dataframe.
@@ -79,28 +64,11 @@ class StationsHandler(object):
         A pandas dataframe is returned.
         """
 
-        # TODO:  Optimize interaction with IRIS by restoring the previous version with
-        # TODO:  requests for format="text" and simple pandas import.
-
-        # NOTE:  The parameters dictionary is created by StationsQueryDialog.getOptions()
-        # NOTE:  and will be passed as **kwargs to client.get_stations:
-        # NOTE:
-        # NOTE:    https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_stations.html
-
-        # Add level='channel'
-        parameters['level'] = 'channel'
-
-        try:
-            sncl_inventory = self.client.get_stations(**parameters)
-
-        except Exception as e:
-            raise
-
         # Set up empty dataframe
-        df = pd.DataFrame(columns=self.get_column_names())
+        df = pd.DataFrame(columns=self.column_names)
 
         # Walk through the Inventory object
-        for n in sncl_inventory.networks:
+        for n in inventory.networks:
             for s in n.stations:
                 for c in s.channels:
                     snclId = n.code + "." + s.code + "." + c.location_code + "." + c.code
@@ -124,6 +92,50 @@ class StationsHandler(object):
                                        snclId]
 
         return(df)
+
+
+class StationsHandler(SignalingObject):
+    """
+    Container for events.
+    """
+
+    def __init__(self, client):
+        """
+        Initialization.
+        """
+        super(StationsHandler, self).__init__()
+
+        self.client = client
+
+        # Current state
+        self.currentDF = None
+        self.selectedIDs = []
+
+        self.loader = None
+
+    def load_data(self, parameters=None):
+        self.loader = StationsLoader(self.client, self.get_column_names(), parameters)
+        self.loader.done.connect(self.on_loader_done)
+        self.loader.start()
+
+    def on_loader_done(self, df):
+        if not isinstance(df, Exception):
+            self.currentDF = df
+        self.done.emit(df)
+
+    def get_selected_ids(self):
+        return(self.selectedIDs)
+
+    def set_selected_ids(self, IDs):
+        self.selectedIDs = IDs
+
+    def get_selected_dataframe(self):
+        df = self.currentDF.loc[self.currentDF['SNCL'].isin(self.selectedIDs)]
+        return(df)
+
+    def get_column_names(self):
+        columnNames = ['Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL']
+        return(columnNames)
 
 
 # ------------------------------------------------------------------------------
