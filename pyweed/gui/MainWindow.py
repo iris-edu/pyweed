@@ -79,7 +79,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Setting up event options dialog...')
         self.eventQueryDialog = EventQueryDialog(self)
         self.eventsHandler = EventsHandler(self.client)
-        self.eventsHandler.done.connect(self.on_events_loaded)
+        self.eventsHandler.done.connect(self.onEventsLoaded)
         self.eventsTable.setSortingEnabled(True)
         self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -87,7 +87,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Stations
         LOGGER.info('Setting up station options dialog...')
         self.stationQueryDialog = StationQueryDialog(self)
-        self.stationsHandler = StationsHandler(LOGGER, self.preferences, self.client)
+        self.stationsHandler = StationsHandler(self.client)
+        self.stationsHandler.done.connect(self.onStationsLoaded)
         self.stationsTable.setSortingEnabled(True)
         self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -154,6 +155,44 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         splashScreenHandler.close()
 
+    def fillTable(self, table, dataframe, visibleColumns, numericColumns):
+        """
+        Common code for filling event/station tables with data
+        """
+
+        # Clear existing contents
+        table.clearSelection() # This is important!
+        while (table.rowCount() > 0):
+            table.removeRow(0)
+
+        # Column names
+        columnNames = dataframe.columns.tolist()
+
+        # Create new table
+        table.setRowCount(dataframe.shape[0])
+        table.setColumnCount(dataframe.shape[1])
+        table.setHorizontalHeaderLabels(columnNames)
+        table.verticalHeader().hide()
+
+        # Hidden columns
+        for i, column in enumerate(columnNames):
+            table.setColumnHidden(i, column not in visibleColumns)
+
+        # Add new contents
+        for i in range(dataframe.shape[0]):
+            for j in range(dataframe.shape[1]):
+                # Guarantee that all elements are converted to strings for display but apply proper sorting
+                if columnNames[j] in numericColumns:
+                    table.setItem(i, j, MyNumericTableWidgetItem(str(dataframe.iat[i, j])))
+                else:
+                    table.setItem(i, j, QtGui.QTableWidgetItem(str(dataframe.iat[i, j])))
+
+        # Tighten up the table
+        table.resizeColumnsToContents()
+        table.resizeRowsToContents()
+
+
+
     @QtCore.pyqtSlot()
     def getEvents(self):
         """
@@ -168,7 +207,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # TODO:  handle errors when querying events
         self.eventsHandler.load_data(parameters=parameters)
 
-    def on_events_loaded(self, eventsDF):
+    def onEventsLoaded(self, eventsDF):
+        """
+        Handler triggered when the EventsHandler finishes loading events
+        """
 
         self.getEventsButton.setEnabled(True)
 
@@ -178,42 +220,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.statusBar().showMessage(msg)
             return
 
-        # NOTE:  Here is the list of all column names:
-        # NOTE:         ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
-        hidden_column = [ False,  False,       False,       False,      False,      False,     False,               True,     True,      True,          True,            True,        True]
-        numeric_column = [False,  True,        True,        True,       True,       False,     False,               False,    False,     False,         False,           False,       False]
+        visibleColumns = [
+            'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
+            'MagType', 'EventLocationName',
+        ]
+        numericColumns = [
+            'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
+        ]
 
-        # Add events to the events table ---------------------------------------
-
-        LOGGER.debug('Received %d events, ', eventsDF.shape[0])
-
-        # Clear existing contents
-        self.eventsTable.clearSelection() # This is important!
-        while (self.eventsTable.rowCount() > 0):
-            self.eventsTable.removeRow(0)
-
-        # Create new table
-        self.eventsTable.setRowCount(eventsDF.shape[0])
-        self.eventsTable.setColumnCount(eventsDF.shape[1])
-        self.eventsTable.setHorizontalHeaderLabels(eventsDF.columns.tolist())
-        self.eventsTable.verticalHeader().hide()
-        # Hidden columns
-        for i in np.arange(len(hidden_column)):
-            if hidden_column[i]:
-                self.eventsTable.setColumnHidden(i,True)
-
-        # Add new contents
-        for i in range(eventsDF.shape[0]):
-            for j in range(eventsDF.shape[1]):
-                # Guarantee that all elements are converted to strings for display but apply proper sorting
-                if numeric_column[j]:
-                    self.eventsTable.setItem(i, j, MyNumericTableWidgetItem(str(eventsDF.iat[i,j])))
-                else:
-                    self.eventsTable.setItem(i, j, QtGui.QTableWidgetItem(str(eventsDF.iat[i,j])))
-
-        # Tighten up the table
-        self.eventsTable.resizeColumnsToContents()
-        self.eventsTable.resizeRowsToContents()
+        self.fillTable(self.eventsTable, eventsDF, visibleColumns, numericColumns)
 
         # Add items to the map -------------------------------------------------
 
@@ -238,51 +253,39 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     @QtCore.pyqtSlot()
     def getStations(self):
         """
-        Get stations dataframe from IRIS.
+        Get events dataframe from IRIS.
         """
+        self.getStationsButton.setEnabled(False)
         LOGGER.info('Loading channels...')
         self.statusBar().showMessage('Loading channels...')
 
         # Get stations and subset to desired columns
         parameters = self.stationQueryDialog.getOptions()
         # TODO:  handle errors when querying stations
-        stationsDF = self.stationsHandler.load_data(parameters=parameters)
-        # NOTE:  Here is the list of all column names:
-        # NOTE:         ['Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL']
-        hidden_column = [ False,     False,     False,      False,     False,       False,      True,        True,    True,      True,  True,                True,    True,        True,         True,         True,        True,      True]
-        numeric_column = [False,     False,     False,      False,     True,        True,       True,        True,    True,      True,  False,               True,    True,        False,        True,         False,       False,     False]
+        self.stationsHandler.load_data(parameters=parameters)
 
-        # Add stations to the stations table -----------------------------------
+    def onStationsLoaded(self, stationsDF):
+        """
+        Handler triggered when the StationsHandler finishes loading stations
+        """
 
-        LOGGER.debug('Received %d channels, ', stationsDF.shape[0])
+        self.getStationsButton.setEnabled(True)
 
-        # Clear existing contents
-        self.stationsTable.clearSelection() # This is important!
-        while (self.stationsTable.rowCount() > 0):
-            self.stationsTable.removeRow(0)
+        if isinstance(stationsDF, Exception):
+            msg = "Error loading stations: %s" % stationsDF
+            LOGGER.error(msg)
+            self.statusBar().showMessage(msg)
+            return
 
-        # Create new table
-        self.stationsTable.setRowCount(stationsDF.shape[0])
-        self.stationsTable.setColumnCount(stationsDF.shape[1])
-        self.stationsTable.setHorizontalHeaderLabels(stationsDF.columns.tolist())
-        self.stationsTable.verticalHeader().hide()
-        # Hidden columns
-        for i in np.arange(len(hidden_column)):
-            if hidden_column[i]:
-                self.stationsTable.setColumnHidden(i,True)
+        visibleColumns = [
+            'Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude',
+        ]
+        numericColumns = [
+            'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip',
+            'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate',
+        ]
 
-        # Add new contents
-        for i in range(stationsDF.shape[0]):
-            for j in range(stationsDF.shape[1]):
-                # Guarantee that all elements are converted to strings for display but apply proper sorting
-                if numeric_column[j]:
-                    self.stationsTable.setItem(i, j, MyNumericTableWidgetItem(str(stationsDF.iat[i,j])))
-                else:
-                    self.stationsTable.setItem(i, j, QtGui.QTableWidgetItem(str(stationsDF.iat[i,j])))
-
-        # Tighten up the table
-        self.stationsTable.resizeColumnsToContents()
-        self.stationsTable.resizeRowsToContents()
+        self.fillTable(self.eventsTable, stationsDF, visibleColumns, numericColumns)
 
         # Add items to the map -------------------------------------------------
 
