@@ -47,8 +47,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 class NoConsoleLoggingFilter(logging.Filter):
+    """
+    Logging filter that excludes the (very noisy) output from the attached Python console
+    """
+    exclude = ('ipykernel', 'traitlets',)
     def filter(self, record):
-        return not record.name.startswith('ipykernel')
+        for exclude in self.exclude:
+            if record.name.startswith(exclude):
+                return False
+        return True
 
 
 class PyWEED(object):

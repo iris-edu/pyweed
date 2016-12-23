@@ -1,55 +1,17 @@
 from PyQt4 import QtGui, QtCore
-from gui.uic import StationQueryDialog
-from gui.MyDoubleValidator import MyDoubleValidator
+from gui.uic import StationOptionsWidget
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
-class StationQueryDialog(QtGui.QDialog, StationQueryDialog.Ui_StationQueryDialog):
+class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptionsWidget):
     """
-    Dialog window for station options used in creating a webservice query.
+    Dialog window for event options used in creating a webservice query.
     """
-    def __init__(self, parent=None, windowTitle='Start/End Time'):
+    def __init__(self, parent=None):
         super(self.__class__, self).__init__()
         self.setupUi(self)
-        self.setWindowTitle('Station Query Options')
-
-        # Get references to MainWindow elements
-        self.seismap = parent.seismap
-        self.map_figure = parent.map_figure
-
-        # Create buttonGroups
-        self.timeButtonGroup = QtGui.QButtonGroup()
-        self.timeButtonGroup.addButton(self.timeBetweenRadioButton,1)
-        self.timeButtonGroup.addButton(self.timeDuringEventsRadioButton,2)
-
-        self.locationButtonGroup = QtGui.QButtonGroup()
-        self.locationButtonGroup.addButton(self.locationRangeRadioButton,1)
-        self.locationButtonGroup.addButton(self.locationDistanceFromPointRadioButton,2)
-        self.locationButtonGroup.addButton(self.locationDistanceFromEventsRadioButton,3)
-        self.locationButtonGroup.buttonClicked['int'].connect(self.onLocationButtonClicked)
-
-
-        # Set validators for input fields # TODO:  What are appropriate valid ranges?
-        self.locationRangeWestLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeWestLineEdit))
-        self.locationRangeEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.locationRangeEastLineEdit))
-        self.locationRangeSouthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeSouthLineEdit))
-        self.locationRangeNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.locationRangeNorthLineEdit))
-        self.distanceFromPointMinRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMinRadiusLineEdit))
-        self.distanceFromPointMaxRadiusLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointMaxRadiusLineEdit))
-        self.distanceFromPointEastLineEdit.setValidator(MyDoubleValidator(-180.0,180.0,2,self.distanceFromPointEastLineEdit))
-        self.distanceFromPointNorthLineEdit.setValidator(MyDoubleValidator(-90.0,90.0,2,self.distanceFromPointNorthLineEdit))
-
-        # Set tab order
-#         self.setTabOrder(self.networkLineEdit, self.stationLineEdit)
-#         self.setTabOrder(self.stationLineEdit, self.locationLineEdit)
-#         self.setTabOrder(self.locationLineEdit, self.channelLineEdit)
-#         self.setTabOrder(self.channelLineEdit, self.locationRangeNorthLineEdit)
-#         self.setTabOrder(self.locationRangeNorthLineEdit, self.locationRangeWestLineEdit)
-#         self.setTabOrder(self.locationRangeWestLineEdit, self.locationRangeEastLineEdit)
-#         self.setTabOrder(self.locationRangeEastLineEdit, self.locationRangeSouthLineEdit)
-#         self.setTabOrder(self.locationRangeSouthLineEdit, self.distanceFromPointMinRadiusLineEdit)
-#         self.setTabOrder(self.distanceFromPointMinRadiusLineEdit, self.distanceFromPointMaxRadiusLineEdit)
-#         self.setTabOrder(self.distanceFromPointMaxRadiusLineEdit, self.distanceFromPointEastLineEdit)
-#         self.setTabOrder(self.distanceFromPointEastLineEdit, self.distanceFromPointNorthLineEdit)
 
         # Initialize input fields using preferences
         prefs = parent.preferences.StationOptions
