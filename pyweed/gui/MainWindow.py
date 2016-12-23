@@ -8,14 +8,14 @@ import os
 from pyweed_utils import manageCache
 from obspy.clients import fdsn
 from seismap import Seismap
-from gui.EventQueryDialog import EventQueryDialog
 from events_handler import EventsHandler
-from gui.StationQueryDialog import StationQueryDialog
 from stations_handler import StationsHandler
 from gui.WaveformDialog import WaveformDialog
 from gui.ConsoleDialog import ConsoleDialog
 import numpy as np
 from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
+from gui.EventOptionsWidget import EventOptionsWidget
+from gui.StationOptionsWidget import StationOptionsWidget
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,21 +77,24 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Events
         LOGGER.info('Setting up event options dialog...')
-        self.eventQueryDialog = EventQueryDialog(self)
         self.eventsHandler = EventsHandler(self.client)
         self.eventsHandler.done.connect(self.onEventsLoaded)
-        self.eventsTable.setSortingEnabled(True)
-        self.eventsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.eventsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+
+        self.eventOptionsWidget = EventOptionsWidget(self)
+        self.eventOptionsDockWidget.setWidget(self.eventOptionsWidget)
+        self.toggleEventOptions.toggled.connect(self.eventOptionsDockWidget.setVisible)
+        self.eventOptionsDockWidget.visibilityChanged.connect(self.toggleEventOptions.setChecked)
 
         # Stations
         LOGGER.info('Setting up station options dialog...')
-        self.stationQueryDialog = StationQueryDialog(self)
         self.stationsHandler = StationsHandler(self.client)
         self.stationsHandler.done.connect(self.onStationsLoaded)
-        self.stationsTable.setSortingEnabled(True)
-        self.stationsTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.stationsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+
+        self.stationOptionsWidget = StationOptionsWidget(self)
+        self.stationOptionsDockWidget.setWidget(self.stationOptionsWidget)
+        self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
+        self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
+
 
         # Connect signals associated with table clicks
         # see:  http://zetcode.com/gui/pyqt4/eventsandsignals/
@@ -118,7 +121,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # see:  https://pythonprogramming.net/menubar-pyqt-tutorial/
         # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
         mainMenu = self.menuBar()
-        mainMenu.setNativeMenuBar(False)
+        # mainMenu.setNativeMenuBar(False)
 
         fileMenu = mainMenu.addMenu('&File')
 
@@ -130,10 +133,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         optionsMenu = mainMenu.addMenu('Options')
 
         eventOptionsAction = QtGui.QAction("Show Event Options", self)
-        QtCore.QObject.connect(eventOptionsAction, QtCore.SIGNAL('triggered()'), self.eventQueryDialog.show)
+        QtCore.QObject.connect(eventOptionsAction, QtCore.SIGNAL('triggered()'), self.eventOptionsDockWidget.show)
         optionsMenu.addAction(eventOptionsAction)
         stationOptionsAction = QtGui.QAction("Show Station Options", self)
-        QtCore.QObject.connect(stationOptionsAction, QtCore.SIGNAL('triggered()'), self.stationQueryDialog.show)
+        QtCore.QObject.connect(stationOptionsAction, QtCore.SIGNAL('triggered()'), self.stationOptionsDockWidget.show)
         optionsMenu.addAction(stationOptionsAction)
 
         helpMenu = mainMenu.addMenu('Help')
@@ -203,7 +206,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.statusBar().showMessage('Loading events...')
 
         # Get events and subset to desired columns
-        parameters = self.eventQueryDialog.getOptions()
+        parameters = self.eventOptionsWidget.getOptions()
         # TODO:  handle errors when querying events
         self.eventsHandler.load_data(parameters=parameters)
 
@@ -234,17 +237,17 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.seismap.add_events(eventsDF)
 
-        if self.eventQueryDialog.locationRangeRadioButton.isChecked():
-            n = float(self.eventQueryDialog.locationRangeNorthLineEdit.text())
-            e = float(self.eventQueryDialog.locationRangeEastLineEdit.text())
-            s = float(self.eventQueryDialog.locationRangeSouthLineEdit.text())
-            w = float(self.eventQueryDialog.locationRangeWestLineEdit.text())
+        if self.eventOptionsWidget.locationRangeRadioButton.isChecked():
+            n = float(self.eventOptionsWidget.locationRangeNorthLineEdit.text())
+            e = float(self.eventOptionsWidget.locationRangeEastLineEdit.text())
+            s = float(self.eventOptionsWidget.locationRangeSouthLineEdit.text())
+            w = float(self.eventOptionsWidget.locationRangeWestLineEdit.text())
             self.seismap.add_events_box(n, e, s, w)
-        elif self.eventQueryDialog.locationDistanceFromPointRadioButton.isChecked():
-            n = float(self.eventQueryDialog.distanceFromPointNorthLineEdit.text())
-            e = float(self.eventQueryDialog.distanceFromPointEastLineEdit.text())
-            minradius = float(self.eventQueryDialog.distanceFromPointMinRadiusLineEdit.text())
-            maxradius = float(self.eventQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
+        elif self.eventOptionsWidget.locationDistanceFromPointRadioButton.isChecked():
+            n = float(self.eventOptionsWidget.distanceFromPointNorthLineEdit.text())
+            e = float(self.eventOptionsWidget.distanceFromPointEastLineEdit.text())
+            minradius = float(self.eventOptionsWidget.distanceFromPointMinRadiusLineEdit.text())
+            maxradius = float(self.eventOptionsWidget.distanceFromPointMaxRadiusLineEdit.text())
             self.seismap.add_events_toroid(n, e, minradius, maxradius)
 
         LOGGER.info('Loaded %d events', eventsDF.shape[0])
@@ -285,7 +288,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate',
         ]
 
-        self.fillTable(self.eventsTable, stationsDF, visibleColumns, numericColumns)
+        self.fillTable(self.stationsTable, stationsDF, visibleColumns, numericColumns)
 
         # Add items to the map -------------------------------------------------
 
@@ -436,6 +439,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.debug('Managing the waveform cache...')
         if os.path.exists(waveformDownloadDir):
             manageCache(waveformDownloadDir, waveformCacheSize)
+
+        self.preferences.save()
 
         LOGGER.info('Closing application...')
         QtGui.QApplication.quit()
