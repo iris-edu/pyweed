@@ -19,14 +19,14 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
         self.stationLineEdit.setText(prefs.station)
         self.locationLineEdit.setText(prefs.location)
         self.channelLineEdit.setText(prefs.channel)
-        self.locationRangeWestLineEdit.setText(prefs.locationRangeWest)
-        self.locationRangeEastLineEdit.setText(prefs.locationRangeEast)
-        self.locationRangeSouthLineEdit.setText(prefs.locationRangeSouth)
-        self.locationRangeNorthLineEdit.setText(prefs.locationRangeNorth)
-        self.distanceFromPointMinRadiusLineEdit.setText(prefs.distanceFromPointMinRadius)
-        self.distanceFromPointMaxRadiusLineEdit.setText(prefs.distanceFromPointMaxRadius)
-        self.distanceFromPointEastLineEdit.setText(prefs.distanceFromPointEast)
-        self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
+        self.locationRangeWestInput.setValue(float(prefs.locationRangeWest))
+        self.locationRangeEastInput.setValue(float(prefs.locationRangeEast))
+        self.locationRangeSouthInput.setValue(float(prefs.locationRangeSouth))
+        self.locationRangeNorthInput.setValue(float(prefs.locationRangeNorth))
+        self.distanceFromPointMinRadiusInput.setValue(float(prefs.distanceFromPointMinRadius))
+        self.distanceFromPointMaxRadiusInput.setValue(float(prefs.distanceFromPointMaxRadius))
+        self.distanceFromPointEastInput.setValue(float(prefs.distanceFromPointEast))
+        self.distanceFromPointNorthInput.setValue(float(prefs.distanceFromPointNorth))
 
         # Initialize the date selectors # TODO: using preferences
         #self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
@@ -75,22 +75,22 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
         if str(self.locationLineEdit.text()) != '':
             options['channel'] = str(self.channelLineEdit.text())
         if self.locationRangeRadioButton.isChecked():
-            if str(self.locationRangeWestLineEdit.text()) != '':
-                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())
-            if str(self.locationRangeEastLineEdit.text()) != '':
-                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())
-            if str(self.locationRangeSouthLineEdit.text()) != '':
-                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())
-            if str(self.locationRangeNorthLineEdit.text()) != '':
-                options['maxlatitude'] = str(self.locationRangeNorthLineEdit.text())
+            if str(self.locationRangeWestInput.text()) != '':
+                options['minlongitude'] = str(self.locationRangeWestInput.text())
+            if str(self.locationRangeEastInput.text()) != '':
+                options['maxlongitude'] = str(self.locationRangeEastInput.text())
+            if str(self.locationRangeSouthInput.text()) != '':
+                options['minlatitude'] = str(self.locationRangeSouthInput.text())
+            if str(self.locationRangeNorthInput.text()) != '':
+                options['maxlatitude'] = str(self.locationRangeNorthInput.text())
         if self.locationDistanceFromPointRadioButton.isChecked():
-            if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
-                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())
-            if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
-                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())
-            if str(self.distanceFromPointEastLineEdit.text()) != '':
-                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())
-            if str(self.distanceFromPointNorthLineEdit.text()) != '':
-                options['latitude'] = str(self.distanceFromPointNorthLineEdit.text())
+            if str(self.distanceFromPointMinRadiusInput.text()) != '':
+                options['minradius'] = str(self.distanceFromPointMinRadiusInput.text())
+            if str(self.distanceFromPointMaxRadiusInput.text()) != '':
+                options['maxradius'] = str(self.distanceFromPointMaxRadiusInput.text())
+            if str(self.distanceFromPointEastInput.text()) != '':
+                options['longitude'] = str(self.distanceFromPointEastInput.text())
+            if str(self.distanceFromPointNorthInput.text()) != '':
+                options['latitude'] = str(self.distanceFromPointNorthInput.text())
 
         return options

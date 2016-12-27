@@ -263,7 +263,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.statusBar().showMessage('Loading channels...')
 
         # Get stations and subset to desired columns
-        parameters = self.stationQueryDialog.getOptions()
+        parameters = self.stationOptionsWidget.getOptions()
         # TODO:  handle errors when querying stations
         self.stationsHandler.load_data(parameters=parameters)
 
@@ -294,17 +294,17 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.seismap.add_stations(stationsDF)
 
-        if self.stationQueryDialog.locationRangeRadioButton.isChecked():
-            n = float(self.stationQueryDialog.locationRangeNorthLineEdit.text())
-            e = float(self.stationQueryDialog.locationRangeEastLineEdit.text())
-            s = float(self.stationQueryDialog.locationRangeSouthLineEdit.text())
-            w = float(self.stationQueryDialog.locationRangeWestLineEdit.text())
+        if self.stationOptionsWidget.locationRangeRadioButton.isChecked():
+            n = float(self.stationOptionsWidget.locationRangeNorthInput.text())
+            e = float(self.stationOptionsWidget.locationRangeEastInput.text())
+            s = float(self.stationOptionsWidget.locationRangeSouthInput.text())
+            w = float(self.stationOptionsWidget.locationRangeWestInput.text())
             self.seismap.add_stations_box(n, e, s, w)
-        elif self.stationQueryDialog.locationDistanceFromPointRadioButton.isChecked():
-            n = float(self.stationQueryDialog.distanceFromPointNorthLineEdit.text())
-            e = float(self.stationQueryDialog.distanceFromPointEastLineEdit.text())
-            minradius = float(self.stationQueryDialog.distanceFromPointMinRadiusLineEdit.text())
-            maxradius = float(self.stationQueryDialog.distanceFromPointMaxRadiusLineEdit.text())
+        elif self.stationOptionsWidget.locationDistanceFromPointRadioButton.isChecked():
+            n = float(self.stationOptionsWidget.distanceFromPointNorthInput.text())
+            e = float(self.stationOptionsWidget.distanceFromPointEastInput.text())
+            minradius = float(self.stationOptionsWidget.distanceFromPointMinRadiusInput.text())
+            maxradius = float(self.stationOptionsWidget.distanceFromPointMaxRadiusInput.text())
             self.seismap.add_stations_toroid(n, e, minradius, maxradius)
 
         LOGGER.info('Loaded %d channels', stationsDF.shape[0])
