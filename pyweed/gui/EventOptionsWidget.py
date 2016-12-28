@@ -16,18 +16,18 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
 
         # Initialize input fields using preferences
         prefs = parent.preferences.EventOptions
-        self.minmagLineEdit.setValue(float(prefs.minmag))
-        self.maxmagLineEdit.setText(prefs.maxmag)
-        self.mindepthLineEdit.setText(prefs.mindepth)
-        self.maxdepthLineEdit.setText(prefs.maxdepth)
-        self.locationRangeWestLineEdit.setText(prefs.locationRangeWest)
-        self.locationRangeEastLineEdit.setText(prefs.locationRangeEast)
-        self.locationRangeSouthLineEdit.setText(prefs.locationRangeSouth)
-        self.locationRangeNorthLineEdit.setText(prefs.locationRangeNorth)
-        self.distanceFromPointMinRadiusLineEdit.setText(prefs.distanceFromPointMinRadius)
-        self.distanceFromPointMaxRadiusLineEdit.setText(prefs.distanceFromPointMaxRadius)
-        self.distanceFromPointEastLineEdit.setText(prefs.distanceFromPointEast)
-        self.distanceFromPointNorthLineEdit.setText(prefs.distanceFromPointNorth)
+        self.minMagDoubleSpinBox.setValue(float(prefs.minmag))
+        self.maxMagDoubleSpinBox.setValue(float(prefs.maxmag))
+        self.minDepthDoubleSpinBox.setValue(float(prefs.mindepth))
+        self.maxDepthDoubleSpinBox.setValue(float(prefs.maxdepth))
+        self.locationRangeWestDoubleSpinBox.setValue(float(prefs.locationRangeWest))
+        self.locationRangeEastDoubleSpinBox.setValue(float(prefs.locationRangeEast))
+        self.locationRangeSouthDoubleSpinBox.setValue(float(prefs.locationRangeSouth))
+        self.locationRangeNorthDoubleSpinBox.setValue(float(prefs.locationRangeNorth))
+        self.distanceFromPointMinRadiusDoubleSpinBox.setValue(float(prefs.distanceFromPointMinRadius))
+        self.distanceFromPointMaxRadiusDoubleSpinBox.setValue(float(prefs.distanceFromPointMaxRadius))
+        self.distanceFromPointEastDoubleSpinBox.setValue(float(prefs.distanceFromPointEast))
+        self.distanceFromPointNorthDoubleSpinBox.setValue(float(prefs.distanceFromPointNorth))
 
         # Initialize the date selectors # TODO: using preferences
         #self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
@@ -55,34 +55,34 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
         # times, magnitudes and depths are all guaranteed to be present
         options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
         options['endtime'] = str(self.endtimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
-        options['minmagnitude'] = str(self.minmagLineEdit.value())
-        options['maxmagnitude'] = str(self.maxmagLineEdit.text())
-        options['mindepth'] = str(self.mindepthLineEdit.text())
-        options['maxdepth'] = str(self.maxdepthLineEdit.text())
+        options['minmagnitude'] = str(self.minMagDoubleSpinBox.value())
+        options['maxmagnitude'] = str(self.maxMagDoubleSpinBox.value())
+        options['mindepth'] = str(self.minDepthDoubleSpinBox.value())
+        options['maxdepth'] = str(self.maxDepthDoubleSpinBox.value())
 
         # catalog, type, and lat-lon ranges are optional
         #if str(self.catalogComboBox.currentText()) != 'All Catalogs':
             #options['catalog'] = str(self.type.currentText())
-        if str(self.magtypeComboBox.currentText()) != 'All Types':
-            options['magnitudetype'] = str(self.magtypeComboBox.currentText())
+        if str(self.magTypeComboBox.currentText()) != 'All Types':
+            options['magnitudetype'] = str(self.magTypeComboBox.currentText())
         if self.locationRangeRadioButton.isChecked():
-            if str(self.locationRangeWestLineEdit.text()) != '':
-                options['minlongitude'] = str(self.locationRangeWestLineEdit.text())
-            if str(self.locationRangeEastLineEdit.text()) != '':
-                options['maxlongitude'] = str(self.locationRangeEastLineEdit.text())
-            if str(self.locationRangeSouthLineEdit.text()) != '':
-                options['minlatitude'] = str(self.locationRangeSouthLineEdit.text())
-            if str(self.locationRangeNorthLineEdit.text()) != '':
-                options['maxlatitude'] = str(self.locationRangeNorthLineEdit.text())
+            if str(self.locationRangeWestDoubleSpinBox.value()) != '':
+                options['minlongitude'] = str(self.locationRangeWestDoubleSpinBox.text())
+            if str(self.locationRangeEastDoubleSpinBox.text()) != '':
+                options['maxlongitude'] = str(self.locationRangeEastDoubleSpinBox.text())
+            if str(self.locationRangeSouthDoubleSpinBox.text()) != '':
+                options['minlatitude'] = str(self.locationRangeSouthDoubleSpinBox.text())
+            if str(self.locationRangeNorthDoubleSpinBox.text()) != '':
+                options['maxlatitude'] = str(self.locationRangeNorthDoubleSpinBox.text())
         if self.locationDistanceFromPointRadioButton.isChecked():
-            if str(self.distanceFromPointMinRadiusLineEdit.text()) != '':
-                options['minradius'] = str(self.distanceFromPointMinRadiusLineEdit.text())
-            if str(self.distanceFromPointMaxRadiusLineEdit.text()) != '':
-                options['maxradius'] = str(self.distanceFromPointMaxRadiusLineEdit.text())
-            if str(self.distanceFromPointEastLineEdit.text()) != '':
-                options['longitude'] = str(self.distanceFromPointEastLineEdit.text())
-            if str(self.distanceFromPointNorthLineEdit.text()) != '':
-                options['latitude'] = str(self.distanceFromPointNorthLineEdit.text())
+            if str(self.distanceFromPointMinRadiusDoubleSpinBox.text()) != '':
+                options['minradius'] = str(self.distanceFromPointMinRadiusDoubleSpinBox.text())
+            if str(self.distanceFromPointMaxRadiusDoubleSpinBox.text()) != '':
+                options['maxradius'] = str(self.distanceFromPointMaxRadiusDoubleSpinBox.text())
+            if str(self.distanceFromPointEastDoubleSpinBox.text()) != '':
+                options['longitude'] = str(self.distanceFromPointEastDoubleSpinBox.text())
+            if str(self.distanceFromPointNorthDoubleSpinBox.text()) != '':
+                options['latitude'] = str(self.distanceFromPointNorthDoubleSpinBox.text())
 
         return options
 

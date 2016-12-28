@@ -19,14 +19,14 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
         self.stationLineEdit.setText(prefs.station)
         self.locationLineEdit.setText(prefs.location)
         self.channelLineEdit.setText(prefs.channel)
-        self.locationRangeWestInput.setValue(float(prefs.locationRangeWest))
-        self.locationRangeEastInput.setValue(float(prefs.locationRangeEast))
-        self.locationRangeSouthInput.setValue(float(prefs.locationRangeSouth))
-        self.locationRangeNorthInput.setValue(float(prefs.locationRangeNorth))
-        self.distanceFromPointMinRadiusInput.setValue(float(prefs.distanceFromPointMinRadius))
-        self.distanceFromPointMaxRadiusInput.setValue(float(prefs.distanceFromPointMaxRadius))
-        self.distanceFromPointEastInput.setValue(float(prefs.distanceFromPointEast))
-        self.distanceFromPointNorthInput.setValue(float(prefs.distanceFromPointNorth))
+        self.locationRangeWestDoubleSpinBox.setValue(float(prefs.locationRangeWest))
+        self.locationRangeEastDoubleSpinBox.setValue(float(prefs.locationRangeEast))
+        self.locationRangeSouthDoubleSpinBox.setValue(float(prefs.locationRangeSouth))
+        self.locationRangeNorthDoubleSpinBox.setValue(float(prefs.locationRangeNorth))
+        self.distanceFromPointMinRadiusDoubleSpinBox.setValue(float(prefs.distanceFromPointMinRadius))
+        self.distanceFromPointMaxRadiusDoubleSpinBox.setValue(float(prefs.distanceFromPointMaxRadius))
+        self.distanceFromPointEastDoubleSpinBox.setValue(float(prefs.distanceFromPointEast))
+        self.distanceFromPointNorthDoubleSpinBox.setValue(float(prefs.distanceFromPointNorth))
 
         # Initialize the date selectors # TODO: using preferences
         #self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
@@ -75,22 +75,22 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
         if str(self.locationLineEdit.text()) != '':
             options['channel'] = str(self.channelLineEdit.text())
         if self.locationRangeRadioButton.isChecked():
-            if str(self.locationRangeWestInput.text()) != '':
-                options['minlongitude'] = str(self.locationRangeWestInput.text())
-            if str(self.locationRangeEastInput.text()) != '':
-                options['maxlongitude'] = str(self.locationRangeEastInput.text())
-            if str(self.locationRangeSouthInput.text()) != '':
-                options['minlatitude'] = str(self.locationRangeSouthInput.text())
-            if str(self.locationRangeNorthInput.text()) != '':
-                options['maxlatitude'] = str(self.locationRangeNorthInput.text())
+            if str(self.locationRangeWestDoubleSpinBox.text()) != '':
+                options['minlongitude'] = str(self.locationRangeWestDoubleSpinBox.text())
+            if str(self.locationRangeEastDoubleSpinBox.text()) != '':
+                options['maxlongitude'] = str(self.locationRangeEastDoubleSpinBox.text())
+            if str(self.locationRangeSouthDoubleSpinBox.text()) != '':
+                options['minlatitude'] = str(self.locationRangeSouthDoubleSpinBox.text())
+            if str(self.locationRangeNorthDoubleSpinBox.text()) != '':
+                options['maxlatitude'] = str(self.locationRangeNorthDoubleSpinBox.text())
         if self.locationDistanceFromPointRadioButton.isChecked():
-            if str(self.distanceFromPointMinRadiusInput.text()) != '':
-                options['minradius'] = str(self.distanceFromPointMinRadiusInput.text())
-            if str(self.distanceFromPointMaxRadiusInput.text()) != '':
-                options['maxradius'] = str(self.distanceFromPointMaxRadiusInput.text())
-            if str(self.distanceFromPointEastInput.text()) != '':
-                options['longitude'] = str(self.distanceFromPointEastInput.text())
-            if str(self.distanceFromPointNorthInput.text()) != '':
-                options['latitude'] = str(self.distanceFromPointNorthInput.text())
+            if str(self.distanceFromPointMinRadiusDoubleSpinBox.text()) != '':
+                options['minradius'] = str(self.distanceFromPointMinRadiusDoubleSpinBox.text())
+            if str(self.distanceFromPointMaxRadiusDoubleSpinBox.text()) != '':
+                options['maxradius'] = str(self.distanceFromPointMaxRadiusDoubleSpinBox.text())
+            if str(self.distanceFromPointEastDoubleSpinBox.text()) != '':
+                options['longitude'] = str(self.distanceFromPointEastDoubleSpinBox.text())
+            if str(self.distanceFromPointNorthDoubleSpinBox.text()) != '':
+                options['latitude'] = str(self.distanceFromPointNorthDoubleSpinBox.text())
 
         return options

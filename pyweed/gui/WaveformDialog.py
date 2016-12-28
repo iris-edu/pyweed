@@ -633,6 +633,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
         self.selectionTable.resizeRowsToContents()
+        self.selectionTable.horizontalHeader().setStretchLastSection(True)
 
     def on_all_downloaded(self, result):
         self.waveformsDownloadComplete = True
