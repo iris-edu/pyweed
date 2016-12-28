@@ -16,22 +16,70 @@ import os
 import platform
 import ConfigParser
 
+__appName__ = "PyWEED"
+__version__ = "0.1.1"
+
+
+class Section(object):
+    def __init__(self, **initial):
+        self.__dict__.update(initial)
+
+    def read_from_config(self, config):
+        name = self.__name__
+        for k in self.__dict__.keys():
+            if config.has_option(name, k):
+                self.__dict__[k] = config.get(name, k)
+#         for k, v in initial.iteritems():
+#             setattr(self, k, v)
+
+    def write_to_config(self, config):
+        name = self.__name__
+        config.add_section(name)
+        for key, value in self.items():
+            config.set(name, key, str(value))
+
+    @property
+    def __name__(self):
+        return self.__class__.__name__
+
+    def items(self):
+        return [i for i in self.__dict__.iteritems() if not i[0].startswith('__')]
+
+    def update(self, values):
+        self.__dict__.update(values)
+
+    def __repr__(self):
+        return self.__dict__.__repr__()
+
+    @classmethod
+    def create(cls, section_name, **initial):
+        return type(section_name, (cls,), {})(**initial)
+
+
+DEFAULTS = {
+    "App": {
+        "name": __appName__,
+        "version": __version__,
+    },
+    "Waveforms": {
+        "downloadDir": os.path.join(os.path.expanduser("~"), ".pyweed_downloads"),
+        "cacheSize": "50", # megabytes
+    },
+}
+
 
 class Preferences(object):
     """
     Container for application preferences.
     """
+
     def __init__(self):
         """
         Initialization with default settings.
         """
 
-        # NOTE:  All preferences are saved and read in as strings bucause this is what is
-        # NOTE:  used in Qt dialog initialization.
-
-        self.Waveforms = type("Waveforms", (object,), {})()
-        self.Waveforms.downloadDir = os.path.join(os.path.expanduser("~"), ".pyweed_downloads")
-        self.Waveforms.cacheSize = "50" # megabytes
+        for (section, prefs) in DEFAULTS.items():
+            setattr(self, section, Section.create(section, **prefs))
 
         self.Logging = type("Logging", (object,), {})()
         self.Logging.level = "DEBUG"
@@ -77,9 +125,11 @@ class Preferences(object):
         """
         config = ConfigParser.SafeConfigParser()
 
-        config.add_section("Waveforms")
-        for key, value in vars(self.Waveforms).items():
-            config.set("Waveforms", key, str(value))
+        for section in [self.Waveforms,]:
+            section_name = section.__class__.__name__
+            config.add_section(section_name)
+            for key, value in section:
+                config.set(section_name, key, str(value))
 
         config.add_section("Logging")
         for key, value in vars(self.Logging).items():
@@ -125,6 +175,8 @@ class Preferences(object):
             f = open(path, "r")
             config = ConfigParser.SafeConfigParser()
             config.readfp(f)
+
+            self.App = Preference("App", config=config)
 
             # Read in preferences by section
             self.set_option(config, 'Waveforms', 'downloadDir')
