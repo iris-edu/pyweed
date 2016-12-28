@@ -40,11 +40,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.version = version
         self.setWindowTitle('%s version %s' % (self.appName, self.version))
 
-        # Create StatusBar
-        sb = QtGui.QStatusBar()
-        sb.setFixedHeight(18)
-        self.setStatusBar(sb)
-
         # Make sure the waveform download directory exists and isn't full
         waveformDownloadDir = self.preferences.Waveforms.downloadDir
         waveformCacheSize = float(self.preferences.Waveforms.cacheSize)
@@ -115,6 +110,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.getStationsButton.pressed.connect(self.getStations)
         self.getWaveformsButton.pressed.connect(self.getWaveforms)
 
+        # Python console
+        self.console = ConsoleDialog(self)
+
         # Create menuBar
         # see:  http://doc.qt.io/qt-4.8/qmenubar.html
         # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
@@ -138,6 +136,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         stationOptionsAction = QtGui.QAction("Show Station Options", self)
         QtCore.QObject.connect(stationOptionsAction, QtCore.SIGNAL('triggered()'), self.stationOptionsDockWidget.show)
         optionsMenu.addAction(stationOptionsAction)
+        showConsoleAction = QtGui.QAction("Show Python Console", self)
+        showConsoleAction.triggered.connect(self.console.show)
+        optionsMenu.addAction(showConsoleAction)
 
         helpMenu = mainMenu.addMenu('Help')
 
@@ -148,9 +149,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         loggingDialogAction = QtGui.QAction("Show Logs", self)
         QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
         helpMenu.addAction(loggingDialogAction)
-
-        console = ConsoleDialog(self)
-        console.show()
 
         # Display MainWindow
         LOGGER.info('Showing main window...')
@@ -203,7 +201,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.getEventsButton.setEnabled(False)
         LOGGER.info('Loading events...')
-        self.statusBar().showMessage('Loading events...')
+        self.statusBar.showMessage('Loading events...')
 
         # Get events and subset to desired columns
         parameters = self.eventOptionsWidget.getOptions()
@@ -220,7 +218,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         if isinstance(eventsDF, Exception):
             msg = "Error loading events: %s" % eventsDF
             LOGGER.error(msg)
-            self.statusBar().showMessage(msg)
+            self.statusBar.showMessage(msg)
             return
 
         visibleColumns = [
@@ -238,20 +236,20 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.add_events(eventsDF)
 
         if self.eventOptionsWidget.locationRangeRadioButton.isChecked():
-            n = float(self.eventOptionsWidget.locationRangeNorthLineEdit.text())
-            e = float(self.eventOptionsWidget.locationRangeEastLineEdit.text())
-            s = float(self.eventOptionsWidget.locationRangeSouthLineEdit.text())
-            w = float(self.eventOptionsWidget.locationRangeWestLineEdit.text())
+            n = self.eventOptionsWidget.locationRangeNorthDoubleSpinBox.value()
+            e = self.eventOptionsWidget.locationRangeEastDoubleSpinBox.value()
+            s = self.eventOptionsWidget.locationRangeSouthDoubleSpinBox.value()
+            w = self.eventOptionsWidget.locationRangeWestDoubleSpinBox.value()
             self.seismap.add_events_box(n, e, s, w)
         elif self.eventOptionsWidget.locationDistanceFromPointRadioButton.isChecked():
-            n = float(self.eventOptionsWidget.distanceFromPointNorthLineEdit.text())
-            e = float(self.eventOptionsWidget.distanceFromPointEastLineEdit.text())
-            minradius = float(self.eventOptionsWidget.distanceFromPointMinRadiusLineEdit.text())
-            maxradius = float(self.eventOptionsWidget.distanceFromPointMaxRadiusLineEdit.text())
+            n = self.eventOptionsWidget.distanceFromPointNorthDoubleSpinBox.value()
+            e = self.eventOptionsWidget.distanceFromPointEastDoubleSpinBox.value()
+            minradius = self.eventOptionsWidget.distanceFromPointMinRadiusDoubleSpinBox.value()
+            maxradius = self.eventOptionsWidget.distanceFromPointMaxRadiusDoubleSpinBox.value()
             self.seismap.add_events_toroid(n, e, minradius, maxradius)
 
         LOGGER.info('Loaded %d events', eventsDF.shape[0])
-        self.statusBar().showMessage('Loaded %d events' % (eventsDF.shape[0]))
+        self.statusBar.showMessage('Loaded %d events' % (eventsDF.shape[0]))
 
     @QtCore.pyqtSlot()
     def getStations(self):
@@ -260,7 +258,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.getStationsButton.setEnabled(False)
         LOGGER.info('Loading channels...')
-        self.statusBar().showMessage('Loading channels...')
+        self.statusBar.showMessage('Loading channels...')
 
         # Get stations and subset to desired columns
         parameters = self.stationOptionsWidget.getOptions()
@@ -277,7 +275,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         if isinstance(stationsDF, Exception):
             msg = "Error loading stations: %s" % stationsDF
             LOGGER.error(msg)
-            self.statusBar().showMessage(msg)
+            self.statusBar.showMessage(msg)
             return
 
         visibleColumns = [
@@ -295,20 +293,20 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.add_stations(stationsDF)
 
         if self.stationOptionsWidget.locationRangeRadioButton.isChecked():
-            n = float(self.stationOptionsWidget.locationRangeNorthInput.text())
-            e = float(self.stationOptionsWidget.locationRangeEastInput.text())
-            s = float(self.stationOptionsWidget.locationRangeSouthInput.text())
-            w = float(self.stationOptionsWidget.locationRangeWestInput.text())
+            n = self.stationOptionsWidget.locationRangeNorthDoubleSpinBox.value()
+            e = self.stationOptionsWidget.locationRangeEastDoubleSpinBox.value()
+            s = self.stationOptionsWidget.locationRangeSouthDoubleSpinBox.value()
+            w = self.stationOptionsWidget.locationRangeWestDoubleSpinBox.value()
             self.seismap.add_stations_box(n, e, s, w)
         elif self.stationOptionsWidget.locationDistanceFromPointRadioButton.isChecked():
-            n = float(self.stationOptionsWidget.distanceFromPointNorthInput.text())
-            e = float(self.stationOptionsWidget.distanceFromPointEastInput.text())
-            minradius = float(self.stationOptionsWidget.distanceFromPointMinRadiusInput.text())
-            maxradius = float(self.stationOptionsWidget.distanceFromPointMaxRadiusInput.text())
+            n = self.stationOptionsWidget.distanceFromPointNorthDoubleSpinBox.value()
+            e = self.stationOptionsWidget.distanceFromPointEastDoubleSpinBox.value()
+            minradius = self.stationOptionsWidget.distanceFromPointMinRadiusDoubleSpinBox.value()
+            maxradius = self.stationOptionsWidget.distanceFromPointMaxRadiusDoubleSpinBox.value()
             self.seismap.add_stations_toroid(n, e, minradius, maxradius)
 
         LOGGER.info('Loaded %d channels', stationsDF.shape[0])
-        self.statusBar().showMessage('Loaded %d channels' % (stationsDF.shape[0]))
+        self.statusBar.showMessage('Loaded %d channels' % (stationsDF.shape[0]))
 
 
     @QtCore.pyqtSlot()

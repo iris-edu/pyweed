@@ -6,14 +6,17 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1224</width>
-    <height>1103</height>
+    <width>929</width>
+    <height>724</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
+   <property name="spacing">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QFrame" name="topFrame">
      <property name="frameShape">
@@ -37,13 +40,16 @@
       </property>
       <item>
        <widget class="QGroupBox" name="downloadGroupBox">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="title">
          <string>Download / Preview Waveforms</string>
         </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-        </property>
         <layout class="QVBoxLayout" name="verticalLayout_6">
+         <property name="spacing">
+          <number>2</number>
+         </property>
          <property name="leftMargin">
           <number>2</number>
          </property>
@@ -56,107 +62,73 @@
          <property name="bottomMargin">
           <number>2</number>
          </property>
-         <item alignment="Qt::AlignLeft">
-          <widget class="QWidget" name="widget" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <property name="leftMargin">
-             <number>2</number>
-            </property>
-            <property name="topMargin">
-             <number>2</number>
-            </property>
-            <property name="rightMargin">
-             <number>2</number>
-            </property>
-            <property name="bottomMargin">
-             <number>2</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="secondsBeforeLabel">
-              <property name="text">
-               <string>Waveform start (secs before P-wave)</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="secondsBeforeSpinBox">
-              <property name="maximum">
-               <number>3600</number>
-              </property>
-              <property name="singleStep">
-               <number>10</number>
-              </property>
-              <property name="value">
-               <number>60</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="QWidget" name="widget_2" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <property name="leftMargin">
-             <number>2</number>
-            </property>
-            <property name="topMargin">
-             <number>2</number>
-            </property>
-            <property name="rightMargin">
-             <number>2</number>
-            </property>
-            <property name="bottomMargin">
-             <number>2</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="secondsAfterLabel">
-              <property name="text">
-               <string>Waveform end (secs after P-wave)</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="secondsAfterSpinBox">
-              <property name="maximum">
-               <number>21600</number>
-              </property>
-              <property name="singleStep">
-               <number>100</number>
-              </property>
-              <property name="value">
-               <number>600</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_6">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
+         <item>
+          <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0,1">
+           <property name="verticalSpacing">
+            <number>2</number>
+           </property>
+           <item row="0" column="3">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="secondsBeforeSpinBox">
+             <property name="maximum">
+              <number>3600</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+             <property name="value">
+              <number>60</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>secs after P-wave</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="secondsBeforeLabel">
+             <property name="text">
+              <string>Waveform start</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="secondsAfterSpinBox">
+             <property name="maximum">
+              <number>21600</number>
+             </property>
+             <property name="singleStep">
+              <number>100</number>
+             </property>
+             <property name="value">
+              <number>600</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>secs before P-wave</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="secondsAfterLabel">
+             <property name="text">
+              <string>Waveform end</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <widget class="QWidget" name="widget_5" native="true">
@@ -207,10 +179,16 @@
       </item>
       <item>
        <widget class="QGroupBox" name="saveGroupBox">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="title">
          <string>Save Waveforms</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
+         <property name="spacing">
+          <number>2</number>
+         </property>
          <property name="leftMargin">
           <number>2</number>
          </property>
@@ -223,94 +201,59 @@
          <property name="bottomMargin">
           <number>2</number>
          </property>
-         <item alignment="Qt::AlignLeft">
-          <widget class="QWidget" name="widget_3" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <property name="leftMargin">
-             <number>2</number>
-            </property>
-            <property name="topMargin">
-             <number>2</number>
-            </property>
-            <property name="rightMargin">
-             <number>2</number>
-            </property>
-            <property name="bottomMargin">
-             <number>2</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="saveDirectoryLabel">
-              <property name="text">
-               <string>To:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="saveDirectoryPushButton">
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="text">
-               <string>Directory</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_7">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
+         <item>
+          <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,1">
+           <property name="verticalSpacing">
+            <number>2</number>
+           </property>
+           <item row="0" column="1">
+            <widget class="QPushButton" name="saveDirectoryPushButton">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="text">
+              <string>Directory</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="saveDirectoryLabel">
+             <property name="text">
+              <string>To:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="saveFormatLabel">
+             <property name="text">
+              <string>As:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="saveFormatComboBox"/>
+           </item>
+          </layout>
          </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="QWidget" name="widget_4" native="true">
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <property name="leftMargin">
-             <number>2</number>
-            </property>
-            <property name="topMargin">
-             <number>2</number>
-            </property>
-            <property name="rightMargin">
-             <number>2</number>
-            </property>
-            <property name="bottomMargin">
-             <number>2</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="saveFormatLabel">
-              <property name="text">
-               <string>As:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="saveFormatComboBox"/>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_8">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
          </item>
          <item>
           <widget class="QWidget" name="widget_6" native="true">
@@ -328,7 +271,7 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QPushButton" name="savePushButton">
+             <widget class="QToolButton" name="saveToolButton">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -361,12 +304,6 @@
    </item>
    <item>
     <widget class="QFrame" name="selectionTableFrame">
-     <property name="minimumSize">
-      <size>
-       <width>1200</width>
-       <height>900</height>
-      </size>
-     </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="leftMargin">
        <number>2</number>
@@ -382,6 +319,9 @@
       </property>
       <item>
        <widget class="QGroupBox" name="filterGroupBox">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="title">
          <string>Table Filters</string>
         </property>
@@ -440,8 +380,11 @@
          <enum>Qt::NoPen</enum>
         </property>
         <property name="sortingEnabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
        </widget>
       </item>
      </layout>
