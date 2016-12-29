@@ -2,6 +2,8 @@ from PyQt4 import QtGui, QtCore
 from gui.uic import EventOptionsWidget
 from gui.MyDoubleValidator import MyDoubleValidator
 import logging
+from obspy.core.utcdatetime import UTCDateTime
+from distutils.util import strtobool
 
 LOGGER = logging.getLogger(__name__)
 
@@ -13,6 +15,29 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
     def __init__(self, parent=None):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+
+        self.inputs = {
+            'starttime': self.starttimeDateTimeEdit,
+            'endtime': self.endtimeDateTimeEdit,
+            'minmagnitude': self.minMagDoubleSpinBox,
+            'maxmagnitude': self.maxMagDoubleSpinBox,
+            'mindepth': self.minDepthDoubleSpinBox,
+            'maxdepth': self.maxDepthDoubleSpinBox,
+            'magnitudetype': self.magTypeComboBox,
+            'minlongitude': self.locationRangeWestDoubleSpinBox,
+            'maxlongitude': self.locationRangeEastDoubleSpinBox,
+            'minlatitude': self.locationRangeSouthDoubleSpinBox,
+            'maxlatitude': self.locationRangeNorthDoubleSpinBox,
+            'minradius': self.distanceFromPointMinRadiusDoubleSpinBox,
+            'maxradius': self.distanceFromPointMaxRadiusDoubleSpinBox,
+            'longitude': self.distanceFromPointEastDoubleSpinBox,
+            'latitude': self.distanceFromPointNorthDoubleSpinBox,
+            '_timeBetween': self.timeBetweenRadioButton,
+            '_timeDuringStations': self.timeDuringStationsRadioButton,
+            '_locationRange': self.locationRangeRadioButton,
+            '_locationDistanceFromPoint': self.locationDistanceFromPointRadioButton,
+            '_locationDistanceFromEvents': self.locationDistanceFromEventsRadioButton,
+        }
 
         # Initialize input fields using preferences
         prefs = parent.preferences.EventOptions
@@ -41,6 +66,31 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
         getattr(self, prefs.selectedTimeButton).setChecked(True)
         getattr(self, prefs.selectedLocationButton).setChecked(True)
 
+    def setOptions(self, options):
+        for k, v in options.iteritems():
+            input = self.inputs.get(k)
+            if input:
+                if isinstance(input, QtGui.QDateTimeEdit):
+                    # Ugh, complicated conversion from UTCDateTime
+                    dt = QtCore.QDateTime.fromString(v, QtCore.Qt.ISODate)
+                    input.setDateTime(dt)
+                elif isinstance(input, QtGui.QDoubleSpinBox):
+                    # Float value
+                    input.setValue(float(v))
+                elif isinstance(input, QtGui.QComboBox):
+                    # Combo box
+                    index = input.findText(v)
+                    if index > -1:
+                        input.setCurrentIndex(index)
+                elif isinstance(input, QtGui.QLineEdit):
+                    # Text input
+                    input.setText(v)
+                elif isinstance(input, QtGui.QAbstractButton):
+                    # Radio/checkbox button
+                    input.setChecked(strtobool(v))
+                else:
+                    LOGGER.warning("Don't know how to read option %s (%s)", k, v)
+
     @QtCore.pyqtSlot()
     def getOptions(self):
         """
@@ -51,39 +101,19 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
           https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_events.html
         """
         options = {}
-
-        # times, magnitudes and depths are all guaranteed to be present
-        options['starttime'] = str(self.starttimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
-        options['endtime'] = str(self.endtimeDateTimeEdit.text()).rstrip(' UTC').replace(' ','T')
-        options['minmagnitude'] = str(self.minMagDoubleSpinBox.value())
-        options['maxmagnitude'] = str(self.maxMagDoubleSpinBox.value())
-        options['mindepth'] = str(self.minDepthDoubleSpinBox.value())
-        options['maxdepth'] = str(self.maxDepthDoubleSpinBox.value())
-
-        # catalog, type, and lat-lon ranges are optional
-        #if str(self.catalogComboBox.currentText()) != 'All Catalogs':
-            #options['catalog'] = str(self.type.currentText())
-        if str(self.magTypeComboBox.currentText()) != 'All Types':
-            options['magnitudetype'] = str(self.magTypeComboBox.currentText())
-        if self.locationRangeRadioButton.isChecked():
-            if str(self.locationRangeWestDoubleSpinBox.value()) != '':
-                options['minlongitude'] = str(self.locationRangeWestDoubleSpinBox.text())
-            if str(self.locationRangeEastDoubleSpinBox.text()) != '':
-                options['maxlongitude'] = str(self.locationRangeEastDoubleSpinBox.text())
-            if str(self.locationRangeSouthDoubleSpinBox.text()) != '':
-                options['minlatitude'] = str(self.locationRangeSouthDoubleSpinBox.text())
-            if str(self.locationRangeNorthDoubleSpinBox.text()) != '':
-                options['maxlatitude'] = str(self.locationRangeNorthDoubleSpinBox.text())
-        if self.locationDistanceFromPointRadioButton.isChecked():
-            if str(self.distanceFromPointMinRadiusDoubleSpinBox.text()) != '':
-                options['minradius'] = str(self.distanceFromPointMinRadiusDoubleSpinBox.text())
-            if str(self.distanceFromPointMaxRadiusDoubleSpinBox.text()) != '':
-                options['maxradius'] = str(self.distanceFromPointMaxRadiusDoubleSpinBox.text())
-            if str(self.distanceFromPointEastDoubleSpinBox.text()) != '':
-                options['longitude'] = str(self.distanceFromPointEastDoubleSpinBox.text())
-            if str(self.distanceFromPointNorthDoubleSpinBox.text()) != '':
-                options['latitude'] = str(self.distanceFromPointNorthDoubleSpinBox.text())
+        for k, input in self.inputs.iteritems():
+            if isinstance(input, QtGui.QDateTimeEdit):
+                # DateTime
+                options[k] = input.dateTime().toString(QtCore.Qt.ISODate)
+            elif isinstance(input, QtGui.QAbstractButton):
+                # Radio/checkbox button
+                options[k] = str(input.isChecked())
+            elif hasattr(input, 'text'):
+                options[k] = input.text()
+            else:
+                LOGGER.warning("Don't know how to write input %s (%s)", k, input)
 
         return options
+
 
 

@@ -44,7 +44,7 @@
          <number>2</number>
         </property>
         <item>
-         <widget class="MyQt4MplCanvas" name="map_canvas" native="true">
+         <widget class="MyQt4MplCanvas" name="mapCanvas" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>

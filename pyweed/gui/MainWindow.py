@@ -1,3 +1,15 @@
+"""
+Main window
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
+from __future__ import (absolute_import, division, print_function)
+
 from PyQt4 import QtGui, QtCore
 from gui.uic import MainWindow
 from preferences import Preferences
@@ -22,74 +34,35 @@ LOGGER = logging.getLogger(__name__)
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
-    def __init__(self, appName, version, preferences, parent=None):
+    def __init__(self, manager):
 
-        self.preferences = preferences
-
-        # Logging
-        # see:  http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
-        # see:  http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
-        self.loggingDialog = LoggingDialog(self)
-        splashScreenHandler = SplashScreenHandler(self)
+        self.manager = manager
+        self.pyweed = manager.pyweed
+        self.preferences = manager.pyweed.preferences
 
         super(self.__class__, self).__init__()
         self.setupUi(self)
 
         # Set MainWindow properties
-        self.appName = appName
-        self.version = version
-        self.setWindowTitle('%s version %s' % (self.appName, self.version))
-
-        # Make sure the waveform download directory exists and isn't full
-        waveformDownloadDir = self.preferences.Waveforms.downloadDir
-        waveformCacheSize = float(self.preferences.Waveforms.cacheSize)
-        LOGGER.info('Checking on download directory...')
-        if os.path.exists(waveformDownloadDir):
-            manageCache(waveformDownloadDir, waveformCacheSize)
-        else:
-            try:
-                os.makedirs(waveformDownloadDir, 0700)
-            except Exception as e:
-                LOGGER.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
-                SystemExit()
-
-        # Set up the ObsPy FDSN client
-        # Important preferences
-        self.dataCenter = "IRIS" # TODO:  dataCenter should be configurable
-
-        # Instantiate a client
-        LOGGER.info("Creating ObsPy client for %s", self.dataCenter)
-        self.client = fdsn.Client(self.dataCenter)
+        self.setWindowTitle('%s version %s' % (self.preferences.App.name, self.preferences.App.version))
 
         # Get the Figure object from the map_canvas
         LOGGER.info('Setting up main map...')
-        self.map_figure = self.map_canvas.fig
+        self.map_figure = self.mapCanvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
-        prefs = self.preferences.Map
-        self.seismap = Seismap(projection=prefs.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
+        self.seismap = Seismap(projection=self.preferences.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
-
-        # Events
-        LOGGER.info('Setting up event options dialog...')
-        self.eventsHandler = EventsHandler(self.client)
-        self.eventsHandler.done.connect(self.onEventsLoaded)
 
         self.eventOptionsWidget = EventOptionsWidget(self)
         self.eventOptionsDockWidget.setWidget(self.eventOptionsWidget)
         self.toggleEventOptions.toggled.connect(self.eventOptionsDockWidget.setVisible)
         self.eventOptionsDockWidget.visibilityChanged.connect(self.toggleEventOptions.setChecked)
 
-        # Stations
-        LOGGER.info('Setting up station options dialog...')
-        self.stationsHandler = StationsHandler(self.client)
-        self.stationsHandler.done.connect(self.onStationsLoaded)
-
         self.stationOptionsWidget = StationOptionsWidget(self)
         self.stationOptionsDockWidget.setWidget(self.stationOptionsWidget)
         self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
         self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
-
 
         # Connect signals associated with table clicks
         # see:  http://zetcode.com/gui/pyqt4/eventsandsignals/
@@ -97,69 +70,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClicked)
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
-        # Waveforms
-        # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
-        LOGGER.info('Setting up waveforms dialog...')
-        self.waveformsDialog = WaveformDialog(self)
         self.getWaveformsButton.setEnabled(False)
-
-        LOGGER.info('Setting up main window...')
-
-        # Connect the main window buttons
-        self.getEventsButton.clicked.connect(self.getEvents)
-        self.getStationsButton.pressed.connect(self.getStations)
-        self.getWaveformsButton.pressed.connect(self.getWaveforms)
-
-        # Python console
-        self.console = ConsoleDialog(self)
-
-        # Create menuBar
-        # see:  http://doc.qt.io/qt-4.8/qmenubar.html
-        # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
-        # see:  https://pythonprogramming.net/menubar-pyqt-tutorial/
-        # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
-        mainMenu = self.menuBar()
-        # mainMenu.setNativeMenuBar(False)
-
-        fileMenu = mainMenu.addMenu('&File')
-
-        quitAction = QtGui.QAction("&Quit", self)
-        quitAction.setShortcut("Ctrl+Q")
-        quitAction.triggered.connect(self.closeApplication)
-        fileMenu.addAction(quitAction)
-
-        optionsMenu = mainMenu.addMenu('Options')
-
-        eventOptionsAction = QtGui.QAction("Show Event Options", self)
-        QtCore.QObject.connect(eventOptionsAction, QtCore.SIGNAL('triggered()'), self.eventOptionsDockWidget.show)
-        optionsMenu.addAction(eventOptionsAction)
-        stationOptionsAction = QtGui.QAction("Show Station Options", self)
-        QtCore.QObject.connect(stationOptionsAction, QtCore.SIGNAL('triggered()'), self.stationOptionsDockWidget.show)
-        optionsMenu.addAction(stationOptionsAction)
-        showConsoleAction = QtGui.QAction("Show Python Console", self)
-        showConsoleAction.triggered.connect(self.console.show)
-        optionsMenu.addAction(showConsoleAction)
-
-        helpMenu = mainMenu.addMenu('Help')
-
-        aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
-        aboutPyweedAction.triggered.connect(self.aboutPyweed)
-        helpMenu.addAction(aboutPyweedAction)
-        helpMenu.addSeparator()
-        loggingDialogAction = QtGui.QAction("Show Logs", self)
-        QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
-        helpMenu.addAction(loggingDialogAction)
-
-        # Display MainWindow
-        LOGGER.info('Showing main window...')
-        self.show()
-
-        splashScreenHandler.close()
 
     def fillTable(self, table, dataframe, visibleColumns, numericColumns):
         """
         Common code for filling event/station tables with data
         """
+        LOGGER.info("Filling table")
 
         # Clear existing contents
         table.clearSelection() # This is important!
@@ -192,8 +109,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         table.resizeColumnsToContents()
         table.resizeRowsToContents()
 
-
-
     @QtCore.pyqtSlot()
     def getEvents(self):
         """
@@ -203,10 +118,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Loading events...')
         self.statusBar.showMessage('Loading events...')
 
-        # Get events and subset to desired columns
         parameters = self.eventOptionsWidget.getOptions()
-        # TODO:  handle errors when querying events
-        self.eventsHandler.load_data(parameters=parameters)
+        self.manager.getEvents(parameters)
 
     def onEventsLoaded(self, eventsDF):
         """
@@ -392,53 +305,3 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.getWaveformsButton.setEnabled(False)
 
-
-    def aboutPyweed(self):
-        """Display About message box."""
-        # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox
-        website = "https://github.com/iris-edu-int/pyweed"
-        ###email = "adam@iris.washington.edu"
-        license_link = "https://github.com/iris-edu-int/pyweed/blob/master/LICENSE"
-        license_name = "MIT"
-        mazama_link = "http://mazamascience.com"
-        mazama_name = "Mazama Science"
-        iris_link = "http://ds.iris.edu/ds/nodes/dmc/"
-        iris_name = "IRIS"
-
-        msgBox = QtGui.QMessageBox()
-        msgBox.setWindowTitle(self.tr("About " + self.appName))
-        msgBox.setTextFormat(QtCore.Qt.RichText)
-        ###msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
-        msgBox.setText("<br><br><br>" +
-                       self.appName +
-                       " v" +
-                       self.version +
-                       "<br><br>" +
-                       "Pyweed is a cross-platform GUI application for retrieving event-based seismic data." +
-                       "<br><br>" +
-                       "<a href='{0}'>{0}</a><br><br>".format(website) +
-                       ###"<a href='mailto:{0}'>{0}</a><br><br>".format(email) +
-                       "License: <a href='{0}'>{1}</a>".format(license_link, license_name) +
-                       "<br><br>" +
-                       "Developed by <a href='{0}'>{1}</a>".format(mazama_link, mazama_name) +
-                       " for <a href='{0}'>{1}</a>".format(iris_link, iris_name) +
-                       ".")
-
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.exec_()
-        # NOTE:  For info on " modalSession has been exited prematurely" error on OS X see:
-        # NOTE:    https://forum.qt.io/topic/43618/modal-sessions-with-pyqt4-and-os-x/2
-
-
-    def closeApplication(self):
-        # Manage the waveform cache
-        waveformDownloadDir = self.preferences.Waveforms.downloadDir
-        waveformCacheSize = self.preferences.Waveforms.cacheSize
-        LOGGER.debug('Managing the waveform cache...')
-        if os.path.exists(waveformDownloadDir):
-            manageCache(waveformDownloadDir, waveformCacheSize)
-
-        self.preferences.save()
-
-        LOGGER.info('Closing application...')
-        QtGui.QApplication.quit()
