@@ -2,7 +2,7 @@
 Container for events.
 
 :copyright:
-    Mazama Science
+    Mazama Science, IRIS
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -14,6 +14,7 @@ import re
 import pandas as pd
 from signals import SignalingThread, SignalingObject
 import logging
+from PyQt4 import QtCore
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +24,11 @@ class EventsLoader(SignalingThread):
     Thread to handle event requests
     """
 
-    def __init__(self, client, column_names, parameters):
+    def __init__(self, client, parameters):
         """
         Initialization.
         """
-        # Keep a reference to globally shared components
         self.client = client
-        self.column_names = column_names
         self.parameters = parameters
         super(EventsLoader, self).__init__()
 
@@ -41,19 +40,44 @@ class EventsLoader(SignalingThread):
         try:
             if not self.parameters.has_key('starttime') or not self.parameters.has_key('endtime'):
                 raise ValueError('starttime or endtime is missing')
-
-            # Create dataframe of station metadata
             LOGGER.info('Loading events...')
             event_catalog = self.client.get_events(**self.parameters)
-            df = self.build_dataframe(event_catalog)
-            self.done.emit(df)
-
+            self.done.emit(event_catalog)
         except Exception as e:
             # TODO:  What type of exception should we trap?
             self.done.emit(e)
             raise
 
-    def build_dataframe(self, event_catalog):
+
+class EventsDataFrameLoader(SignalingThread):
+    """
+    Thread to handle event requests
+    """
+
+    def __init__(self, event_catalog, client, column_names):
+        """
+        Initialization.
+        """
+        self.event_catalog = event_catalog
+        self.client = client
+        self.column_names = column_names
+        super(EventsDataFrameLoader, self).__init__()
+
+    def run(self):
+        """
+        Make a webservice request for events using the passed in options.
+        """
+        # Sanity check
+        try:
+            # Create dataframe of station metadata
+            df = self.build_dataframe()
+            self.done.emit(df)
+        except Exception as e:
+            # TODO:  What type of exception should we trap?
+            self.done.emit(e)
+            raise
+
+    def build_dataframe(self):
         """
         Obtain events data as an ObsPy Catalog.
         Then convert this into a pandas dataframe.
@@ -91,7 +115,7 @@ class EventsLoader(SignalingThread):
         # Set up empty dataframe
         df = pd.DataFrame(columns=self.column_names)
 
-        for event in event_catalog:
+        for event in self.event_catalog:
             origin = event.preferred_origin()
             magnitude = event.preferred_magnitude()
 
@@ -144,6 +168,13 @@ class EventsHandler(SignalingObject):
     Container for events.
     """
 
+    catalog_loaded = QtCore.pyqtSignal(object)
+
+    column_names = [
+        'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName',
+        'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID'
+    ]
+
     def __init__(self, client):
         """
         Initialization.
@@ -153,17 +184,30 @@ class EventsHandler(SignalingObject):
         self.client = client
 
         # Current state
+        self.event_catalog = None
         self.currentDF = None
         self.selectedIDs = []
 
-        self.loader = None
+        self.catalog_loader = None
+        self.data_frame_loader = None
 
-    def load_data(self, parameters=None):
-        self.loader = EventsLoader(self.client, self.get_column_names(), parameters)
-        self.loader.done.connect(self.on_loader_done)
-        self.loader.start()
+    def load_catalog(self, parameters=None):
+        self.catalog_loader = EventsLoader(self.client, parameters)
+        self.catalog_loader.done.connect(self.on_catalog_loaded)
+        self.catalog_loader.start()
 
-    def on_loader_done(self, df):
+    def on_catalog_loaded(self, event_catalog):
+        if not isinstance(event_catalog, Exception):
+            self.event_catalog = event_catalog
+        self.catalog_loaded.emit(event_catalog)
+
+    def load_data_frame(self):
+        column_names = self.get_column_names()
+        self.data_frame_loader = EventsDataFrameLoader(self.event_catalog, self.client, column_names)
+        self.data_frame_loader.done.connect(self.on_data_frame_loaded)
+        self.data_frame_loader.start()
+
+    def on_data_frame_loaded(self, df):
         if not isinstance(df, Exception):
             self.currentDF = df
         self.done.emit(df)
@@ -179,8 +223,7 @@ class EventsHandler(SignalingObject):
         return(df)
 
     def get_column_names(self):
-        columnNames = ['Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName', 'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID']
-        return(columnNames)
+        return(self.columnNames)
 
 
 # ------------------------------------------------------------------------------

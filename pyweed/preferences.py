@@ -4,7 +4,7 @@ Application preferences
 Adapted from: https://github.com/claysmith/oldArcD/blob/master/tools/arctographer/arcmap/preferences.py
 
 :copyright:
-    Mazama Science
+    Mazama Science, IRIS
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -73,6 +73,9 @@ class Preferences(object):
         self.App = Section.create("App")
         self.App.name = __appName__
         self.App.version = __version__
+
+        self.Data = Section.create("Data")
+        self.Data.dataCenter = "IRIS"
 
         self.Waveforms = Section.create("Waveforms")
         self.Waveforms.downloadDir = os.path.join(os.path.expanduser("~"), ".pyweed_downloads")
