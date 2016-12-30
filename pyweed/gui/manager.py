@@ -22,28 +22,24 @@ from gui.ConsoleDialog import ConsoleDialog
 from PyQt4 import QtGui, QtCore
 import os
 from pyweed_utils import manageCache
+from pyweed import PyWEED
 
 LOGGER = getLogger(__name__)
 
 
 class GUIManager(QtCore.QObject):
 
-    def __init__(self, pyweed):
-        self.pyweed = pyweed
-        self.event_catalog = None
-        self.event_options = None
-        self.station_inventory = None
+    def __init__(self):
+        super(GUIManager, self).__init__()
 
-    def initialize(self):
+        self.pyweed = PyWEED()
+
         self.mainWindow = MainWindow(self)
-
-        prefs = self.pyweed.preferences
 
         # Logging
         # see:  http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
         # see:  http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
         self.loggingDialog = LoggingDialog(self.mainWindow)
-        splashScreenHandler = SplashScreenHandler(self.mainWindow)
 
         # Events
         LOGGER.info('Setting up event options dialog...')
@@ -54,22 +50,19 @@ class GUIManager(QtCore.QObject):
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
         LOGGER.info('Setting up waveforms dialog...')
-        self.waveformsDialog = WaveformDialog(self.mainWindow)
+        self.waveformsDialog = WaveformDialog(self)
 
         LOGGER.info('Setting up main window...')
 
         # Python console
-        self.console = ConsoleDialog(self)
+        self.console = ConsoleDialog(self, self.mainWindow)
 
         self.configure_menu()
 
-        self.mainWindow.initialize()
-
         # Display MainWindow
         LOGGER.info('Showing main window...')
+        self.mainWindow.initialize()
         self.mainWindow.show()
-
-        splashScreenHandler.close()
 
     def configure_menu(self):
         # Create menuBar
@@ -84,7 +77,7 @@ class GUIManager(QtCore.QObject):
 
         quitAction = QtGui.QAction("&Quit", self.mainWindow)
         quitAction.setShortcut("Ctrl+Q")
-        quitAction.triggered.connect(self.mainWindow.closeApplication)
+        quitAction.triggered.connect(self.closeApplication)
         fileMenu.addAction(quitAction)
 
         optionsMenu = mainMenu.addMenu('Options')
@@ -103,57 +96,30 @@ class GUIManager(QtCore.QObject):
         QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
         helpMenu.addAction(loggingDialogAction)
 
-    def getEvents(self, parameters):
+    def fetch_events(self):
         """
         Load events
         """
-        self.eventsHandler.load_data(parameters=parameters)
+        self.eventsHandler.load_data(parameters=self.pyweed.event_options)
+
+    def getEvents(self, options):
+        """
+        Load events
+        """
+        self.pyweed.event_options.set_options(options)
+        self.eventsHandler.load_data()
 
     def onEventCatalogLoaded(self, catalog):
-        self.event_catalog = catalog
+        self.pyweed.set_events(catalog)
 
     def onEventsLoaded(self, eventsDF):
         """
         Handler triggered when the EventsHandler finishes loading events
         """
-
-        self.getEventsButton.setEnabled(True)
-
         if isinstance(eventsDF, Exception):
             msg = "Error loading events: %s" % eventsDF
             LOGGER.error(msg)
-            self.statusBar.showMessage(msg)
-            return
-
-        visibleColumns = [
-            'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
-            'MagType', 'EventLocationName',
-        ]
-        numericColumns = [
-            'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
-        ]
-
-        self.fillTable(self.eventsTable, eventsDF, visibleColumns, numericColumns)
-
-        # Add items to the map -------------------------------------------------
-
-        self.seismap.add_events(eventsDF)
-
-        if self.eventOptionsWidget.locationRangeRadioButton.isChecked():
-            n = self.eventOptionsWidget.locationRangeNorthDoubleSpinBox.value()
-            e = self.eventOptionsWidget.locationRangeEastDoubleSpinBox.value()
-            s = self.eventOptionsWidget.locationRangeSouthDoubleSpinBox.value()
-            w = self.eventOptionsWidget.locationRangeWestDoubleSpinBox.value()
-            self.seismap.add_events_box(n, e, s, w)
-        elif self.eventOptionsWidget.locationDistanceFromPointRadioButton.isChecked():
-            n = self.eventOptionsWidget.distanceFromPointNorthDoubleSpinBox.value()
-            e = self.eventOptionsWidget.distanceFromPointEastDoubleSpinBox.value()
-            minradius = self.eventOptionsWidget.distanceFromPointMinRadiusDoubleSpinBox.value()
-            maxradius = self.eventOptionsWidget.distanceFromPointMaxRadiusDoubleSpinBox.value()
-            self.seismap.add_events_toroid(n, e, minradius, maxradius)
-
-        LOGGER.info('Loaded %d events', eventsDF.shape[0])
-        self.statusBar.showMessage('Loaded %d events' % (eventsDF.shape[0]))
+        self.mainWindow.onEventsLoaded(eventsDF)
 
     def showAboutDialog(self):
         """Display About message box."""
@@ -191,16 +157,7 @@ class GUIManager(QtCore.QObject):
         # NOTE:  For info on " modalSession has been exited prematurely" error on OS X see:
         # NOTE:    https://forum.qt.io/topic/43618/modal-sessions-with-pyqt4-and-os-x/2
 
-
     def closeApplication(self):
-        # Manage the waveform cache
-        waveformDownloadDir = self.preferences.Waveforms.downloadDir
-        waveformCacheSize = self.preferences.Waveforms.cacheSize
-        LOGGER.debug('Managing the waveform cache...')
-        if os.path.exists(waveformDownloadDir):
-            manageCache(waveformDownloadDir, waveformCacheSize)
-
-        self.preferences.save()
-
         LOGGER.info('Closing application...')
+        self.pyweed.close()
         QtGui.QApplication.quit()

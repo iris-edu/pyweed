@@ -18,14 +18,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     """
     Dialog window for selection and display of waveforms.
     """
-    def __init__(self, parent=None):
-        super(self.__class__, self).__init__()
+    def __init__(self, manager, parent=None):
+        super(self.__class__, self).__init__(parent=parent)
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
         # Keep a reference to globally shared components
-        self.preferences = parent.preferences
-        self.client = parent.client
+        self.preferences = manager.pyweed.preferences
+        self.client = manager.pyweed.client
 
         # Configured properties
         self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformDirectory
@@ -47,9 +47,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsHandler.progress.connect(self.on_waveform_downloaded)
         self.waveformsHandler.done.connect(self.on_all_downloaded)
 
-        # Get references to the Events and Stations objects
-        self.eventsHandler = parent.eventsHandler
-        self.stationsHandler = parent.stationsHandler
+#         # Get references to the Events and Stations objects
+#         self.eventsHandler = parent.eventsHandler
+#         self.stationsHandler = parent.stationsHandler
 
         # Set up queues to request waveform downloads and respond with a status
         self.waveformRequestQueue = multiprocessing.Queue()

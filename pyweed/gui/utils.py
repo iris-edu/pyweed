@@ -5,28 +5,31 @@ from logging import getLogger
 LOGGER = getLogger(__name__)
 
 
-class Options(object):
+class OptionsAdapter(object):
     """
-    An object representing a set of options, for example EventOptions manages the options for requesting events
+    An adapter object that pairs an Options object with a set of Qt Widget fields
     """
-    def __init__(self, initial=None):
-        """
-        @param inputs: a dict mapping option fields to Qt Widgets
-        @param initial: a dict of initial values
-        """
-        # Option values
-        self.options = dict(initial or {})
+    def __init__(self):
         # Map of option names to Qt inputs
         self.inputs = {}
 
     def connect_to_widget(self, widget):
         raise NotImplementedError()
 
-    def write_to_widget(self):
+    def options_to_inputs(self, options):
+        """
+        Transform the given Options object into a set of string-string mappings
+        """
+        # By default, include everything that's defined in both places
+        keys = set(options.keys()) | set(self.inputs.keys())
+        return options.get_options(keys=list(keys), stringify=True)
+
+    def write_to_widget(self, options):
         """
         Put the current set of options into the mapped inputs
         """
-        for k, v in self.options.iteritems():
+        inputs = self.options_to_inputs(options)
+        for k, v in inputs.iteritems():
             input = self.inputs.get(k)
             if input:
                 if isinstance(input, QtGui.QDateTimeEdit):
@@ -49,23 +52,29 @@ class Options(object):
                     input.setChecked(strtobool(v))
                 else:
                     LOGGER.warning("Don't know how to set an input for %s (%s)", k, input)
-            else:
-                LOGGER.warning("No input for option %s", k)
+
+    def inputs_to_options(self, inputs):
+        """
+        Transform a set of input values into input for Options.set_options
+        """
+        return inputs
 
     def read_from_widget(self):
         """
         Set the options from the mapped inputs
         """
+        options = {}
         for k, input in self.inputs.iteritems():
             if isinstance(input, QtGui.QDateTimeEdit):
                 # DateTime
-                self.options[k] = input.dateTime().toString(QtCore.Qt.ISODate)
+                options[k] = input.dateTime().toString(QtCore.Qt.ISODate)
             elif isinstance(input, QtGui.QAbstractButton):
                 # Radio/checkbox button
-                self.options[k] = str(input.isChecked())
+                options[k] = str(input.isChecked())
             elif hasattr(input, 'text'):
-                self.options[k] = input.text()
+                options[k] = input.text()
             else:
                 LOGGER.warning("Don't know how to write input %s (%s)", k, input)
+        return options
 
 

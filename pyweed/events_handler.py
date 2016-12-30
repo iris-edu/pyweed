@@ -54,12 +54,11 @@ class EventsDataFrameLoader(SignalingThread):
     Thread to handle event requests
     """
 
-    def __init__(self, event_catalog, client, column_names):
+    def __init__(self, event_catalog, column_names):
         """
         Initialization.
         """
         self.event_catalog = event_catalog
-        self.client = client
         self.column_names = column_names
         super(EventsDataFrameLoader, self).__init__()
 
@@ -138,12 +137,12 @@ class EventsDataFrameLoader(SignalingThread):
             # Need to handle some information differently depending on which dataCenter it comes from
             # NOTE:  List of FDSN datacenters:   http://www.fdsn.org/webservices/datacenters/
             # NOTE:  ObsPy list of datacenters:  https://docs.obspy.org/packages/obspy.clients.fdsn.html
-            if self.client.base_url == "http://service.iris.edu":
-                event_id = re.sub('.*eventid=','',event.resource_id.id)
-            elif self.client.base_url == "http://service.ncedc.org":
+            event_id = event.resource_id.id
+            if 'eventid=' in event_id:
+                event_id = re.sub('.*eventid=', '', event_id)
+            if '/Event/NC/' in event_id:
                 # 'quakeml:nc.anss.org/Event/NC/72734605'
-                event_id = re.sub('.*/Event/NC/','',event.resource_id.id)
-            # elif OTHER
+                event_id = re.sub('.*/Event/NC/', '', event_id)
 
             # Append a row to the dataframe
             df.loc[len(df)] = [time,
@@ -175,13 +174,13 @@ class EventsHandler(SignalingObject):
         'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID'
     ]
 
-    def __init__(self, client):
+    def __init__(self, pyweed):
         """
         Initialization.
         """
         super(EventsHandler, self).__init__()
 
-        self.client = client
+        self.pyweed = pyweed
 
         # Current state
         self.event_catalog = None
@@ -192,18 +191,21 @@ class EventsHandler(SignalingObject):
         self.data_frame_loader = None
 
     def load_catalog(self, parameters=None):
-        self.catalog_loader = EventsLoader(self.client, parameters)
+        if not parameters:
+            parameters = self.pyweed.event_options.get_obspy_options()
+        self.catalog_loader = EventsLoader(self.pyweed.client, parameters)
         self.catalog_loader.done.connect(self.on_catalog_loaded)
         self.catalog_loader.start()
 
     def on_catalog_loaded(self, event_catalog):
         if not isinstance(event_catalog, Exception):
             self.event_catalog = event_catalog
+            self.load_data_frame()
         self.catalog_loaded.emit(event_catalog)
 
     def load_data_frame(self):
         column_names = self.get_column_names()
-        self.data_frame_loader = EventsDataFrameLoader(self.event_catalog, self.client, column_names)
+        self.data_frame_loader = EventsDataFrameLoader(self.event_catalog, column_names)
         self.data_frame_loader.done.connect(self.on_data_frame_loaded)
         self.data_frame_loader.start()
 

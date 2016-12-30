@@ -13,34 +13,20 @@ Main PyWEED application
 from __future__ import (absolute_import, division, print_function)
 
 # Basic packages
+import os
 import sys
 import logging
 
 # For debugging, raise an exception on attempted chained assignment
 # See http://pandas.pydata.org/pandas-docs/version/0.19.1/indexing.html#returning-a-view-versus-a-copy
 import pandas as pd
-from pyweed_utils import manageCache
-from obspy.clients import fdsn
 pd.set_option('mode.chained_assignment', 'raise')
 
-# Configure PyQt4 -- in order for the Python console to work, we need to load a particular
-# version of some internal libraries. This must be done before the first import of the PyQt4 libraries.
-# See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
-import os
-os.environ['QT_API'] = 'pyqt'
-import sip
-sip.setapi("QString", 2)
-sip.setapi("QVariant", 2)
-from PyQt4 import QtCore
-from PyQt4 import QtGui
-
-# Configure matplotlib backend
-import matplotlib
-matplotlib.use('AGG')
-
 # Pyweed UI components
-from gui.MainWindow import MainWindow
 from preferences import Preferences
+from pyweed_utils import manageCache
+from obspy.clients import fdsn
+from events import EventOptions
 
 
 __appName__ = "PyWEED"
@@ -55,6 +41,7 @@ class NoConsoleLoggingFilter(logging.Filter):
     Logging filter that excludes the (very noisy) output from the attached Python console
     """
     exclude = ('ipykernel', 'traitlets',)
+
     def filter(self, record):
         for exclude in self.exclude:
             if record.name.startswith(exclude):
@@ -64,9 +51,19 @@ class NoConsoleLoggingFilter(logging.Filter):
 
 class PyWEED(object):
 
-    def __init__(self, app):
-        self.app = app
+    app = None
+    manager = None
+    client = None
+    preferences = None
+    event_options = None
+    events = None
+    station_options = None
+    stations = None
+
+    def __init__(self):
         self.configure_logging()
+        self.event_options = EventOptions()
+        self.station_options = {}
         self.load_preferences()
         self.manage_cache()
 
@@ -76,11 +73,21 @@ class PyWEED(object):
 
     def load_preferences(self):
         # Load configurable preferences from ~/.pyweed/config.ini
+        LOGGER.info("Loading preferences")
         self.preferences = Preferences()
         try:
             self.preferences.load()
+            self.event_options.set_options(self.preferences.EventOptions)
         except Exception as e:
             LOGGER.error("Unable to load configuration preferences -- using defaults.\n%s", e)
+
+    def save_preferences(self):
+        LOGGER.info("Saving preferences")
+        try:
+            self.preferences.EventOptions.update(self.event_options.get_options(stringify=True))
+            self.preferences.save()
+        except Exception as e:
+            LOGGER.error("Unable to save configuration preferences: %s", e)
 
     def configure_logging(self):
         """
@@ -97,6 +104,7 @@ class PyWEED(object):
         handler.setFormatter(formatter)
         handler.addFilter(NoConsoleLoggingFilter())
         logger.addHandler(handler)
+        LOGGER.info("Logging configured")
 
     def manage_cache(self, init=True):
         """
@@ -114,19 +122,24 @@ class PyWEED(object):
                 LOGGER.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 raise
 
-    def start_gui(self):
-        self.mainWindow = MainWindow(self)
+    def fetch_events(self):
+        pass
+
+    def set_events(self, events):
+        self.events = events
+
+    def fetch_stations(self):
+        pass
+
+    def set_stations(self, stations):
+        self.stations = stations
 
     def close(self):
         self.manage_cache(init=False)
-        self.preferences.save()
+        self.save_preferences()
 
-        LOGGER.info('Closing application...')
-        QtGui.QApplication.quit()
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
-    pyweed = PyWEED(app)
-    pyweed.start_gui()
-    sys.exit(app.exec_())
+    pyweed = PyWEED()
+    # Do something?
 
