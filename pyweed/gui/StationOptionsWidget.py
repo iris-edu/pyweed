@@ -9,12 +9,12 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
     """
     Dialog window for event options used in creating a webservice query.
     """
-    def __init__(self, parent=None):
-        super(self.__class__, self).__init__()
+    def __init__(self, manager, parent=None):
+        super(self.__class__, self).__init__(parent=parent)
         self.setupUi(self)
 
         # Initialize input fields using preferences
-        prefs = parent.preferences.StationOptions
+        prefs = manager.pyweed.preferences.StationOptions
         self.networkLineEdit.setText(prefs.network)
         self.stationLineEdit.setText(prefs.station)
         self.locationLineEdit.setText(prefs.location)

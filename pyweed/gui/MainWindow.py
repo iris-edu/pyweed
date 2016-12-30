@@ -35,31 +35,23 @@ LOGGER = logging.getLogger(__name__)
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     def __init__(self, manager):
-
-        self.manager = manager
-        self.pyweed = manager.pyweed
-        self.preferences = manager.pyweed.preferences
-
         super(self.__class__, self).__init__()
         self.setupUi(self)
 
+        self.manager = manager
+
+    def initialize(self):
+        prefs = self.manager.pyweed.preferences
         # Set MainWindow properties
-        self.setWindowTitle('%s version %s' % (self.preferences.App.name, self.preferences.App.version))
+        self.setWindowTitle('%s version %s' % (prefs.App.name, prefs.App.version))
 
-        # Get the Figure object from the map_canvas
-        LOGGER.info('Setting up main map...')
-        self.map_figure = self.mapCanvas.fig
-        self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
-        self.map_axes.clear()
-        self.seismap = Seismap(projection=self.preferences.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
-        self.map_figure.canvas.draw()
-
-        self.eventOptionsWidget = EventOptionsWidget(self)
+        self.eventOptionsWidget = EventOptionsWidget(parent=self)
+        self.eventOptionsWidget.setOptions(self.manager.pyweed.event_options)
         self.eventOptionsDockWidget.setWidget(self.eventOptionsWidget)
         self.toggleEventOptions.toggled.connect(self.eventOptionsDockWidget.setVisible)
         self.eventOptionsDockWidget.visibilityChanged.connect(self.toggleEventOptions.setChecked)
 
-        self.stationOptionsWidget = StationOptionsWidget(self)
+        self.stationOptionsWidget = StationOptionsWidget(self.manager, parent=self)
         self.stationOptionsDockWidget.setWidget(self.stationOptionsWidget)
         self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
         self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
@@ -71,6 +63,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
         self.getWaveformsButton.setEnabled(False)
+
+        # Get the Figure object from the map_canvas
+        LOGGER.info('Setting up main map...')
+        self.map_figure = self.mapCanvas.fig
+        self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
+        self.map_axes.clear()
+        self.seismap = Seismap(projection=prefs.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
+        self.map_figure.canvas.draw()
+
 
     def fillTable(self, table, dataframe, visibleColumns, numericColumns):
         """
@@ -118,8 +119,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Loading events...')
         self.statusBar.showMessage('Loading events...')
 
-        parameters = self.eventOptionsWidget.getOptions()
-        self.manager.getEvents(parameters)
+        options = self.eventOptionsWidget.getOptions()
+
+        self.manager.getEvents(options)
 
     def onEventsLoaded(self, eventsDF):
         """
