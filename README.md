@@ -30,6 +30,16 @@ The first thing to do is update conda itself:
 
 `conda update conda`
 
+## Get the PyWEED project
+
+This README reflects changes on one branch of the project, so you need to use Git to download the project and checkout that branch:
+
+```
+git clone https://github.com/iris-edu-int/pyweed.git
+cd pyweed
+git checkout adam
+```
+
 ## Creating a Python environment
 
 The packages necessary to run PyWEED are defined in the `environment.yml` file in the root of the project.
