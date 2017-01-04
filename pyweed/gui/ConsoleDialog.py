@@ -17,9 +17,9 @@ class EmbedIPython(RichIPythonWidget):
 
 
 class ConsoleDialog(QtGui.QDialog):
-    def __init__(self, manager, *args, **kwargs):
+    def __init__(self, pyweed, *args, **kwargs):
         super(ConsoleDialog, self).__init__(*args, **kwargs)
-        self.widget = EmbedIPython(manager=manager, pyweed=manager.pyweed)
+        self.widget = EmbedIPython(pyweed=pyweed)
         layout = QtGui.QVBoxLayout(self)
         layout.addWidget(self.widget)
 

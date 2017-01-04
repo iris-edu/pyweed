@@ -49,18 +49,19 @@ class NoConsoleLoggingFilter(logging.Filter):
         return True
 
 
-class PyWEED(object):
+class PyWeed(object):
 
-    app = None
-    manager = None
     client = None
     preferences = None
     event_options = None
     events = None
+    selected_event_ids = None
     station_options = None
     stations = None
+    selected_station_ids = None
 
     def __init__(self):
+        super(PyWeed, self).__init__()
         self.configure_logging()
         self.event_options = EventOptions()
         self.station_options = {}
@@ -122,17 +123,31 @@ class PyWEED(object):
                 LOGGER.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 raise
 
-    def fetch_events(self):
-        pass
+    def set_event_options(self, options):
+        self.event_options.set_options(options)
+
+    def fetch_events(self, options=None):
+        raise NotImplementedError("PyWEED subclass should implement this")
 
     def set_events(self, events):
+        LOGGER.info("Set events")
         self.events = events
 
-    def fetch_stations(self):
-        pass
+    def set_selected_event_ids(self, event_ids):
+        self.selected_event_ids = event_ids
+
+    def set_station_options(self, options):
+        self.station_options = options
+
+    def fetch_stations(self, options=None):
+        raise NotImplementedError("PyWEED subclass should implement this")
 
     def set_stations(self, stations):
+        LOGGER.info("Set stations")
         self.stations = stations
+
+    def set_selected_station_ids(self, station_ids):
+        self.selected_station_ids = station_ids
 
     def close(self):
         self.manage_cache(init=False)
@@ -140,6 +155,6 @@ class PyWEED(object):
 
 
 if __name__ == "__main__":
-    pyweed = PyWEED()
+    pyweed = PyWeed()
     # Do something?
 

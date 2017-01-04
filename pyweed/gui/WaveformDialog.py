@@ -18,14 +18,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     """
     Dialog window for selection and display of waveforms.
     """
-    def __init__(self, manager, parent=None):
+    def __init__(self, pyweed, parent=None):
         super(self.__class__, self).__init__(parent=parent)
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
         # Keep a reference to globally shared components
-        self.preferences = manager.pyweed.preferences
-        self.client = manager.pyweed.client
+        self.preferences = pyweed.preferences
+        self.client = pyweed.client
 
         # Configured properties
         self.waveformDirectory = os.path.expanduser('~') # TODO:  get configurable WaveformDirectory
