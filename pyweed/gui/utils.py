@@ -63,18 +63,20 @@ class OptionsAdapter(object):
         """
         Set the options from the mapped inputs
         """
-        options = {}
+        inputs = {}
         for k, input in self.inputs.iteritems():
             if isinstance(input, QtGui.QDateTimeEdit):
                 # DateTime
-                options[k] = input.dateTime().toString(QtCore.Qt.ISODate)
+                inputs[k] = input.dateTime().toString(QtCore.Qt.ISODate)
             elif isinstance(input, QtGui.QAbstractButton):
                 # Radio/checkbox button
-                options[k] = str(input.isChecked())
+                inputs[k] = str(input.isChecked())
+            elif isinstance(input, QtGui.QComboBox):
+                inputs[k] = input.currentText()
             elif hasattr(input, 'text'):
-                options[k] = input.text()
+                inputs[k] = input.text()
             else:
                 LOGGER.warning("Don't know how to write input %s (%s)", k, input)
-        return options
+        return self.inputs_to_options(inputs)
 
 

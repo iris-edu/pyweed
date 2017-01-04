@@ -225,7 +225,7 @@ class EventsHandler(SignalingObject):
         return(df)
 
     def get_column_names(self):
-        return(self.columnNames)
+        return(self.column_names)
 
 
 # ------------------------------------------------------------------------------
