@@ -34,24 +34,23 @@ LOGGER = logging.getLogger(__name__)
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
-    def __init__(self, manager):
+    def __init__(self, pyweed):
         super(self.__class__, self).__init__()
         self.setupUi(self)
-
-        self.manager = manager
+        self.pyweed = pyweed
 
     def initialize(self):
-        prefs = self.manager.pyweed.preferences
+        prefs = self.pyweed.preferences
         # Set MainWindow properties
         self.setWindowTitle('%s version %s' % (prefs.App.name, prefs.App.version))
 
         self.eventOptionsWidget = EventOptionsWidget(parent=self)
-        self.eventOptionsWidget.setOptions(self.manager.pyweed.event_options)
+        self.eventOptionsWidget.setOptions(self.pyweed.event_options)
         self.eventOptionsDockWidget.setWidget(self.eventOptionsWidget)
         self.toggleEventOptions.toggled.connect(self.eventOptionsDockWidget.setVisible)
         self.eventOptionsDockWidget.visibilityChanged.connect(self.toggleEventOptions.setChecked)
 
-        self.stationOptionsWidget = StationOptionsWidget(self.manager, parent=self)
+        self.stationOptionsWidget = StationOptionsWidget(self.pyweed, parent=self)
         self.stationOptionsDockWidget.setWidget(self.stationOptionsWidget)
         self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
         self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
@@ -63,6 +62,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
 
         self.getWaveformsButton.setEnabled(False)
+
+        # Connect the main window buttons
+        self.getEventsButton.clicked.connect(self.getEvents)
+        self.getStationsButton.pressed.connect(self.getStations)
+        self.getWaveformsButton.pressed.connect(self.getWaveforms)
 
         # Get the Figure object from the map_canvas
         LOGGER.info('Setting up main map...')
@@ -121,7 +125,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         options = self.eventOptionsWidget.getOptions()
 
-        self.manager.getEvents(options)
+        self.pyweed.set_event_options(options)
+        self.pyweed.fetch_events()
 
     def onEventsLoaded(self, eventsDF):
         """
@@ -256,7 +261,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             eventIDs.append(eventID)
 
         # Update the events_handler with the latest selection information
-        self.eventsHandler.set_selected_ids(eventIDs)
+        self.pyweed.set_selected_event_ids(eventIDs)
 
         self.seismap.add_events_highlighting(lons, lats)
 
@@ -286,7 +291,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             SNCLs.append(SNCL)
 
         # Update the stations_handler with the latest selection information
-        self.stationsHandler.set_selected_ids(SNCLs)
+        self.pyweed.set_selected_station_ids(SNCLs)
 
         self.seismap.add_stations_highlighting(lons, lats)
 
