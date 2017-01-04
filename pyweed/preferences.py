@@ -88,8 +88,8 @@ class Preferences(object):
         self.Map.projection = "robin"
 
         self.EventOptions = Section.create("EventOptions")
-        self.EventOptions.minmag = "5.0"
-        self.EventOptions.maxmag = "10.0"
+        self.EventOptions.minmagnitude = "5.0"
+        self.EventOptions.maxmagnitude = "10.0"
         self.EventOptions.mindepth = "0.0"
         self.EventOptions.maxdepth = "6731.0"
         self.EventOptions.minlongitude = "-180.0"
