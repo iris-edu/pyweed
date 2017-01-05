@@ -115,8 +115,14 @@ class EventsDataFrameLoader(SignalingThread):
         df = pd.DataFrame(columns=self.column_names)
 
         for event in self.event_catalog:
-            origin = event.preferred_origin()
-            magnitude = event.preferred_magnitude()
+            origin = event.preferred_origin() or (len(event.origins) and event.origins[0])
+            if not origin:
+                LOGGER.error("No preferred origin found for event %s", event)
+                continue
+            magnitude = event.preferred_magnitude() or (len(event.magnitudes) and event.magnitudes[0])
+            if not magnitude:
+                LOGGER.error("No preferred magnitude found for event %s", event)
+                continue
 
             # Uniformly handled elements
             time = origin.time.strftime("%Y-%m-%d %H:%M:%S") # use strftime to remove milliseconds
