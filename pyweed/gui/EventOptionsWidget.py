@@ -6,7 +6,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from distutils.util import strtobool
 from utils import OptionsAdapter
 from copy import copy
-from events import EventOptions
+from event_options import EventOptions
 
 LOGGER = logging.getLogger(__name__)
 
