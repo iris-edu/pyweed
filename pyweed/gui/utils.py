@@ -19,6 +19,7 @@ class OptionsAdapter(object):
     def options_to_inputs(self, options):
         """
         Transform the given Options object into a set of string-string mappings
+        Subclasses should override this to implement any special handling.
         """
         # By default, include everything that's defined in both places
         keys = set(options.keys()) | set(self.inputs.keys())
@@ -55,7 +56,8 @@ class OptionsAdapter(object):
 
     def inputs_to_options(self, inputs):
         """
-        Transform a set of input values into input for Options.set_options
+        Transform a set of input values into input for Options.set_options.
+        Subclasses should override this to implement any special handling.
         """
         return inputs
 

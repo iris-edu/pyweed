@@ -50,7 +50,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.toggleEventOptions.toggled.connect(self.eventOptionsDockWidget.setVisible)
         self.eventOptionsDockWidget.visibilityChanged.connect(self.toggleEventOptions.setChecked)
 
-        self.stationOptionsWidget = StationOptionsWidget(self.pyweed, parent=self)
+        self.stationOptionsWidget = StationOptionsWidget(parent=self)
+        self.stationOptionsWidget.setOptions(self.pyweed.station_options)
         self.stationOptionsDockWidget.setWidget(self.stationOptionsWidget)
         self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
         self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
@@ -75,7 +76,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_axes.clear()
         self.seismap = Seismap(projection=prefs.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
-
 
     def fillTable(self, table, dataframe, visibleColumns, numericColumns):
         """
@@ -124,15 +124,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.statusBar.showMessage('Loading events...')
 
         options = self.eventOptionsWidget.getOptions()
-
         self.pyweed.set_event_options(options)
+
         self.pyweed.fetch_events()
 
     def onEventsLoaded(self, eventsDF):
         """
         Handler triggered when the EventsHandler finishes loading events
         """
-
         self.getEventsButton.setEnabled(True)
 
         if isinstance(eventsDF, Exception):
@@ -181,9 +180,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.statusBar.showMessage('Loading channels...')
 
         # Get stations and subset to desired columns
-        parameters = self.stationOptionsWidget.getOptions()
-        # TODO:  handle errors when querying stations
-        self.stationsHandler.load_data(parameters=parameters)
+        options = self.stationOptionsWidget.getOptions()
+
+        self.pyweed.set_station_options(options)
+        self.pyweed.fetch_stations()
 
     def onStationsLoaded(self, stationsDF):
         """
