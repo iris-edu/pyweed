@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import logging
 from signals import SignalingThread, SignalingObject
+from PyQt4 import QtCore
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +24,12 @@ class StationsLoader(SignalingThread):
     Thread to handle station requests
     """
 
-    def __init__(self, client, column_names, parameters):
+    def __init__(self, client, parameters):
         """
         Initialization.
         """
         # Keep a reference to globally shared components
         self.client = client
-        self.column_names = column_names
         self.parameters = parameters
         super(StationsLoader, self).__init__()
 
@@ -44,19 +44,43 @@ class StationsLoader(SignalingThread):
         try:
             if not self.parameters.has_key('starttime') or not self.parameters.has_key('endtime'):
                 raise ValueError('starttime or endtime is missing')
-
-            # Create dataframe of station metadata
             LOGGER.info('Loading stations...')
             inventory = self.client.get_stations(**self.parameters)
-            df = self.build_dataframe(inventory)
-            self.done.emit(df)
-
+            self.done.emit(inventory)
         except Exception as e:
             # TODO:  What type of exception should we trap?
             self.done.emit(e)
             raise
 
-    def build_dataframe(self, inventory):
+
+class StationsDataFrameLoader(SignalingThread):
+    """
+    Thread to handle event requests
+    """
+
+    def __init__(self, inventory, column_names):
+        """
+        Initialization.
+        """
+        self.inventory = inventory
+        self.column_names = column_names
+        super(StationsDataFrameLoader, self).__init__()
+
+    def run(self):
+        """
+        Make a webservice request for events using the passed in options.
+        """
+        # Sanity check
+        try:
+            # Create dataframe of station metadata
+            df = self.build_dataframe()
+            self.done.emit(df)
+        except Exception as e:
+            # TODO:  What type of exception should we trap?
+            self.done.emit(e)
+            raise
+
+    def build_dataframe(self):
         """
         Obtain station data as an ObsPy Inventory.
         Then convert this into a pandas dataframe.
@@ -68,7 +92,7 @@ class StationsLoader(SignalingThread):
         df = pd.DataFrame(columns=self.column_names)
 
         # Walk through the Inventory object
-        for n in inventory.networks:
+        for n in self.inventory.networks:
             for s in n.stations:
                 for c in s.channels:
                     snclId = n.code + "." + s.code + "." + c.location_code + "." + c.code
@@ -99,26 +123,49 @@ class StationsHandler(SignalingObject):
     Container for events.
     """
 
-    def __init__(self, client):
+    inventory_loaded = QtCore.pyqtSignal(object)
+
+    column_names = [
+        'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName',
+        'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID'
+    ]
+
+    def __init__(self, pyweed):
         """
         Initialization.
         """
         super(StationsHandler, self).__init__()
 
-        self.client = client
+        self.pyweed = pyweed
 
         # Current state
+        self.inventory = None
         self.currentDF = None
         self.selectedIDs = []
 
-        self.loader = None
+        self.inventory_loader = None
+        self.data_frame_loader = None
 
-    def load_data(self, parameters=None):
-        self.loader = StationsLoader(self.client, self.get_column_names(), parameters)
-        self.loader.done.connect(self.on_loader_done)
-        self.loader.start()
+    def load_inventory(self, parameters=None):
+        if not parameters:
+            parameters = self.pyweed.station_options.get_obspy_options()
+        self.inventory_loader = StationsLoader(self.pyweed.client, parameters)
+        self.inventory_loader.done.connect(self.on_inventory_loaded)
+        self.inventory_loader.start()
 
-    def on_loader_done(self, df):
+    def on_inventory_loaded(self, inventory):
+        if not isinstance(inventory, Exception):
+            self.inventory = inventory
+            self.load_data_frame()
+        self.inventory_loaded.emit(inventory)
+
+    def load_data_frame(self):
+        column_names = self.get_column_names()
+        self.data_frame_loader = StationsDataFrameLoader(self.inventory, column_names)
+        self.data_frame_loader.done.connect(self.on_data_frame_loaded)
+        self.data_frame_loader.start()
+
+    def on_data_frame_loaded(self, df):
         if not isinstance(df, Exception):
             self.currentDF = df
         self.done.emit(df)
@@ -134,8 +181,7 @@ class StationsHandler(SignalingObject):
         return(df)
 
     def get_column_names(self):
-        columnNames = ['Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL']
-        return(columnNames)
+        return(self.column_names)
 
 
 # ------------------------------------------------------------------------------

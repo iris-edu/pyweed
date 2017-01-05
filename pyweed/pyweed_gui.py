@@ -20,6 +20,7 @@ import logging
 # version of some internal libraries. This must be done before the first import of the PyQt4 libraries.
 # See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
 import os
+from stations_handler import StationsHandler
 os.environ['QT_API'] = 'pyqt'
 import sip
 sip.setapi("QString", 2)
@@ -61,6 +62,12 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         self.eventsHandler = EventsHandler(self)
         self.eventsHandler.catalog_loaded.connect(self.onEventCatalogLoaded)
         self.eventsHandler.done.connect(self.onEventsLoaded)
+
+        # Stations
+        LOGGER.info('Setting up station options dialog...')
+        self.stationsHandler = StationsHandler(self)
+        self.stationsHandler.inventory_loaded.connect(self.onStationsInventoryLoaded)
+        self.stationsHandler.done.connect(self.onStationsLoaded)
 
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
@@ -119,18 +126,12 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
             self.set_event_options(options)
         else:
             options = self.event_options.get_obspy_options()
+        LOGGER.info("Fetching events with parameters: %s" % repr(options))
         self.eventsHandler.load_catalog(parameters=options)
 
     def set_event_options(self, options):
         super(PyWeedGUI, self).set_event_options(options)
         self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
-
-    def getEvents(self, options):
-        """
-        Load events
-        """
-        self.event_options.set_options(options)
-        self.eventsHandler.load_data()
 
     def onEventCatalogLoaded(self, catalog):
         self.set_events(catalog)
@@ -143,6 +144,33 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
             msg = "Error loading events: %s" % eventsDF
             LOGGER.error(msg)
         self.mainWindow.onEventsLoaded(eventsDF)
+
+    def fetch_stations(self, options=None):
+        """
+        Load stations
+        """
+        if options:
+            self.set_station_options(options)
+        else:
+            options = self.station_options.get_obspy_options()
+        LOGGER.info("Fetching stations with parameters: %s" % repr(options))
+        self.stationsHandler.load_catalog(parameters=options)
+
+    def set_station_options(self, options):
+        super(PyWeedGUI, self).set_station_options(options)
+        self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
+
+    def onStationCatalogLoaded(self, catalog):
+        self.set_stations(catalog)
+
+    def onStationsLoaded(self, stationsDF):
+        """
+        Handler triggered when the StationsHandler finishes loading stations
+        """
+        if isinstance(stationsDF, Exception):
+            msg = "Error loading stations: %s" % stationsDF
+            LOGGER.error(msg)
+        self.mainWindow.onStationsLoaded(stationsDF)
 
     def showAboutDialog(self):
         """Display About message box."""
