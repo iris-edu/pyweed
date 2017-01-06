@@ -10,13 +10,12 @@ LOGGER = logging.getLogger(__name__)
 class StationOptionsAdapter(OptionsAdapter):
     def connect_to_widget(self, widget):
         self.inputs = {
+            'network': widget.networkLineEdit,
+            'station': widget.stationLineEdit,
+            'location': widget.locationLineEdit,
+            'channel': widget.channelLineEdit,
             'starttime': widget.starttimeDateTimeEdit,
             'endtime': widget.endtimeDateTimeEdit,
-            'minmagnitude': widget.minMagDoubleSpinBox,
-            'maxmagnitude': widget.maxMagDoubleSpinBox,
-            'mindepth': widget.minDepthDoubleSpinBox,
-            'maxdepth': widget.maxDepthDoubleSpinBox,
-            'magnitudetype': widget.magTypeComboBox,
             'minlongitude': widget.locationRangeWestDoubleSpinBox,
             'maxlongitude': widget.locationRangeEastDoubleSpinBox,
             'minlatitude': widget.locationRangeSouthDoubleSpinBox,
@@ -36,7 +35,7 @@ class StationOptionsAdapter(OptionsAdapter):
         inputs = super(StationOptionsAdapter, self).options_to_inputs(options)
         # Set the radio buttons based on the EventOptions settings
         inputs['_timeBetween'] = str(options.time_choice == StationOptions.TIME_RANGE)
-        inputs['_timeDuringStations'] = str(options.time_choice == StationOptions.TIME_EVENTS)
+        inputs['_timeDuringEvents'] = str(options.time_choice == StationOptions.TIME_EVENTS)
         inputs['_locationRange'] = str(options.location_choice == StationOptions.LOCATION_BOX)
         inputs['_locationDistanceFromPoint'] = str(options.location_choice == StationOptions.LOCATION_POINT)
         inputs['_locationDistanceFromEvents'] = str(options.location_choice == StationOptions.LOCATION_EVENTS)
@@ -46,7 +45,7 @@ class StationOptionsAdapter(OptionsAdapter):
         options = super(StationOptionsAdapter, self).inputs_to_options(inputs)
         if options.get('_timeBetween'):
             options['time_choice'] = StationOptions.TIME_RANGE
-        elif options.get('_timeDuringStations'):
+        elif options.get('_timeDuringEvents'):
             options['time_choice'] = StationOptions.TIME_EVENTS
         if options.get('_locationRange'):
             options['location_choice'] = StationOptions.LOCATION_BOX
