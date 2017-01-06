@@ -40,7 +40,7 @@ from stations_handler import StationsHandler
 from gui.EventOptionsWidget import EventOptionsWidget
 from gui.WaveformDialog import WaveformDialog
 from gui.ConsoleDialog import ConsoleDialog
-from pyweed import PyWeed
+from pyweed import PyWeed, __app_name__, __version__
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,15 +59,15 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
 
         # Events
         LOGGER.info('Setting up event options dialog...')
-        self.eventsHandler = EventsHandler(self)
-        self.eventsHandler.catalog_loaded.connect(self.onEventCatalogLoaded)
-        self.eventsHandler.done.connect(self.onEventsLoaded)
+        self.events_handler = EventsHandler(self)
+        self.events_handler.catalog_loaded.connect(self.on_event_catalog_loaded)
+        self.events_handler.done.connect(self.on_events_loaded)
 
         # Stations
         LOGGER.info('Setting up station options dialog...')
-        self.stationsHandler = StationsHandler(self)
-        self.stationsHandler.inventory_loaded.connect(self.onStationsInventoryLoaded)
-        self.stationsHandler.done.connect(self.onStationsLoaded)
+        self.stations_handler = StationsHandler(self)
+        self.stations_handler.inventory_loaded.connect(self.on_station_inventory_loaded)
+        self.stations_handler.done.connect(self.on_stations_loaded)
 
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
@@ -85,6 +85,80 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         LOGGER.info('Showing main window...')
         self.mainWindow.initialize()
         self.mainWindow.show()
+
+    ###############
+    # Events
+    ###############
+
+    def fetch_events(self, options=None):
+        """
+        Load events
+        """
+        # TODO: this is a patch for https://github.com/obspy/obspy/issues/1629
+        if self.events:
+            self.events.clear()
+
+        if not options:
+            options = self.event_options.get_obspy_options()
+        LOGGER.info("Fetching events with parameters: %s" % repr(options))
+        self.events_handler.load_catalog(parameters=options)
+
+    def set_event_options(self, options):
+        super(PyWeedGUI, self).set_event_options(options)
+        self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
+
+    def on_event_catalog_loaded(self, catalog):
+        self.set_events(catalog)
+
+    def on_events_loaded(self, eventsDF):
+        """
+        Handler triggered when the EventsHandler finishes loading events
+        """
+        if isinstance(eventsDF, Exception):
+            msg = "Error loading events: %s" % eventsDF
+            LOGGER.error(msg)
+        self.mainWindow.onEventsLoaded(eventsDF)
+
+    ###############
+    # Stations
+    ###############
+
+    def fetch_stations(self, options=None):
+        """
+        Load stations
+        """
+        if not options:
+            options = self.station_options.get_obspy_options()
+        LOGGER.info("Fetching stations with parameters: %s" % repr(options))
+        self.stations_handler.load_inventory(parameters=options)
+
+    def set_station_options(self, options):
+        super(PyWeedGUI, self).set_station_options(options)
+        self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
+
+    def on_station_inventory_loaded(self, inventory):
+        self.set_stations(inventory)
+
+    def on_stations_loaded(self, stationsDF):
+        """
+        Handler triggered when the StationsHandler finishes loading stations
+        """
+        if isinstance(stationsDF, Exception):
+            msg = "Error loading stations: %s" % stationsDF
+            LOGGER.error(msg)
+        self.mainWindow.onStationsLoaded(stationsDF)
+
+    ###############
+    # Waveforms
+    ###############
+
+    def open_waveforms_dialog(self):
+        self.waveformsDialog.show()
+        self.waveformsDialog.loadWaveformChoices()
+
+    ###############
+    # Other UI elements
+    ###############
 
     def configure_menu(self):
         # Create menuBar
@@ -118,61 +192,11 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
         helpMenu.addAction(loggingDialogAction)
 
-    def fetch_events(self, options=None):
-        """
-        Load events
-        """
-        if not options:
-            options = self.event_options.get_obspy_options()
-        LOGGER.info("Fetching events with parameters: %s" % repr(options))
-        self.eventsHandler.load_catalog(parameters=options)
-
-    def set_event_options(self, options):
-        super(PyWeedGUI, self).set_event_options(options)
-        self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
-
-    def onEventCatalogLoaded(self, catalog):
-        self.set_events(catalog)
-
-    def onEventsLoaded(self, eventsDF):
-        """
-        Handler triggered when the EventsHandler finishes loading events
-        """
-        if isinstance(eventsDF, Exception):
-            msg = "Error loading events: %s" % eventsDF
-            LOGGER.error(msg)
-        self.mainWindow.onEventsLoaded(eventsDF)
-
-    def fetch_stations(self, options=None):
-        """
-        Load stations
-        """
-        if not options:
-            options = self.station_options.get_obspy_options()
-        LOGGER.info("Fetching stations with parameters: %s" % repr(options))
-        self.stationsHandler.load_inventory(parameters=options)
-
-    def set_station_options(self, options):
-        super(PyWeedGUI, self).set_station_options(options)
-        self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
-
-    def onStationsInventoryLoaded(self, inventory):
-        self.set_stations(inventory)
-
-    def onStationsLoaded(self, stationsDF):
-        """
-        Handler triggered when the StationsHandler finishes loading stations
-        """
-        if isinstance(stationsDF, Exception):
-            msg = "Error loading stations: %s" % stationsDF
-            LOGGER.error(msg)
-        self.mainWindow.onStationsLoaded(stationsDF)
-
     def showAboutDialog(self):
         """Display About message box."""
         # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox
         website = "https://github.com/iris-edu-int/pyweed"
-        ###email = "adam@iris.washington.edu"
+        # email = "adam@iris.washington.edu"
         license_link = "https://github.com/iris-edu-int/pyweed/blob/master/LICENSE"
         license_name = "MIT"
         mazama_link = "http://mazamascience.com"
@@ -183,16 +207,16 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         msgBox = QtGui.QMessageBox()
         msgBox.setWindowTitle("About %s" % self.app_name)
         msgBox.setTextFormat(QtCore.Qt.RichText)
-        ###msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
+        # msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
         msgBox.setText("<br><br><br>" +
-                       self.appName +
+                       __app_name__ +
                        " v" +
-                       self.version +
+                       __version__ +
                        "<br><br>" +
                        "Pyweed is a cross-platform GUI application for retrieving event-based seismic data." +
                        "<br><br>" +
                        "<a href='{0}'>{0}</a><br><br>".format(website) +
-                       ###"<a href='mailto:{0}'>{0}</a><br><br>".format(email) +
+                       # "<a href='mailto:{0}'>{0}</a><br><br>".format(email) +
                        "License: <a href='{0}'>{1}</a>".format(license_link, license_name) +
                        "<br><br>" +
                        "Developed by <a href='{0}'>{1}</a>".format(mazama_link, mazama_name) +

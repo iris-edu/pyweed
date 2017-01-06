@@ -23,7 +23,7 @@ class StationOptions(Options):
     minlatitude = FloatOption(default=-90)
     maxlatitude = FloatOption(default=90)
     minlongitude = FloatOption(default=-180)
-    maxlongitude = FloatOption(default=80)
+    maxlongitude = FloatOption(default=180)
 
     latitude = FloatOption()
     longitude = FloatOption()

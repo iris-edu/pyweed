@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui/uic/MainWindow.ui'
 #
-# Created: Wed Dec 28 16:44:53 2016
-#      by: PyQt4 UI code generator 4.10.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -62,12 +61,11 @@ class Ui_MainWindow(object):
         self.eventsWidget = QtGui.QWidget(self.splitter_2)
         self.eventsWidget.setObjectName(_fromUtf8("eventsWidget"))
         self.eventsLayout = QtGui.QVBoxLayout(self.eventsWidget)
-        self.eventsLayout.setSpacing(0)
         self.eventsLayout.setMargin(0)
+        self.eventsLayout.setSpacing(0)
         self.eventsLayout.setObjectName(_fromUtf8("eventsLayout"))
         self.eventsButtonLayout = QtGui.QHBoxLayout()
         self.eventsButtonLayout.setSpacing(12)
-        self.eventsButtonLayout.setMargin(0)
         self.eventsButtonLayout.setObjectName(_fromUtf8("eventsButtonLayout"))
         self.getEventsButton = QtGui.QPushButton(self.eventsWidget)
         self.getEventsButton.setObjectName(_fromUtf8("getEventsButton"))
@@ -95,12 +93,11 @@ class Ui_MainWindow(object):
         self.stationsWidget = QtGui.QWidget(self.splitter_2)
         self.stationsWidget.setObjectName(_fromUtf8("stationsWidget"))
         self.stationsLayout = QtGui.QVBoxLayout(self.stationsWidget)
-        self.stationsLayout.setSpacing(0)
         self.stationsLayout.setMargin(0)
+        self.stationsLayout.setSpacing(0)
         self.stationsLayout.setObjectName(_fromUtf8("stationsLayout"))
         self.stationsButtonLayout = QtGui.QHBoxLayout()
         self.stationsButtonLayout.setSpacing(12)
-        self.stationsButtonLayout.setMargin(0)
         self.stationsButtonLayout.setObjectName(_fromUtf8("stationsButtonLayout"))
         self.getStationsButton = QtGui.QPushButton(self.stationsWidget)
         self.getStationsButton.setObjectName(_fromUtf8("getStationsButton"))
@@ -136,7 +133,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.splitter)
         MainWindow.setCentralWidget(self.centralwidget)
         self.eventOptionsDockWidget = QtGui.QDockWidget(MainWindow)
-        self.eventOptionsDockWidget.setFloating(True)
+        self.eventOptionsDockWidget.setFloating(False)
         self.eventOptionsDockWidget.setFeatures(QtGui.QDockWidget.AllDockWidgetFeatures)
         self.eventOptionsDockWidget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         self.eventOptionsDockWidget.setObjectName(_fromUtf8("eventOptionsDockWidget"))
@@ -145,7 +142,7 @@ class Ui_MainWindow(object):
         self.eventOptionsDockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.eventOptionsDockWidget)
         self.stationOptionsDockWidget = QtGui.QDockWidget(MainWindow)
-        self.stationOptionsDockWidget.setFloating(True)
+        self.stationOptionsDockWidget.setFloating(False)
         self.stationOptionsDockWidget.setFeatures(QtGui.QDockWidget.AllDockWidgetFeatures)
         self.stationOptionsDockWidget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         self.stationOptionsDockWidget.setObjectName(_fromUtf8("stationOptionsDockWidget"))

@@ -24,6 +24,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.setWindowTitle('Waveforms')
 
         # Keep a reference to globally shared components
+        self.pyweed = pyweed
         self.preferences = pyweed.preferences
         self.client = pyweed.client
 
@@ -277,8 +278,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsDownloadComplete = False
 
         ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
-        eventsDF = self.eventsHandler.get_selected_dataframe()
-        stationsDF = self.stationsHandler.get_selected_dataframe()
+        eventsDF = self.pyweed.events_handler.get_selected_dataframe()
+        stationsDF = self.pyweed.stations_handler.get_selected_dataframe()
 
         self.downloadStatusLabel.setText("Calculating distances...")
         self.downloadStatusLabel.repaint()

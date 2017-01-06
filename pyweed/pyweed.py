@@ -60,8 +60,6 @@ class PyWeed(object):
     station_options = None
     stations = None
     selected_station_ids = None
-    app_name = __app_name__
-    app_version = __version__
 
     def __init__(self):
         super(PyWeed, self).__init__()
@@ -90,6 +88,7 @@ class PyWeed(object):
         LOGGER.info("Saving preferences")
         try:
             self.preferences.EventOptions.update(self.event_options.get_options(stringify=True))
+            self.preferences.StationOptions.update(self.station_options.get_options(stringify=True))
             self.preferences.save()
         except Exception as e:
             LOGGER.error("Unable to save configuration preferences: %s", e)
