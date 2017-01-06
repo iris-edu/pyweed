@@ -228,12 +228,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Loaded %d channels', stationsDF.shape[0])
         self.statusBar.showMessage('Loaded %d channels' % (stationsDF.shape[0]))
 
-
     @QtCore.pyqtSlot()
     def getWaveforms(self):
-        self.waveformsDialog.show()
-        self.waveformsDialog.loadWaveformChoices()
-
+        self.pyweed.open_waveforms_dialog()
 
     @QtCore.pyqtSlot(int, int)
     def eventsTableClicked(self, row, col):
