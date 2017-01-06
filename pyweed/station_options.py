@@ -4,31 +4,31 @@ from options import Options, DateOption, FloatOption, Option
 class StationOptions(Options):
 
     time_choice = Option(hidden=True)
-    TIME_RANGE = 'timeBetweenRadioButton'
-    TIME_EVENTS = 'timeDuringEventsRadioButton'
+    TIME_RANGE = 'timeBetween'
+    TIME_EVENTS = 'timeDuringEvents'
 
-    starttime = DateOption()
-    endtime = DateOption()
+    starttime = DateOption(default=-30)
+    endtime = DateOption(default=0)
 
-    network = Option()
-    station = Option()
-    location = Option()
-    channel = Option()
+    network = Option(default="_GSN")
+    station = Option(default="*")
+    location = Option(default="*")
+    channel = Option(default="?HZ")
 
     location_choice = Option(hidden=True)
-    LOCATION_BOX = 'locationRangeRadioButton'
-    LOCATION_POINT = 'locationDistanceFromPointRadioButton'
-    LOCATION_EVENTS = 'locationDistanceFromEventsRadioButton'
+    LOCATION_BOX = 'locationRange'
+    LOCATION_POINT = 'locationDistanceFromPoint'
+    LOCATION_EVENTS = 'locationDistanceFromEvents'
 
-    minlatitude = FloatOption()
-    maxlatitude = FloatOption()
-    minlongitude = FloatOption()
-    maxlongitude = FloatOption()
+    minlatitude = FloatOption(default=-90)
+    maxlatitude = FloatOption(default=90)
+    minlongitude = FloatOption(default=-180)
+    maxlongitude = FloatOption(default=80)
 
     latitude = FloatOption()
     longitude = FloatOption()
     minradius = FloatOption()
-    maxradius = FloatOption()
+    maxradius = FloatOption(default=30)
 
     def get_obspy_options(self):
         exclude = set()

@@ -88,36 +88,8 @@ class Preferences(object):
         self.Map.projection = "robin"
 
         self.EventOptions = Section.create("EventOptions")
-        self.EventOptions.minmagnitude = "5.0"
-        self.EventOptions.maxmagnitude = "10.0"
-        self.EventOptions.mindepth = "0.0"
-        self.EventOptions.maxdepth = "6731.0"
-        self.EventOptions.minlongitude = "-180.0"
-        self.EventOptions.maxlongitude = "180.0"
-        self.EventOptions.minlatitude = "-90.0"
-        self.EventOptions.maxlatitude = "90.0"
-        self.EventOptions.minradius = "0"
-        self.EventOptions.maxradius = "30"
-        self.EventOptions.longitude = "0"
-        self.EventOptions.latitude = "0"
-        self.EventOptions.time_choice = 'timeBetweenRadioButton' # or 'timeDuringStationsRadioButton'
-        self.EventOptions.location_choice = 'locationRangeRadioButton' # or 'locationDistanceFromPointRadioButton' or 'locationDistanceFromStationsRadioButton'
 
         self.StationOptions = Section.create("StationOptions")
-        self.StationOptions.network = "_GSN"
-        self.StationOptions.station = "*"
-        self.StationOptions.location = "*"
-        self.StationOptions.channel = "?HZ"
-        self.StationOptions.locationRangeWest = "-180"
-        self.StationOptions.locationRangeEast = "180"
-        self.StationOptions.locationRangeSouth = "-90"
-        self.StationOptions.locationRangeNorth = "90"
-        self.StationOptions.distanceFromPointMinRadius = "0"
-        self.StationOptions.distanceFromPointMaxRadius = "30"
-        self.StationOptions.distanceFromPointEast = "0"
-        self.StationOptions.distanceFromPointNorth = "0"
-        self.StationOptions.selectedTimeButton = 'timeBetweenRadioButton' # or 'timeDuringEventsRadioButton'
-        self.StationOptions.selectedLocationButton = 'locationRangeRadioButton' # or 'locationDistanceFromPointRadioButton' or 'locationDistanceFromEventsRadioButton'
 
     def save(self):
         """
