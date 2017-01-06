@@ -1,6 +1,8 @@
 from obspy.core.utcdatetime import UTCDateTime
 from distutils.util import strtobool
 from logging import getLogger
+from numbers import Number
+from datetime import timedelta
 
 ###
 # Webservice request library
@@ -67,7 +69,11 @@ class DateOption(Option):
     A date parameter.
     """
     def to_option(self, value):
-        return UTCDateTime(value)
+        # Value can be a number indicating number of days relative to today
+        if isinstance(value, Number):
+            return UTCDateTime() + timedelta(days=value)
+        else:
+            return UTCDateTime(value)
 
     def to_string(self, value):
         if hasattr(value, 'isoformat'):
@@ -94,7 +100,7 @@ class IntOption(Option):
     An integer value
     """
     def to_option(self, value):
-        return float(value)
+        return int(value)
 
 
 class FloatOption(Option):
@@ -128,8 +134,11 @@ class OptionsMeta(type):
             if isinstance(option, Option):
                 # Keep the definition
                 options[attr] = option
-                # Set the actual instance attribute to None
-                attrs[attr] = None
+                # Set the actual instance attribute to the default value or None
+                if option.default is not None:
+                    attrs[attr] = option.to_option(option.default)
+                else:
+                    attrs[attr] = None
         # Store the option definitions in a private attribute
         attrs['_options'] = options
         return type.__new__(cls, name, bases, attrs)

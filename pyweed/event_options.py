@@ -4,33 +4,33 @@ from options import Options, DateOption, FloatOption, Option
 class EventOptions(Options):
 
     time_choice = Option(hidden=True)
-    TIME_RANGE = 'timeBetweenRadioButton'
-    TIME_STATIONS = 'timeDuringStationsRadioButton'
+    TIME_RANGE = 'timeBetween'
+    TIME_STATIONS = 'timeDuringStations'
 
-    starttime = DateOption()
-    endtime = DateOption()
+    starttime = DateOption(default=-30)
+    endtime = DateOption(default=0)
 
-    minmagnitude = FloatOption()
-    maxmagnitude = FloatOption()
+    minmagnitude = FloatOption(default=5.0)
+    maxmagnitude = FloatOption(default=10.0)
     magtype = Option()
 
-    mindepth = FloatOption()
-    maxdepth = FloatOption()
+    mindepth = FloatOption(default=0)
+    maxdepth = FloatOption(default=6800)
 
     location_choice = Option(hidden=True)
-    LOCATION_BOX = 'locationRangeRadioButton'
-    LOCATION_POINT = 'locationDistanceFromPointRadioButton'
-    LOCATION_STATIONS = 'locationDistanceFromStationsRadioButton'
+    LOCATION_BOX = 'locationRange'
+    LOCATION_POINT = 'locationDistanceFromPoint'
+    LOCATION_STATIONS = 'locationDistanceFromStations'
 
-    minlatitude = FloatOption()
-    maxlatitude = FloatOption()
-    minlongitude = FloatOption()
-    maxlongitude = FloatOption()
+    minlatitude = FloatOption(default=-90)
+    maxlatitude = FloatOption(default=90)
+    minlongitude = FloatOption(default=-180)
+    maxlongitude = FloatOption(default=180)
 
     latitude = FloatOption()
     longitude = FloatOption()
     minradius = FloatOption()
-    maxradius = FloatOption()
+    maxradius = FloatOption(default=30)
 
     def get_obspy_options(self):
         exclude = set()
