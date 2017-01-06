@@ -143,7 +143,6 @@ class StationsHandler(SignalingObject):
         # Current state
         self.inventory = None
         self.currentDF = None
-        self.selectedIDs = []
 
         self.inventory_loader = None
         self.data_frame_loader = None
@@ -172,14 +171,8 @@ class StationsHandler(SignalingObject):
             self.currentDF = df
         self.done.emit(df)
 
-    def get_selected_ids(self):
-        return(self.selectedIDs)
-
-    def set_selected_ids(self, IDs):
-        self.selectedIDs = IDs
-
     def get_selected_dataframe(self):
-        df = self.currentDF.loc[self.currentDF['SNCL'].isin(self.selectedIDs)]
+        df = self.currentDF.loc[self.currentDF['SNCL'].isin(self.pyweed.selected_station_ids)]
         return(df)
 
     def get_column_names(self):
