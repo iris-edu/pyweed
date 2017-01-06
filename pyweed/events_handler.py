@@ -197,7 +197,6 @@ class EventsHandler(SignalingObject):
         # Current state
         self.event_catalog = None
         self.currentDF = None
-        self.selectedIDs = []
 
         self.catalog_loader = None
         self.data_frame_loader = None
@@ -226,14 +225,8 @@ class EventsHandler(SignalingObject):
             self.currentDF = df
         self.done.emit(df)
 
-    def get_selected_ids(self):
-        return(self.selectedIDs)
-
-    def set_selected_ids(self, IDs):
-        self.selectedIDs = IDs
-
     def get_selected_dataframe(self):
-        df = self.currentDF.loc[self.currentDF['EventID'].isin(self.selectedIDs)]
+        df = self.currentDF.loc[self.currentDF['EventID'].isin(self.pyweed.selected_event_ids)]
         return(df)
 
     def get_column_names(self):
