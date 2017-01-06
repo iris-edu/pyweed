@@ -97,7 +97,8 @@ class StationsDataFrameLoader(SignalingThread):
                 for c in s.channels:
                     snclId = n.code + "." + s.code + "." + c.location_code + "." + c.code
                     # Append a row to the dataframe
-                    df.loc[len(df)] = [n.code, s.code,
+                    df.loc[len(df)] = [n.code,
+                                       s.code,
                                        c.location_code,
                                        c.code,
                                        c.longitude,
@@ -126,8 +127,9 @@ class StationsHandler(SignalingObject):
     inventory_loaded = QtCore.pyqtSignal(object)
 
     column_names = [
-        'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km', 'MagType', 'EventLocationName',
-        'Author', 'Catalog', 'Contributor', 'ContributorID', 'MagAuthor', 'EventID'
+        'Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude',
+        'Elevation', 'Depth', 'Azimuth', 'Dip', 'SensorDescription', 'Scale', 'ScaleFreq',
+        'ScaleUnits', 'SampleRate', 'StartTime', 'EndTime', 'SNCL'
     ]
 
     def __init__(self, pyweed):

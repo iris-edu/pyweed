@@ -20,7 +20,6 @@ import logging
 # version of some internal libraries. This must be done before the first import of the PyQt4 libraries.
 # See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
 import os
-from stations_handler import StationsHandler
 os.environ['QT_API'] = 'pyqt'
 import sip
 sip.setapi("QString", 2)
@@ -37,6 +36,7 @@ from gui.LoggingDialog import LoggingDialog
 from gui.SplashScreenHandler import SplashScreenHandler
 from seismap import Seismap
 from events_handler import EventsHandler
+from stations_handler import StationsHandler
 from gui.EventOptionsWidget import EventOptionsWidget
 from gui.WaveformDialog import WaveformDialog
 from gui.ConsoleDialog import ConsoleDialog
@@ -122,9 +122,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         """
         Load events
         """
-        if options:
-            self.set_event_options(options)
-        else:
+        if not options:
             options = self.event_options.get_obspy_options()
         LOGGER.info("Fetching events with parameters: %s" % repr(options))
         self.eventsHandler.load_catalog(parameters=options)
@@ -149,19 +147,17 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         """
         Load stations
         """
-        if options:
-            self.set_station_options(options)
-        else:
+        if not options:
             options = self.station_options.get_obspy_options()
         LOGGER.info("Fetching stations with parameters: %s" % repr(options))
-        self.stationsHandler.load_catalog(parameters=options)
+        self.stationsHandler.load_inventory(parameters=options)
 
     def set_station_options(self, options):
         super(PyWeedGUI, self).set_station_options(options)
         self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
 
-    def onStationCatalogLoaded(self, catalog):
-        self.set_stations(catalog)
+    def onStationsInventoryLoaded(self, inventory):
+        self.set_stations(inventory)
 
     def onStationsLoaded(self, stationsDF):
         """
@@ -185,7 +181,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         iris_name = "IRIS"
 
         msgBox = QtGui.QMessageBox()
-        msgBox.setWindowTitle("About %s" % self.preferences.App.name)
+        msgBox.setWindowTitle("About %s" % self.app_name)
         msgBox.setTextFormat(QtCore.Qt.RichText)
         ###msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
         msgBox.setText("<br><br><br>" +

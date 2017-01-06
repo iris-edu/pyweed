@@ -26,10 +26,11 @@ pd.set_option('mode.chained_assignment', 'raise')
 from preferences import Preferences
 from pyweed_utils import manageCache
 from obspy.clients import fdsn
-from events import EventOptions
+from event_options import EventOptions
+from station_options import StationOptions
 
 
-__appName__ = "PyWEED"
+__app_name__ = "PyWEED"
 __version__ = "0.1.1"
 
 
@@ -59,12 +60,14 @@ class PyWeed(object):
     station_options = None
     stations = None
     selected_station_ids = None
+    app_name = __app_name__
+    app_version = __version__
 
     def __init__(self):
         super(PyWeed, self).__init__()
         self.configure_logging()
         self.event_options = EventOptions()
-        self.station_options = {}
+        self.station_options = StationOptions()
         self.load_preferences()
         self.manage_cache()
 
@@ -78,7 +81,8 @@ class PyWeed(object):
         self.preferences = Preferences()
         try:
             self.preferences.load()
-            self.event_options.set_options(self.preferences.EventOptions)
+            self.set_event_options(self.preferences.EventOptions)
+            self.set_station_options(self.preferences.StationOptions)
         except Exception as e:
             LOGGER.error("Unable to load configuration preferences -- using defaults.\n%s", e)
 
@@ -137,7 +141,7 @@ class PyWeed(object):
         self.selected_event_ids = event_ids
 
     def set_station_options(self, options):
-        self.station_options = options
+        self.station_options.set_options(options)
 
     def fetch_stations(self, options=None):
         raise NotImplementedError("PyWEED subclass should implement this")
