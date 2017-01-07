@@ -56,11 +56,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
         self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
 
-        # Connect signals associated with table clicks
-        # see:  http://zetcode.com/gui/pyqt4/eventsandsignals/
-        # see:  https://wiki.python.org/moin/PyQt/Sending%20Python%20values%20with%20signals%20and%20slots
-        QtCore.QObject.connect(self.eventsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.eventsTableClicked)
-        QtCore.QObject.connect(self.stationsTable, QtCore.SIGNAL('cellClicked(int, int)'), self.stationsTableClicked)
+        self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
+        self.stationsTable.itemSelectionChanged.connect(self.onStationSelectionChanged)
 
         self.getWaveformsButton.setEnabled(False)
 
@@ -232,8 +229,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     def getWaveforms(self):
         self.pyweed.open_waveforms_dialog()
 
-    @QtCore.pyqtSlot(int, int)
-    def eventsTableClicked(self, row, col):
+    def onEventSelectionChanged(self):
         """
         Handle a click anywhere in the table.
         """
@@ -264,9 +260,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.manageGetWaveformsButton()
 
-
-    @QtCore.pyqtSlot(int, int)
-    def stationsTableClicked(self, row, col):
+    def onStationSelectionChanged(self):
         # Get selected rows
         rows = []
         for idx in self.stationsTable.selectionModel().selectedRows():
