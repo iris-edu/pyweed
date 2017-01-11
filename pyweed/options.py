@@ -163,7 +163,7 @@ class Options(object):
         """
         Return the options as a dictionary, with a few options
         @param keys: only include the options named
-        @param hidden: include (or not) where Option.hidden is set
+        @param hidden: if True, include options where Option.hidden is set
         @param stringify: convert the option value to a string
         """
         options = {}
@@ -181,6 +181,11 @@ class Options(object):
         return options
 
     def keys(self, hidden=True):
+        """
+        Return a list of keys
+
+        @param hidden: if True, include options where Option.hidden is set
+        """
         return [key for key, option in self._options.items() if hidden or not option.hidden]
 
     def __setattr__(self, k, v):
