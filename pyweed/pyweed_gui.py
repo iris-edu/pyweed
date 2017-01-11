@@ -108,7 +108,10 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
 
     def on_event_catalog_loaded(self, catalog):
-        self.set_events(catalog)
+        if isinstance(catalog, Exception):
+            LOGGER.error("Error loading events")
+        else:
+            self.set_events(catalog)
 
     def on_events_loaded(self, eventsDF):
         """

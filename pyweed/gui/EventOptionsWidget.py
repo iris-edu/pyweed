@@ -48,15 +48,15 @@ class EventOptionsAdapter(OptionsAdapter):
 
     def inputs_to_options(self, inputs):
         options = super(EventOptionsAdapter, self).inputs_to_options(inputs)
-        if options.get('_timeBetween'):
+        if strtobool(options.get('_timeBetween')):
             options['time_choice'] = EventOptions.TIME_RANGE
-        elif options.get('_timeDuringStations'):
+        elif strtobool(options.get('_timeDuringStations')):
             options['time_choice'] = EventOptions.TIME_STATIONS
-        if options.get('_locationRange'):
+        if strtobool(options.get('_locationRange')):
             options['location_choice'] = EventOptions.LOCATION_BOX
-        elif options.get('_locationDistanceFromPoint'):
+        elif strtobool(options.get('_locationDistanceFromPoint')):
             options['location_choice'] = EventOptions.LOCATION_POINT
-        elif options.get('_locationDistanceFromEvents'):
+        elif strtobool(options.get('_locationDistanceFromEvents')):
             options['location_choice'] = EventOptions.LOCATION_STATIONS
         return options
 

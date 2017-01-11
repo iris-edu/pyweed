@@ -209,10 +209,13 @@ class EventsHandler(SignalingObject):
         self.catalog_loader.start()
 
     def on_catalog_loaded(self, event_catalog):
-        if not isinstance(event_catalog, Exception):
+        self.catalog_loaded.emit(event_catalog)
+        if isinstance(event_catalog, Exception):
+            # On exception, be sure to emit the final signal
+            self.done.emit(event_catalog)
+        else:
             self.event_catalog = event_catalog
             self.load_data_frame()
-        self.catalog_loaded.emit(event_catalog)
 
     def load_data_frame(self):
         column_names = self.get_column_names()
