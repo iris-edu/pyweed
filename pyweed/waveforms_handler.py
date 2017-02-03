@@ -120,7 +120,7 @@ class WaveformLoader(SignalingThread):
                 # Resize the subplot to a hard size, because otherwise it will do it inconsistently
                 h.subplots_adjust(bottom=.1, left=.1, right=.95, top=.85)
                 # Save with transparency
-                h.savefig(imageFile, transparent=True)
+                h.savefig(imageFile)
 
             self.done.emit(WaveformResult(waveform_id, imageFile))
 

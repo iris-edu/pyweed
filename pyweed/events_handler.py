@@ -15,6 +15,8 @@ import pandas as pd
 from signals import SignalingThread, SignalingObject
 import logging
 from PyQt4 import QtCore
+from obspy.clients.fdsn.header import FDSNException
+from obspy.core.event.catalog import Catalog
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,9 +46,14 @@ class EventsLoader(SignalingThread):
             event_catalog = self.client.get_events(**self.parameters)
             self.done.emit(event_catalog)
         except Exception as e:
-            # TODO:  What type of exception should we trap?
-            self.done.emit(e)
-            raise
+            # If no results found, the client will raise an exception, we need to trap this
+            # TODO: this should be much cleaner with a fix to https://github.com/obspy/obspy/issues/1656
+            if e.message.startswith("No data"):
+                LOGGER.warning("No events found! Your query may be too narrow.")
+                self.done.emit(Catalog())
+            else:
+                self.done.emit(e)
+                raise
 
 
 class EventsDataFrameLoader(SignalingThread):

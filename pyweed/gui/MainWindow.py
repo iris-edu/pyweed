@@ -12,7 +12,7 @@ from __future__ import (absolute_import, division, print_function)
 
 from PyQt4 import QtGui, QtCore
 from gui.uic import MainWindow
-from preferences import Preferences
+from preferences import Preferences, safe_int, safe_bool, bool_to_str
 import logging
 from gui.LoggingDialog import LoggingDialog
 from gui.SplashScreenHandler import SplashScreenHandler
@@ -73,6 +73,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_axes.clear()
         self.seismap = Seismap(projection=prefs.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
+
+        self.resize(
+            safe_int(prefs.MainWindow.width, 1000),
+            safe_int(prefs.MainWindow.height, 800))
+        self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
+        self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
+
 
     def fillTable(self, table, dataframe, visibleColumns, numericColumns):
         """
@@ -288,7 +295,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.manageGetWaveformsButton()
 
-
     def manageGetWaveformsButton(self):
         """
         Handle enabled/disabled status of the "Get Waveforms" button
@@ -303,3 +309,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.getWaveformsButton.setEnabled(False)
 
+    def savePreferences(self):
+        self.pyweed.preferences.MainWindow.width = self.width()
+        self.pyweed.preferences.MainWindow.height = self.height()
+        self.pyweed.preferences.MainWindow.eventOptionsFloat = bool_to_str(self.eventOptionsDockWidget.isFloating())
+        self.pyweed.preferences.MainWindow.stationOptionsFloat = bool_to_str(self.stationOptionsDockWidget.isFloating())
