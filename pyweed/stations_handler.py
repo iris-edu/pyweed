@@ -15,6 +15,7 @@ import pandas as pd
 import logging
 from signals import SignalingThread, SignalingObject
 from PyQt4 import QtCore
+from obspy.core.inventory.inventory import Inventory
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +49,14 @@ class StationsLoader(SignalingThread):
             inventory = self.client.get_stations(**self.parameters)
             self.done.emit(inventory)
         except Exception as e:
-            # TODO:  What type of exception should we trap?
-            self.done.emit(e)
-            raise
+            # If no results found, the client will raise an exception, we need to trap this
+            # TODO: this should be much cleaner with a fix to https://github.com/obspy/obspy/issues/1656
+            if e.message.startswith("No data"):
+                LOGGER.warning("No stations found! Your query may be too narrow.")
+                self.done.emit(Inventory([], 'INTERNAL'))
+            else:
+                self.done.emit(e)
+                raise
 
 
 class StationsDataFrameLoader(SignalingThread):

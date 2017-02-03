@@ -72,6 +72,12 @@
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
             </spacer>
            </item>
            <item row="0" column="1">
@@ -146,7 +152,7 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QToolButton" name="downloadToolButton">
+             <widget class="QPushButton" name="downloadPushButton">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -154,13 +160,10 @@
                </size>
               </property>
               <property name="text">
-               <string/>
+               <string>Download</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
-              </property>
-              <property name="popupMode">
-               <enum>QToolButton::InstantPopup</enum>
               </property>
              </widget>
             </item>
@@ -235,6 +238,12 @@
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
             </spacer>
            </item>
            <item row="1" column="1">
@@ -271,7 +280,7 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QToolButton" name="saveToolButton">
+             <widget class="QPushButton" name="savePushButton">
               <property name="minimumSize">
                <size>
                 <width>200</width>
@@ -279,7 +288,7 @@
                </size>
               </property>
               <property name="text">
-               <string/>
+               <string>Save</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -362,7 +371,7 @@
          <set>QAbstractItemView::NoEditTriggers</set>
         </property>
         <property name="selectionMode">
-         <enum>QAbstractItemView::NoSelection</enum>
+         <enum>QAbstractItemView::MultiSelection</enum>
         </property>
         <property name="selectionBehavior">
          <enum>QAbstractItemView::SelectRows</enum>

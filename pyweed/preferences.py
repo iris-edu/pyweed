@@ -20,6 +20,27 @@ __appName__ = "PyWEED"
 __version__ = "0.1.1"
 
 
+def safe_bool(s, default=False):
+    try:
+        return s.startswith('y')
+    except:
+        return default
+
+
+def bool_to_str(b):
+    if b:
+        return "y"
+    else:
+        return "n"
+
+
+def safe_int(s, default=0):
+    try:
+        return int(s)
+    except:
+        return default
+
+
 class Section(object):
     def __init__(self, **initial):
         self.__dict__.update(initial)
@@ -78,14 +99,21 @@ class Preferences(object):
         self.Data.dataCenter = "IRIS"
 
         self.Waveforms = Section.create("Waveforms")
-        self.Waveforms.downloadDir = os.path.join(os.path.expanduser("~"), ".pyweed_downloads")
+        self.Waveforms.downloadDir = user_download_path()
         self.Waveforms.cacheSize = "50" # megabytes
+        self.Waveforms.saveDir = user_save_path()
 
         self.Logging = Section.create("Logging")
         self.Logging.level = "DEBUG"
 
         self.Map = Section.create("Map")
         self.Map.projection = "robin"
+
+        self.MainWindow = Section.create("MainWindow")
+        self.MainWindow.width = "1000"
+        self.MainWindow.height = "800"
+        self.MainWindow.eventOptionsFloat = "n"
+        self.MainWindow.stationOptionsFloat = "y"
 
         self.EventOptions = Section.create("EventOptions")
 
@@ -101,6 +129,7 @@ class Preferences(object):
             self.Waveforms,
             self.Logging,
             self.Map,
+            self.MainWindow,
             self.EventOptions,
             self.StationOptions,
         ]
@@ -140,6 +169,7 @@ class Preferences(object):
                 self.Waveforms,
                 self.Logging,
                 self.Map,
+                self.MainWindow,
                 self.EventOptions,
                 self.StationOptions,
             ]
@@ -163,6 +193,50 @@ def user_config_path():
     """
     if platform.system() == "Darwin":
         path = os.path.join(os.path.expanduser("~"), ".pyweed")
+        return(path)
+    #elif platform.system() == "Linux":
+        #path = os.path.join(os.path.expanduser("~"), ".config", "pyweed")
+        #return path
+    #elif platform.system() == "Windows":
+        #path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed")
+        #return path
+    else:
+        raise Exception("Unsupported operating system")
+
+
+def user_download_path():
+    """
+    Option to support different paths for different operating systems.
+
+    Adapted from:  https://github.com/claysmith/oldArcD/blob/master/tools/arctographer/arcmap/datafiles.py
+
+    @rtype: str
+    @return: the default directory for saving waveform files
+    """
+    if platform.system() == "Darwin":
+        path = os.path.join(os.path.expanduser("~"), ".pyweed_downloads")
+        return(path)
+    #elif platform.system() == "Linux":
+        #path = os.path.join(os.path.expanduser("~"), ".config", "pyweed")
+        #return path
+    #elif platform.system() == "Windows":
+        #path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed")
+        #return path
+    else:
+        raise Exception("Unsupported operating system")
+
+
+def user_save_path():
+    """
+    Option to support different paths for different operating systems.
+
+    Adapted from:  https://github.com/claysmith/oldArcD/blob/master/tools/arctographer/arcmap/datafiles.py
+
+    @rtype: str
+    @return: the default directory for saving waveform files
+    """
+    if platform.system() == "Darwin":
+        path = os.path.join(os.path.expanduser("~"), "Downloads", "PyWEED")
         return(path)
     #elif platform.system() == "Linux":
         #path = os.path.join(os.path.expanduser("~"), ".config", "pyweed")
