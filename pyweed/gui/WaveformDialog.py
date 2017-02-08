@@ -51,9 +51,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsHandler.progress.connect(self.on_waveform_downloaded)
         self.waveformsHandler.done.connect(self.on_all_downloaded)
 
-        self.waveformsDownloadStatus = STATUS_READY
-        self.waveformsSaveStatus = STATUS_READY
-
         # Displayed waveforms
         self.visibleWaveformsDF = pd.DataFrame()
 
@@ -78,20 +75,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.secondsBeforeSpinBox.valueChanged.connect(self.resetDownload)
         self.secondsAfterSpinBox.valueChanged.connect(self.resetDownload)
 
-        # Set up a thread to watch for waveform requests that lasts as long as this dialog is open
-        LOGGER.debug('Starting waveformRequestWatcherThread')
-        #self.waveformRequestWatcher = waveformRequestWatcherThread(self.waveformRequestQueue)
-        #self.waveformRequestWatcher.waveformRequestSignal.connect(self.handleWaveformRequest)
-        #self.waveformRequestWatcher.start()
-
-        # Set up a thread to watch for waveforms that lasts as long as this dialog is open
-        LOGGER.debug('Starting waveformWatcher thread')
-        #self.waveformResponseWatcher = waveformResponseWatcherThread(self.waveformResponseQueue)
-        #self.waveformResponseWatcher.waveformResponseSignal.connect(self.handleWaveformResponse)
-        #self.waveformResponseWatcher.start()
-
         LOGGER.debug('Finished initializing waveform dialog')
-
 
     # NOTE:  http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
     # NOTE:  http://stackoverflow.com/questions/30462078/using-a-checkbox-in-pyqt
@@ -115,9 +99,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         else:
             keepItem.setCheckState(QtCore.Qt.Checked)
             self.waveformsHandler.setWaveformKeep(waveformID, True)
-
-        return
-
 
     @QtCore.pyqtSlot()
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
@@ -178,9 +159,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         LOGGER.debug('Finished loading waveform choices')
 
-        self.updateToolbars()
-
-        return
+        self.resetDownload()
 
     @QtCore.pyqtSlot()
     def loadSelectionTable(self, waveformsDF):
@@ -306,10 +285,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Download controls
         if self.waveformsDownloadStatus == STATUS_WORKING:
             # Currently downloading, disable most of the UI
-            self.downloadPushButton.setText('Downloading...')
             self.downloadGroupBox.setEnabled(False)
+            self.downloadPushButton.setChecked(True)
+            self.downloadPushButton.setText('Downloading...')
         else:
             self.downloadGroupBox.setEnabled(True)
+            self.downloadPushButton.setChecked(False)
             if self.waveformsDownloadStatus == STATUS_READY:
                 # Normal operation
                 self.downloadPushButton.setText('Download')
@@ -319,28 +300,26 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.downloadPushButton.setEnabled(False)
 
         # Save controls
-        if self.waveformsDownloadStatus == STATUS_READY:
-            # Data hasn't been downloaded yet
-            self.saveGroupBox.setEnabled(False)
-            self.savePushButton.setText('Save')
-            self.saveStatusLabel.setText('Download waveforms first!')
-        elif self.waveformsSaveStatus == STATUS_WORKING:
+        if self.waveformsSaveStatus == STATUS_WORKING:
             # Currently saving
             self.saveGroupBox.setEnabled(False)
             self.savePushButton.setText('Saving...')
+            self.savePushButton.setChecked(True)
             if self.waveformsDownloadStatus != STATUS_DONE:
                 self.saveStatusLabel.setText('Waiting for downloads to finish')
             else:
                 self.saveStatusLabel.setText('')
         else:
-            # Available
-            self.saveGroupBox.setEnabled(True)
             self.savePushButton.setText('Save')
-            self.saveStatusLabel.setText('')
-
-        # Update GUI
-        QtGui.QApplication.processEvents()
-
+            self.savePushButton.setChecked(False)
+            if self.waveformsDownloadStatus == STATUS_READY:
+                # Data hasn't been downloaded yet
+                self.saveGroupBox.setEnabled(False)
+                self.saveStatusLabel.setText('Download waveforms first!')
+            else:
+                # Available
+                self.saveGroupBox.setEnabled(True)
+                self.saveStatusLabel.setText('')
 
     def onSavePushButton(self):
         """
@@ -460,14 +439,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """
         LOGGER.debug('COMPLETED all downloads')
 
-        self.waveformsDownloadStatus = STATUS_DONE
-        self.updateToolbars()
+        if self.waveformsDownloadStatus == STATUS_WORKING:
+            self.waveformsDownloadStatus = STATUS_DONE
+            self.updateToolbars()
 
-        # Save data if appropriate
-        if self.waveformsSaveStatus == STATUS_WORKING:
-            self.saveWaveformData()
-
-        return
+            # Save data if appropriate
+            if self.waveformsSaveStatus == STATUS_WORKING:
+                self.saveWaveformData()
 
 
     @QtCore.pyqtSlot()
@@ -551,12 +529,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         """
         This function is triggered whenever the user presses the "to <directory>" button.
         """
-
         # If the user quits or cancels this dialog, '' is returned
         newDirectory = str(QtGui.QFileDialog.getExistingDirectory(
             self,
             "Waveform Directory",
-            os.path.expanduser("~"),
+            self.waveformDirectory,
             QtGui.QFileDialog.ShowDirsOnly))
 
         if newDirectory != '':
