@@ -74,6 +74,11 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap = Seismap(projection=prefs.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
 
+        # TODO: Basic mouse event handling
+        def on_press(event):
+            LOGGER.debug('you pressed', event.button, event.xdata, event.ydata)
+        cid = self.mapCanvas.mpl_connect('button_press_event', on_press)
+
         self.resize(
             safe_int(prefs.MainWindow.width, 1000),
             safe_int(prefs.MainWindow.height, 800))
@@ -310,7 +315,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.getWaveformsButton.setEnabled(False)
 
     def savePreferences(self):
-        self.pyweed.preferences.MainWindow.width = self.width()
-        self.pyweed.preferences.MainWindow.height = self.height()
-        self.pyweed.preferences.MainWindow.eventOptionsFloat = bool_to_str(self.eventOptionsDockWidget.isFloating())
-        self.pyweed.preferences.MainWindow.stationOptionsFloat = bool_to_str(self.stationOptionsDockWidget.isFloating())
+        prefs = self.pyweed.preferences
+
+        prefs.MainWindow.width = self.width()
+        prefs.MainWindow.height = self.height()
+        prefs.MainWindow.eventOptionsFloat = bool_to_str(self.eventOptionsDockWidget.isFloating())
+        prefs.MainWindow.stationOptionsFloat = bool_to_str(self.stationOptionsDockWidget.isFloating())
