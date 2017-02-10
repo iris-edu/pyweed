@@ -10,6 +10,7 @@ from gui.MyTableWidgetImageWidget import MyTableWidgetImageWidget
 from logging import getLogger
 from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
+from gui.TableItems import TableItems
 
 LOGGER = getLogger(__name__)
 
@@ -19,7 +20,15 @@ STATUS_READY = "ready"  # Waiting for user to initiate
 STATUS_WORKING = "working"  # Working
 STATUS_DONE = "done"  # Finished
 
+
+class WaveformTableItems(TableItems):
+    pass
+
+
 class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
+
+    tableItems = None
+
     """
     Dialog window for selection and display of waveforms.
     """
@@ -181,69 +190,24 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         hidden_column = self.waveformsHandler.getColumnHidden()
         numeric_column = self.waveformsHandler.getColumnNumeric()
 
-        # Clear existing contents
-        self.selectionTable.clear() # This is important!
-        while (self.selectionTable.rowCount() > 0):
-            self.selectionTable.removeRow(0)
-
-        # Create new table
-        self.selectionTable.setRowCount(waveformsDF.shape[0])
-        self.selectionTable.setColumnCount(waveformsDF.shape[1])
-        self.selectionTable.setHorizontalHeaderLabels(waveformsDF.columns.tolist())
-        self.selectionTable.horizontalHeader().setStretchLastSection(True)
-        self.selectionTable.verticalHeader().hide()
-        # Hidden columns
-        for i in np.arange(len(hidden_column)):
-            if hidden_column[i]:
-                self.selectionTable.setColumnHidden(i,True)
-
-        # Add new contents
-        for i in range(waveformsDF.shape[0]):
-            for j in range(waveformsDF.shape[1]):
-                if numeric_column[j]:
-                    # Guarantee that all elements are converted to strings for display but apply proper sorting
-                    self.selectionTable.setItem(i, j, MyNumericTableWidgetItem(str(waveformsDF.iat[i,j])))
-
-                elif waveformsDF.columns[j] == 'Waveform':
-                    # NOTE:  What to put in the Waveform column depends on what is in the WaveformImagePath column.
-                    # NOTE:  It could be plain text or an imageWidget.
-                    if waveformsDF.WaveformImagePath.iloc[i] == '':
-                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(''))
-                    elif waveformsDF.WaveformImagePath.iloc[i] == 'NO DATA AVAILABLE':
-                        self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
-                    else:
-                        imagePath = waveformsDF.WaveformImagePath.iloc[i]
-                        imageItem = MyTableWidgetImageItem(imagePath)
-                        self.selectionTable.setItem(i, j, imageItem)
-
-                elif waveformsDF.columns[j] == 'Keep':
-                    checkBoxItem = QtGui.QTableWidgetItem()
-                    checkBoxItem.setFlags(QtCore.Qt.ItemIsEnabled)
-                    if self.waveformsHandler.getWaveformKeep(waveformsDF.WaveformID.iloc[i]):
-                        checkBoxItem.setCheckState(QtCore.Qt.Checked)
-                    else:
-                        checkBoxItem.setCheckState(QtCore.Qt.Unchecked)
-                    self.selectionTable.setItem(i, j, checkBoxItem)
-
-                else:
-                    # Anything else is converted to normal text
-                    self.selectionTable.setItem(i, j, QtGui.QTableWidgetItem(str(waveformsDF.iat[i,j])))
-
-        # Tighten up the table
-        # self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
+        # Use WaveformTableItems to put the DF into the table
+        if not self.tableItems:
+            self.tableItems = WaveformTableItems(
+                self.selectionTable,
+                hidden_column,
+                numeric_column
+            )
+        self.tableItems.build(waveformsDF)
 
         # Restore table sorting
         self.selectionTable.setSortingEnabled(True)
 
-        LOGGER.debug('Finished loading waveform selection table')
-
-        if self.waveformsDownloadStatus == STATUS_WORKING:
-            # Restart download with the new contents
+        # Start downloading the waveform data unless this is a filtered DF
+        if waveformsDF == self.waveformsHandler.currentDF:
+            LOGGER.debug('Starting download of waveform data')
             self.downloadWaveformData()
 
-        return
-
+        LOGGER.debug('Finished loading waveform selection table')
 
     @QtCore.pyqtSlot(int)
     def loadFilteredSelectionTable(self):
@@ -540,4 +504,3 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.waveformDirectory = newDirectory
             self.saveDirectoryPushButton.setText(self.waveformDirectory)
             self.resetSave()
-
