@@ -35,6 +35,7 @@ import collections
 from PyQt4 import QtCore
 import obspy
 from logging import getLogger
+import matplotlib
 
 LOGGER = getLogger(__name__)
 
@@ -64,7 +65,7 @@ class WaveformLoader(SignalingThread):
         self.downloadDir = preferences.Waveforms.downloadDir
         # TODO:  plot_width, plot_height should come from preferences
         self.plot_width = 600
-        self.plot_height = 200
+        self.plot_height = 120  # This this must be >100!
         self.secondsBefore = secondsBefore
         self.secondsAfter = secondsAfter
         super(WaveformLoader, self).__init__()
@@ -118,7 +119,11 @@ class WaveformLoader(SignalingThread):
                 # In order to really customize the plotting, we need to return the figure and modify it
                 h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
                 # Resize the subplot to a hard size, because otherwise it will do it inconsistently
-                h.subplots_adjust(bottom=.1, left=.1, right=.95, top=.85)
+                h.subplots_adjust(bottom=.1, left=.1, right=.95, top=1)
+                # Remove the title
+                for c in h.get_children():
+                    if isinstance(c, matplotlib.text.Text):
+                        c.remove()
                 # Save with transparency
                 h.savefig(imageFile)
 
@@ -280,6 +285,8 @@ class WaveformsHandler(SignalingObject):
         LOGGER.info('Downloading waveforms')
         LOGGER.debug("Priority IDs: %s" % (priority_ids.tolist(),))
         LOGGER.debug("Other IDs: %s" % (other_ids.tolist(),))
+        # Clear image path from the DF
+        self.currentDF.WaveformImagePath = ''
         self.seconds_before = seconds_before
         self.seconds_after = seconds_after
         self.queue.extend(priority_ids)
