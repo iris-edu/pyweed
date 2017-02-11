@@ -32,6 +32,18 @@ from gui.StationOptionsWidget import StationOptionsWidget
 LOGGER = logging.getLogger(__name__)
 
 
+def make_exclusive(widget1, widget2):
+    """
+    Make two widgets exclusive, so that if one is toggled the other is disabled and vice versa
+    """
+    widget1.toggled.connect(
+        lambda b: widget2.setEnabled(not b))
+    widget2.toggled.connect(
+        lambda b: widget1.setEnabled(not b))
+    widget2.setEnabled(not widget1.isChecked())
+    widget1.setEnabled(not widget2.isChecked())
+
+
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     def __init__(self, pyweed):
@@ -56,6 +68,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
         self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
 
+        # Connect the interdependent event/station options settings
+        make_exclusive(
+            self.eventOptionsWidget.timeFromStationsRadioButton,
+            self.stationOptionsWidget.timeFromEventsRadioButton)
+        make_exclusive(
+            self.eventOptionsWidget.locationFromStationsRadioButton,
+            self.stationOptionsWidget.locationFromEventsRadioButton)
+
         self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
         self.stationsTable.itemSelectionChanged.connect(self.onStationSelectionChanged)
 
@@ -79,12 +99,12 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             LOGGER.debug('you pressed', event.button, event.xdata, event.ydata)
         cid = self.mapCanvas.mpl_connect('button_press_event', on_press)
 
+        # Size and placement according to preferences
         self.resize(
             safe_int(prefs.MainWindow.width, 1000),
             safe_int(prefs.MainWindow.height, 800))
         self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
         self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
-
 
     def fillTable(self, table, dataframe, visibleColumns, numericColumns):
         """
@@ -123,6 +143,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         table.resizeColumnsToContents()
         table.resizeRowsToContents()
 
+    def updateOptions(self):
+        """
+        Update the event and station options from the GUI
+        """
+        self.pyweed.set_event_options(self.eventOptionsWidget.getOptions())
+        self.pyweed.set_station_options(self.stationOptionsWidget.getOptions())
+
     @QtCore.pyqtSlot()
     def getEvents(self):
         """
@@ -132,9 +159,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Loading events...')
         self.statusBar.showMessage('Loading events...')
 
-        options = self.eventOptionsWidget.getOptions()
-        self.pyweed.set_event_options(options)
-
+        self.updateOptions()
         self.pyweed.fetch_events()
 
     def onEventsLoaded(self, eventsDF):
@@ -188,10 +213,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Loading channels...')
         self.statusBar.showMessage('Loading channels...')
 
-        # Get stations and subset to desired columns
-        options = self.stationOptionsWidget.getOptions()
-
-        self.pyweed.set_station_options(options)
+        self.updateOptions()
         self.pyweed.fetch_stations()
 
     def onStationsLoaded(self, stationsDF):

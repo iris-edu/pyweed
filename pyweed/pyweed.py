@@ -129,6 +129,12 @@ class PyWeed(object):
     def set_event_options(self, options):
         self.event_options.set_options(options)
 
+    def get_event_obspy_options(self):
+        """
+        Get the options for making an event request from Obspy
+        """
+        return self.event_options.get_obspy_options(self.station_options)
+
     def fetch_events(self, options=None):
         raise NotImplementedError("PyWEED subclass should implement this")
 
@@ -141,6 +147,12 @@ class PyWeed(object):
 
     def set_station_options(self, options):
         self.station_options.set_options(options)
+
+    def get_station_obspy_options(self):
+        """
+        Get the options for making an event request from Obspy
+        """
+        return self.station_options.get_obspy_options(self.event_options)
 
     def fetch_stations(self, options=None):
         raise NotImplementedError("PyWEED subclass should implement this")

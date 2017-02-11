@@ -210,7 +210,7 @@ class EventsHandler(SignalingObject):
 
     def load_catalog(self, parameters=None):
         if not parameters:
-            parameters = self.pyweed.event_options.get_obspy_options()
+            parameters = self.pyweed.get_event_obspy_options()
         self.catalog_loader = EventsLoader(self.pyweed.client, parameters)
         self.catalog_loader.done.connect(self.on_catalog_loaded)
         self.catalog_loader.start()

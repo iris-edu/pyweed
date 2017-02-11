@@ -3,6 +3,7 @@ from gui.uic import StationOptionsWidget
 import logging
 from gui.utils import OptionsAdapter
 from station_options import StationOptions
+from distutils.util import strtobool
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,33 +26,37 @@ class StationOptionsAdapter(OptionsAdapter):
             'longitude': widget.distanceFromPointEastDoubleSpinBox,
             'latitude': widget.distanceFromPointNorthDoubleSpinBox,
             '_timeBetween': widget.timeBetweenRadioButton,
-            '_timeDuringEvents': widget.timeDuringEventsRadioButton,
+            '_timeFromEvents': widget.timeFromEventsRadioButton,
+            '_locationGlobal': widget.locationGlobalRadioButton,
             '_locationRange': widget.locationRangeRadioButton,
             '_locationDistanceFromPoint': widget.locationDistanceFromPointRadioButton,
-            '_locationDistanceFromEvents': widget.locationDistanceFromEventsRadioButton,
+            '_locationFromEvents': widget.locationFromEventsRadioButton,
         }
 
     def options_to_inputs(self, options):
         inputs = super(StationOptionsAdapter, self).options_to_inputs(options)
         # Set the radio buttons based on the EventOptions settings
         inputs['_timeBetween'] = str(options.time_choice == StationOptions.TIME_RANGE)
-        inputs['_timeDuringEvents'] = str(options.time_choice == StationOptions.TIME_EVENTS)
+        inputs['_timeFromEvents'] = str(options.time_choice == StationOptions.TIME_EVENTS)
+        inputs['_locationGlobal'] = str(options.location_choice == StationOptions.LOCATION_GLOBAL)
         inputs['_locationRange'] = str(options.location_choice == StationOptions.LOCATION_BOX)
         inputs['_locationDistanceFromPoint'] = str(options.location_choice == StationOptions.LOCATION_POINT)
-        inputs['_locationDistanceFromEvents'] = str(options.location_choice == StationOptions.LOCATION_EVENTS)
+        inputs['_locationFromEvents'] = str(options.location_choice == StationOptions.LOCATION_EVENTS)
         return inputs
 
     def inputs_to_options(self, inputs):
         options = super(StationOptionsAdapter, self).inputs_to_options(inputs)
-        if options.get('_timeBetween'):
+        if strtobool(options.get('_timeBetween')):
             options['time_choice'] = StationOptions.TIME_RANGE
-        elif options.get('_timeDuringEvents'):
+        elif strtobool(options.get('_timeFromEvents')):
             options['time_choice'] = StationOptions.TIME_EVENTS
-        if options.get('_locationRange'):
+        if strtobool(options.get('_locationGlobal')):
+            options['location_choice'] = StationOptions.LOCATION_GLOBAL
+        elif strtobool(options.get('_locationRange')):
             options['location_choice'] = StationOptions.LOCATION_BOX
-        elif options.get('_locationDistanceFromPoint'):
+        elif strtobool(options.get('_locationDistanceFromPoint')):
             options['location_choice'] = StationOptions.LOCATION_POINT
-        elif options.get('_locationDistanceFromEvents'):
+        elif strtobool(options.get('_locationFromEvents')):
             options['location_choice'] = StationOptions.LOCATION_EVENTS
         return options
 
@@ -69,6 +74,9 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
 
     @QtCore.pyqtSlot(int)
     def onLocationButtonClicked(self, button_id):
+        """
+        Experimental code to enable/disable sections based on radio button
+        """
         def enableItem(item, enabled):
             if isinstance(item, QtGui.QLayout):
                 for i in range(item.count()):

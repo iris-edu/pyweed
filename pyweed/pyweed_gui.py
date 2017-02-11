@@ -99,7 +99,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         #    self.events.clear()
 
         if not options:
-            options = self.event_options.get_obspy_options()
+            options = self.get_event_obspy_options()
         LOGGER.info("Fetching events with parameters: %s" % repr(options))
         self.events_handler.load_catalog(parameters=options)
 
@@ -131,7 +131,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         Load stations
         """
         if not options:
-            options = self.station_options.get_obspy_options()
+            options = self.get_station_obspy_options()
         LOGGER.info("Fetching stations with parameters: %s" % repr(options))
         self.stations_handler.load_inventory(parameters=options)
 
