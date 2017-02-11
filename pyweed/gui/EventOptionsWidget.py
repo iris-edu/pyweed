@@ -30,33 +30,37 @@ class EventOptionsAdapter(OptionsAdapter):
             'longitude': widget.distanceFromPointEastDoubleSpinBox,
             'latitude': widget.distanceFromPointNorthDoubleSpinBox,
             '_timeBetween': widget.timeBetweenRadioButton,
-            '_timeDuringStations': widget.timeDuringStationsRadioButton,
+            '_timeFromStations': widget.timeFromStationsRadioButton,
+            '_locationGlobal': widget.locationGlobalRadioButton,
             '_locationRange': widget.locationRangeRadioButton,
             '_locationDistanceFromPoint': widget.locationDistanceFromPointRadioButton,
-            '_locationDistanceFromEvents': widget.locationDistanceFromEventsRadioButton,
+            '_locationFromStations': widget.locationFromStationsRadioButton,
         }
 
     def options_to_inputs(self, options):
         inputs = super(EventOptionsAdapter, self).options_to_inputs(options)
         # Set the radio buttons based on the EventOptions settings
         inputs['_timeBetween'] = str(options.time_choice == EventOptions.TIME_RANGE)
-        inputs['_timeDuringStations'] = str(options.time_choice == EventOptions.TIME_STATIONS)
+        inputs['_timeFromStations'] = str(options.time_choice == EventOptions.TIME_STATIONS)
+        inputs['_locationGlobal'] = str(options.location_choice == EventOptions.LOCATION_GLOBAL)
         inputs['_locationRange'] = str(options.location_choice == EventOptions.LOCATION_BOX)
         inputs['_locationDistanceFromPoint'] = str(options.location_choice == EventOptions.LOCATION_POINT)
-        inputs['_locationDistanceFromEvents'] = str(options.location_choice == EventOptions.LOCATION_STATIONS)
+        inputs['_locationFromStations'] = str(options.location_choice == EventOptions.LOCATION_STATIONS)
         return inputs
 
     def inputs_to_options(self, inputs):
         options = super(EventOptionsAdapter, self).inputs_to_options(inputs)
         if strtobool(options.get('_timeBetween')):
             options['time_choice'] = EventOptions.TIME_RANGE
-        elif strtobool(options.get('_timeDuringStations')):
+        elif strtobool(options.get('_timeFromStations')):
             options['time_choice'] = EventOptions.TIME_STATIONS
-        if strtobool(options.get('_locationRange')):
+        if strtobool(options.get('_locationGlobal')):
+            options['location_choice'] = EventOptions.LOCATION_GLOBAL
+        elif strtobool(options.get('_locationRange')):
             options['location_choice'] = EventOptions.LOCATION_BOX
         elif strtobool(options.get('_locationDistanceFromPoint')):
             options['location_choice'] = EventOptions.LOCATION_POINT
-        elif strtobool(options.get('_locationDistanceFromEvents')):
+        elif strtobool(options.get('_locationFromStations')):
             options['location_choice'] = EventOptions.LOCATION_STATIONS
         return options
 

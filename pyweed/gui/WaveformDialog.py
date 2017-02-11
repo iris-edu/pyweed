@@ -118,6 +118,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         LOGGER.debug('Loading waveform choices...')
 
+        self.resetDownload()
+
         ## Create a new dataframe with time, source_lat, source_lon, source_mag, source_depth, SNCL, network, station, receiver_lat, receiver_lon -- one for each waveform
         eventsDF = self.pyweed.events_handler.get_selected_dataframe()
         stationsDF = self.pyweed.stations_handler.get_selected_dataframe()

@@ -4,42 +4,26 @@ from logging import getLogger
 from numbers import Number
 from datetime import timedelta
 
-###
-# Webservice request library
-#
-# Example:
-#
-# class MyRequest(BaseRequest):
-#     """
-#     Define a particular webservice request
-#     """
-#     # These are the keys and types that can be passed into the query
-#     param_types = {
-#         # A generic string parameter
-#         'name': WSParam(),
-#         # A date, will be put in the query as ISO format
-#         'birthday': WSDateParam(),
-#     }
-#     # Base query url
-#     url = 'http://hostname/path/to/query'
-#
-# req = MyRequest(name='Foo', birthday=datetime.date(1983,5,12))
-#
-# response = """
-# # id | name | message
-# 1|Foo|Hi there
-# 2|Bar|Yarr
-# """
-#
-# for row in req.get():
-#     name = row['name']
-#     message = row['message']
-#     print '%s says "%s"' % (name, message)
-#
-# prints = """
-# Foo says "Hi there"
-# Bar says "Yarr"
-# """
+"""
+Helper class for web services.
+
+Options represents a set of key/value pairs (ie. query parameters), internally these are typed values but
+they can be read/written as strings.
+
+@example
+>>> class Test(Options):
+...     option1 = Option()
+...     option2 = DateOption()
+>>> t = Test()
+>>> t.option1 = 'test'
+>>> t.option1
+'test'
+>>> t.option2 = '2012-01-01'
+>>> t.option2
+UTCDateTime(2012, 1, 1, 0, 0)
+>>> t.get_options(stringify=True)
+{'option1': 'test', 'option2': '2012-01-01'}
+"""
 
 LOGGER = getLogger(__name__)
 
@@ -115,18 +99,6 @@ class OptionsMeta(type):
     """
     Metaclass for the Options type, this converts the Options defined in the class attributes
     into type-aware attributes.
-
-    @example
-    >>> class Test(Options):
-    ...     option1 = Option()
-    ...     option2 = DateOption()
-    >>> t = Test()
-    >>> t.option1 = 'test'
-    >>> t.option1
-    'test'
-    >>> t.option2 = '2012-01-01'
-    >>> t.option2
-    UTCDateTime(2012, 1, 1, 0, 0)
     """
     def __new__(cls, name, bases, attrs):
         options = {}
