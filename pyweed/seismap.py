@@ -1,5 +1,5 @@
 """
-Seismap is a subclass of Basemap, specialized for handling seismic data.    
+Seismap is a subclass of Basemap, specialized for handling seismic data.
 
 Ideas and code borrowed from:
  * https://github.com/matplotlib/basemap/blob/master/examples/allskymap.py
@@ -17,9 +17,43 @@ import numpy as np
 
 from mpl_toolkits.basemap import Basemap
 
+
+class MapMarkers(object):
+    """
+    Handles the markers (for items on the map and bounding boxes/toroids) of a particular type
+    """
+    color = '#FFFFFF'
+    highlight_color = '#FFFF00'
+    marker_type = 'o'
+    marker_size = 6
+    highlight_marker_size = 12
+    markers = None
+    highlights = None
+    box_markers = None
+    toroid_markers = None
+
+    def __init__(self):
+        self.markers = []
+        self.highlights = []
+        self.box_markers = []
+        self.toroid_markers = []
+
+
+class EventMarkers(MapMarkers):
+    color = '#FFFF00'
+    highlight_color = '#FFA500'
+    marker_type = 'o'  # circle
+
+
+class StationMarkers(MapMarkers):
+    color = '#FF0000'
+    highlight_color = '#CD0000'
+    marker_type = 'v'  # inverted triangle
+
+
 class Seismap(Basemap):
     """
-    Seismap is a subclass of Basemap, specialized for handling seismic data.    
+    Seismap is a subclass of Basemap, specialized for handling seismic data.
     """
 
     def __init__(self, llcrnrlon=None, llcrnrlat=None,
@@ -45,40 +79,14 @@ class Seismap(Basemap):
                  round=False,
                  epsg=None,
                  ax=None):
-        
-        # Lists of plotted elements that can be removed
-        self.events = []
-        self.events_box = []
-        self.events_toroid = []
-        self.events_highlighting = []
-        self.stations = []
-        self.stations_box = []
-        self.stations_toroid = []
-        self.stations_highlighting = []
-        
-        # Consistent use of colors
-        self.event_color = '#FFFF00'              # 'yellow1'
-        ###self.event_highlight_color = '#FFFF00'    # 'yellow1'
-        ###self.event_highlight_color = '#EEEE00'    # 'yellow2'
-        ###self.event_highlight_color = '#CDCD00'    # 'yellow3'
-        ###self.event_highlight_color = '#8B8B00'    # 'yellow4'
-        self.event_highlight_color = '#FFA500'    # 'orange1'
-        self.event_marker = 'o'                   # circle
-        self.event_markersize = 6
-        self.event_highlight_markersize = 12
-        self.station_color = '#FF0000'            # 'red1'
-        ###self.station_highlight_color = '#FF0000'  # 'red1'
-        ###self.station_highlight_color = '#EE0000'  # 'red2'
-        self.station_highlight_color = '#CD0000'  # 'red3'
-        ###self.station_highlight_color = '#8B0000'  # 'red4'
-        self.station_marker = 'v'                 # inverted triangle
-        self.station_markersize = 6
-        self.station_highlight_markersize = 12
-        
+
+        self.event_markers = EventMarkers()
+        self.station_markers = StationMarkers()
+
         # Use Basemap's init, enforcing the values of many parameters that
         # aren't used or whose Basemap defaults would not be altered for all-sky
         # celestial maps.
-        
+
         Basemap.__init__(self, llcrnrlon=None, llcrnrlat=None,
                          urcrnrlon=None, urcrnrlat=None,
                          llcrnrx=None, llcrnry=None,
@@ -102,103 +110,74 @@ class Seismap(Basemap):
                          round=False,
                          epsg=None,
                          ax=ax)
-        
+
         # Basic map features
         self.add_base()
-        
-        
+
     def add_base(self):
-        # NOTE:  http://matplotlib.org/basemap/api/basemap_api.html 
+        # NOTE:  http://matplotlib.org/basemap/api/basemap_api.html
         # NOTE:  https://gist.github.com/dannguyen/eb1c4e70565d8cb82d63
         self.bluemarble(scale=0.1, alpha=0.42)
         self.drawcoastlines(color='#555566', linewidth=1)
         self.drawmeridians(np.arange(0, 360, 30))
         self.drawparallels(np.arange(-90, 90, 30))
-        
-        
-    def add_events(self, dataframe):
+
+    def add_markers(self, markers, dataframe):
         """
-        Display event locations
+        Display marker locations
 
         See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
-        
-        # Remove existing 'lines' elements
-        # See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
-        try:
-            while self.events:
-                self.events.pop(0).remove()
-            self.events = []
-        except IndexError:
-            pass
+
+        self.clear_markers(markers, redraw=False)
+        self.clear_highlights(markers, redraw=False)
 
         # Get locations to plot
         lons = dataframe.Longitude.tolist()
         lats = dataframe.Latitude.tolist()
-        
+
         # Plot in projection coordinates
         x, y = self(lons, lats)
-        self.events.extend( self.plot(x, y, linestyle='None', marker=self.event_marker, markersize=self.event_markersize, color=self.event_color, markeredgecolor=self.event_color) )
-        
+        markers.markers.extend(
+            self.plot(
+                x, y, linestyle='None', marker=markers.marker_type, markersize=markers.marker_size,
+                color=markers.color, markeredgecolor=markers.color
+            )
+        )
+
         # NOTE:  Cannot use self.plots(lons, lats, latlon=True, ...) because we run into this error:
         # NOTE:    http://stackoverflow.com/questions/31839047/valueerror-in-python-basemap
         # NOTE:    https://github.com/matplotlib/basemap/issues/214
-        ###lons = self.shiftdata(lons)        
-        ###self.events = self.plot(lons, lats, latlon=True, linestyle='None', marker=self.event_marker, markersize=self.event_markersize, color=self.event_color, markeredgecolor=self.event_color)
-                
-        # Remove highlghting
-        try:
-            while self.events_highlighting:
-                self.events_highlighting.pop(0).remove()
-            self.events_highlighting = []
-        except IndexError:
-            pass
+        ### lons = self.shiftdata(lons)
+        ### self.events = self.plot(lons, lats, latlon=True, linestyle='None', marker=self.event_marker, markersize=self.event_markersize, color=self.event_color, markeredgecolor=self.event_color)
 
         self.ax.figure.canvas.draw()
-        
-        
-    def add_events_highlighting(self, lons, lats):
+
+    def add_highlights(self, markers, lons, lats):
         """
-        Highlights selected events
+        Highlights selected items
         """
-        
-        # Remove existing 'lines' elements
-        try:
-            while self.events_highlighting:
-                self.events_highlighting.pop(0).remove()
-            self.events_highlighting = []
-        except IndexError:
-            pass
+
+        self.clear_highlights(markers, redraw=False)
 
         # Plot in projection coordinates
         # TODO:  Use self.scatter() with zorder=99 to keep highlighting on top?
         x, y = self(lons, lats)
-        self.events_highlighting.extend( self.plot(x, y, linestyle='None',
-                                                   marker=self.event_marker, 
-                                                   markersize=self.event_highlight_markersize,
-                                                   color=self.event_highlight_color) )
-                        
+        markers.highlights.extend(
+            self.plot(
+                x, y, linestyle='None', marker=markers.marker_type, markersize=markers.highlight_marker_size,
+                color=markers.highlight_color
+            )
+        )
+
         self.ax.figure.canvas.draw()
-        
-        
-    def add_events_box(self, n, e, s, w):
-        """
-        Display event box
 
-        See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
+    def add_marker_box(self, markers, n, e, s, w):
+        """
+        Display a bounding box
         """
 
-        # Remove existing 'lines' elements
-        # See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
-        try:
-            while self.events_box:
-                self.events_box.pop(0).remove()
-            self.events_box = []
-            while self.events_toroid:
-                self.events_toroid.pop(0).remove()
-            self.events_toroid = []
-        except IndexError:
-            pass
+        self.clear_bounding_markers(markers, redraw=False)
 
         # Get locations to plot
         lon_top = np.linspace(w,e)
@@ -206,7 +185,7 @@ class Seismap(Basemap):
         lon_bottom = np.linspace(e,w)
         lon_left = np.linspace(w,w)
         lons = np.concatenate((lon_top, lon_right, lon_bottom, lon_left))
-        
+
         lat_top = np.linspace(n,n)
         lat_right = np.linspace(n,s)
         lat_bottom = np.linspace(s,s)
@@ -215,177 +194,141 @@ class Seismap(Basemap):
 
         # Plot in projection coordinates
         x, y = self(lons, lats)
-        self.events_box.extend( self.plot(x, y, lineStyle='solid', color=self.event_color, alpha=0.7, linewidth=2) )
-        
+        markers.box_markers.extend(
+            self.plot(x, y, lineStyle='solid', color=markers.color, alpha=0.7, linewidth=2)
+        )
+
         self.ax.figure.canvas.draw()
-        
-        
+
+    def add_marker_toroid(self, markers, n, e, minradius, maxradius):
+        """
+        Display a toroidal bounding area
+        """
+
+        self.clear_bounding_markers(markers, redraw=False)
+
+        # Get locations to plot
+        lons1, lats1 = self._geocircle(e, n, minradius)
+        lons2, lats2 = self._geocircle(e, n, maxradius)
+
+        # Plot in projection coordinates
+        x1, y1 = self(lons1, lats1)
+        markers.toroid_markers.extend(
+            self.plot(x1, y1, lineStyle='solid', color=markers.color, alpha=0.7, linewidth=2)
+        )
+        x2, y2 = self(lons2, lats2)
+        markers.toroid_markers.extend(
+            self.plot(x2, y2, lineStyle='solid', color=markers.color, alpha=0.7, linewidth=2)
+        )
+
+        self.ax.figure.canvas.draw()
+
+    def clear_markers(self, markers, redraw=True):
+        """
+        Remove existing marker elements
+        See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
+        """
+        try:
+            while markers.markers:
+                markers.markers.pop(0).remove()
+            markers.markers = []
+        except IndexError:
+            pass
+        if redraw:
+            self.ax.figure.canvas.draw()
+
+    def clear_highlights(self, markers, redraw=True):
+        """
+        Remove existing highlights
+        """
+        try:
+            while markers.highlights:
+                markers.highlights.pop(0).remove()
+            markers.highlights = []
+        except IndexError:
+            pass
+        if redraw:
+            self.ax.figure.canvas.draw()
+
+    def clear_bounding_markers(self, markers, redraw=True):
+        """
+        Remove existing bounding box/toroid markers
+        """
+        try:
+            while markers.box_markers:
+                markers.box_markers.pop(0).remove()
+            markers.box_markers = []
+            while markers.toroid_markers:
+                markers.toroid_markers.pop(0).remove()
+            markers.toroid_markers = []
+        except IndexError:
+            pass
+        if redraw:
+            self.ax.figure.canvas.draw()
+
+    def add_events(self, dataframe):
+        """
+        Display event locations
+        """
+        self.add_markers(self.event_markers, dataframe)
+
+    def add_events_highlighting(self, lons, lats):
+        """
+        Highlights selected events
+        """
+        self.add_highlights(self.event_markers, lons, lats)
+
+    def add_events_box(self, n, e, s, w):
+        """
+        Display event box
+        """
+        self.add_marker_box(self.event_markers, n, e, s, w)
+
     def add_events_toroid(self, n, e, minradius, maxradius):
         """
         Display event locations
-
-        See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
+        self.add_marker_toroid(self.event_markers, n, e, minradius, maxradius)
 
-        # Remove existing 'lines' elements
-        # See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
-        try:
-            while self.events_box:
-                self.events_box.pop(0).remove()
-            self.events_box = []
-            while self.events_toroid:
-                self.events_toroid.pop(0).remove()
-            self.events_toroid = []
-        except IndexError:
-            pass
-        
-        # Get locations to plot
-        lons1,lats1 = self._geocircle(e, n, minradius)
-        lons2,lats2 = self._geocircle(e, n, maxradius)
-        
-        # Plot in projection coordinates
-        x1, y1 = self(lons1, lats1)
-        self.events_toroid.extend( self.plot(x1, y1, lineStyle='solid', color=self.event_color, alpha=0.7, linewidth=2) )
-        x2, y2 = self(lons2, lats2)
-        self.events_toroid.extend( self.plot(x2, y2, lineStyle='solid', color=self.event_color, alpha=0.7, linewidth=2) )
-
-        self.ax.figure.canvas.draw()
-
+    def clear_events_bounds(self):
+        """
+        Clear event bounding markers
+        """
+        self.clear_bounding_markers(self.event_markers)
 
     def add_stations(self, dataframe):
         """
         Display station locations
-
-        See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
-        
-        lons = dataframe.Longitude.tolist()
-        lats = dataframe.Latitude.tolist()
-                
-        x, y = self(lons, lats)
-        
-        # Remove existing 'lines' elements
-        # See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
-        try:
-            while self.stations:
-                self.stations.pop(0).remove()
-            self.stations = []
-        except IndexError:
-            pass
-
-        self.stations.extend( self.plot(x, y, linestyle='None',
-                                        marker=self.station_marker,
-                                        markersize=self.station_markersize,
-                                        color=self.station_color,
-                                        markeredgecolor=self.station_color) )
-
-        # Remove highlighting
-        try:
-            while self.stations_highlighting:
-                self.stations_highlighting.pop(0).remove()
-            self.stations_highlighting = []
-        except IndexError:
-            pass
-        
-        self.ax.figure.canvas.draw()
-
+        self.add_markers(self.station_markers, dataframe)
 
     def add_stations_highlighting(self, lons, lats):
         """
         Highlight selected stations
         """
-        
-        # Remove existing 'lines' elements
-        try:
-            while self.stations_highlighting:
-                self.stations_highlighting.pop(0).remove()
-            self.stations_highlighting = []
-        except IndexError:
-            pass
+        self.add_highlights(self.station_markers, lons, lats)
 
-        # Plot in projection coordinates
-        # TODO:  Use self.scatter() with zorder=99 to keep highlighting on top?
-        x, y = self(lons, lats)
-        self.stations_highlighting.extend( self.plot(x, y, linestyle='None',
-                                                     marker=self.station_marker,
-                                                     markersize=self.station_highlight_markersize,
-                                                     color=self.station_highlight_color) )
-                        
-        self.ax.figure.canvas.draw()
-        
-        
     def add_stations_box(self, n, e, s, w):
         """
         Display station box outline
         """
-        
-        # Remove existing 'lines' elements
-        # See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
-        try:
-            while self.stations_box:
-                self.stations_box.pop(0).remove()
-            self.stations_box = []
-            while self.stations_toroid:
-                self.stations_toroid.pop(0).remove()
-            self.stations_toroid = []
-        except IndexError:
-            pass
+        self.add_marker_box(self.station_markers, n, e, s, w)
 
-        # Get locations to plot
-        lon_top = np.linspace(w,e)
-        lon_right = np.linspace(e,e)
-        lon_bottom = np.linspace(e,w)
-        lon_left = np.linspace(w,w)
-        lons = np.concatenate((lon_top, lon_right, lon_bottom, lon_left))
-        
-        lat_top = np.linspace(n,n)
-        lat_right = np.linspace(n,s)
-        lat_bottom = np.linspace(s,s)
-        lat_left = np.linspace(s,n)
-        lats = np.concatenate((lat_top, lat_right, lat_bottom, lat_left))
-
-        # Plot in projection coordinates
-        x, y = self(lons, lats)
-        self.stations_box.extend( self.plot(x, y, lineStyle='solid', color=self.station_color, alpha=0.7, linewidth=2) )
-        
-        self.ax.figure.canvas.draw()
-        
-        
     def add_stations_toroid(self, n, e, minradius, maxradius):
         """
         Display station locations
-
-        See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         """
-        
-        # Remove existing 'lines' element
-        # See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
-        try:
-            while self.stations_box:
-                self.stations_box.pop(0).remove()
-            self.stations_box = []
-            while self.stations_toroid:
-                self.stations_toroid.pop(0).remove()
-            self.stations_toroid = []
-        except IndexError:
-            pass
+        self.add_marker_toroid(self.station_markers, n, e, minradius, maxradius)
 
-        # Get locations to plot
-        lons1,lats1 = self._geocircle(e, n, minradius)
-        lons2,lats2 = self._geocircle(e, n, maxradius)
-        
-        # Plot in projection coordinates
-        x1, y1 = self(lons1, lats1)
-        self.stations_toroid.extend( self.plot(x1, y1, lineStyle='solid', color=self.station_color, alpha=0.7, linewidth=2) )
-        x2, y2 = self(lons2, lats2)
-        self.stations_toroid.extend( self.plot(x2, y2, lineStyle='solid', color=self.station_color, alpha=0.7, linewidth=2) )
-
-        self.ax.figure.canvas.draw()
-
+    def clear_stations_bounds(self):
+        """
+        Clear station bounding markers
+        """
+        self.clear_bounding_markers(self.station_markers)
 
     def _geocircle(self, lon, lat, radius, n=50):
         """Calculate lons and lats associated with a circle."""
-        
+
         # Calculate circle
         step = 2.0*np.pi / n
         lons = lon + radius*np.cos(np.arange(0,2*np.pi,step))
@@ -394,11 +337,11 @@ class Seismap(Basemap):
         lats = lat + radius*np.sin(np.arange(0,2*np.pi,step))
         lats = lats.tolist()
         lats.append(lat)
-        
+
         # TODO:  _geocircle: Handle branch cut at boundaries
-        
+
         coords = (lons,lats)
-        
+
         return(coords)
 
 
