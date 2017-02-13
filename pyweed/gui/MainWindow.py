@@ -95,8 +95,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.map_figure.canvas.draw()
 
         # TODO: Basic mouse event handling
+        # See http://matplotlib.org/users/event_handling.html
         def on_press(event):
-            LOGGER.debug('you pressed', event.button, event.xdata, event.ydata)
+            (lon, lat) = self.seismap(event.xdata, event.ydata, inverse=True)
+            if lat is None or lon is None:
+                LOGGER.debug('Mouse click outside of map')
+            else:
+                LOGGER.debug('you pressed %d x %d', lat, lon)
+                self.seismap.add_events_toroid(lat, lon, 0, 20)
         cid = self.mapCanvas.mpl_connect('button_press_event', on_press)
 
         # Size and placement according to preferences
@@ -188,18 +194,23 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.seismap.add_events(eventsDF)
 
-        if self.eventOptionsWidget.locationRangeRadioButton.isChecked():
-            n = self.eventOptionsWidget.locationRangeNorthDoubleSpinBox.value()
-            e = self.eventOptionsWidget.locationRangeEastDoubleSpinBox.value()
-            s = self.eventOptionsWidget.locationRangeSouthDoubleSpinBox.value()
-            w = self.eventOptionsWidget.locationRangeWestDoubleSpinBox.value()
-            self.seismap.add_events_box(n, e, s, w)
-        elif self.eventOptionsWidget.locationDistanceFromPointRadioButton.isChecked():
-            n = self.eventOptionsWidget.distanceFromPointNorthDoubleSpinBox.value()
-            e = self.eventOptionsWidget.distanceFromPointEastDoubleSpinBox.value()
-            minradius = self.eventOptionsWidget.distanceFromPointMinRadiusDoubleSpinBox.value()
-            maxradius = self.eventOptionsWidget.distanceFromPointMaxRadiusDoubleSpinBox.value()
-            self.seismap.add_events_toroid(n, e, minradius, maxradius)
+        event_options = self.pyweed.event_options
+        if event_options.location_choice == event_options.LOCATION_BOX:
+            self.seismap.add_events_box(
+                event_options.maxlatitude,
+                event_options.maxlongitude,
+                event_options.minlatitude,
+                event_options.minlongitude
+            )
+        elif event_options.location_choice == event_options.LOCATION_POINT:
+            self.seismap.add_events_toroid(
+                event_options.latitude,
+                event_options.longitude,
+                event_options.minradius,
+                event_options.maxradius
+            )
+        else:
+            self.seismap.clear_events_bounds()
 
         LOGGER.info('Loaded %d events', eventsDF.shape[0])
         self.statusBar.showMessage('Loaded %d events' % (eventsDF.shape[0]))
@@ -243,18 +254,23 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.seismap.add_stations(stationsDF)
 
-        if self.stationOptionsWidget.locationRangeRadioButton.isChecked():
-            n = self.stationOptionsWidget.locationRangeNorthDoubleSpinBox.value()
-            e = self.stationOptionsWidget.locationRangeEastDoubleSpinBox.value()
-            s = self.stationOptionsWidget.locationRangeSouthDoubleSpinBox.value()
-            w = self.stationOptionsWidget.locationRangeWestDoubleSpinBox.value()
-            self.seismap.add_stations_box(n, e, s, w)
-        elif self.stationOptionsWidget.locationDistanceFromPointRadioButton.isChecked():
-            n = self.stationOptionsWidget.distanceFromPointNorthDoubleSpinBox.value()
-            e = self.stationOptionsWidget.distanceFromPointEastDoubleSpinBox.value()
-            minradius = self.stationOptionsWidget.distanceFromPointMinRadiusDoubleSpinBox.value()
-            maxradius = self.stationOptionsWidget.distanceFromPointMaxRadiusDoubleSpinBox.value()
-            self.seismap.add_stations_toroid(n, e, minradius, maxradius)
+        station_options = self.pyweed.station_options
+        if station_options.location_choice == station_options.LOCATION_BOX:
+            self.seismap.add_stations_box(
+                station_options.maxlatitude,
+                station_options.maxlongitude,
+                station_options.minlatitude,
+                station_options.minlongitude
+            )
+        elif station_options.location_choice == station_options.LOCATION_POINT:
+            self.seismap.add_stations_toroid(
+                station_options.latitude,
+                station_options.longitude,
+                station_options.minradius,
+                station_options.maxradius
+            )
+        else:
+            self.seismap.clear_stations_bounds()
 
         LOGGER.info('Loaded %d channels', stationsDF.shape[0])
         self.statusBar.showMessage('Loaded %d channels' % (stationsDF.shape[0]))
