@@ -47,6 +47,9 @@ LOGGER = logging.getLogger(__name__)
 
 class PyWeedGUI(PyWeed, QtCore.QObject):
 
+    # We need to define mainWindow since we may check it before we are fully initialized
+    mainWindow = None
+
     def __init__(self):
         super(PyWeedGUI, self).__init__()
 
@@ -105,7 +108,8 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
 
     def set_event_options(self, options):
         super(PyWeedGUI, self).set_event_options(options)
-        self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
+        if self.mainWindow:
+            self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
 
     def on_event_catalog_loaded(self, catalog):
         if isinstance(catalog, Exception):
@@ -137,7 +141,8 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
 
     def set_station_options(self, options):
         super(PyWeedGUI, self).set_station_options(options)
-        self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
+        if self.mainWindow:
+            self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
 
     def on_station_inventory_loaded(self, inventory):
         self.set_stations(inventory)

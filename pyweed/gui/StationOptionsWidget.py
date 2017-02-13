@@ -72,6 +72,10 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
         self.adapter = StationOptionsAdapter()
         self.adapter.connect_to_widget(self)
 
+        # Hook up the shortcut buttons
+        self.time30DaysPushButton.clicked.connect(self.setTime30Days)
+        self.time1YearPushButton.clicked.connect(self.setTime1Year)
+
     @QtCore.pyqtSlot(int)
     def onLocationButtonClicked(self, button_id):
         """
@@ -91,3 +95,21 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
     @QtCore.pyqtSlot()
     def getOptions(self):
         return self.adapter.read_from_widget()
+
+    def setTime30Days(self):
+        """
+        Set the start/end times to cover the last 30 days
+        """
+        end = QtCore.QDateTime.currentDateTimeUtc()
+        start = end.addDays(-30)
+        self.starttimeDateTimeEdit.setDateTime(start)
+        self.endtimeDateTimeEdit.setDateTime(end)
+
+    def setTime1Year(self):
+        """
+        Set the start/end times to cover the last 30 days
+        """
+        end = QtCore.QDateTime.currentDateTimeUtc()
+        start = end.addYears(-1)
+        self.starttimeDateTimeEdit.setDateTime(start)
+        self.endtimeDateTimeEdit.setDateTime(end)

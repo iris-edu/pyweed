@@ -14,6 +14,10 @@ class OptionsAdapter(object):
         self.inputs = {}
 
     def connect_to_widget(self, widget):
+        """
+        This should be called on initialization, passing in the widget to work on.
+        Subclasses should implement this to set up self.inputs
+        """
         raise NotImplementedError()
 
     def options_to_inputs(self, options):
