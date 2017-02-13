@@ -13,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 class EventOptionsAdapter(OptionsAdapter):
     def connect_to_widget(self, widget):
+        # Map widget inputs to options
         self.inputs = {
             'starttime': widget.starttimeDateTimeEdit,
             'endtime': widget.endtimeDateTimeEdit,
@@ -50,6 +51,7 @@ class EventOptionsAdapter(OptionsAdapter):
 
     def inputs_to_options(self, inputs):
         options = super(EventOptionsAdapter, self).inputs_to_options(inputs)
+        # Set various options based on radio button selections
         if strtobool(options.get('_timeBetween')):
             options['time_choice'] = EventOptions.TIME_RANGE
         elif strtobool(options.get('_timeFromStations')):
@@ -76,32 +78,9 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
         self.adapter = EventOptionsAdapter()
         self.adapter.connect_to_widget(self)
 
-#         # Initialize input fields using preferences
-#         prefs = parent.preferences.EventOptions
-#         self.minMagDoubleSpinBox.setValue(float(prefs.minmag))
-#         self.maxMagDoubleSpinBox.setValue(float(prefs.maxmag))
-#         self.minDepthDoubleSpinBox.setValue(float(prefs.mindepth))
-#         self.maxDepthDoubleSpinBox.setValue(float(prefs.maxdepth))
-#         self.locationRangeWestDoubleSpinBox.setValue(float(prefs.locationRangeWest))
-#         self.locationRangeEastDoubleSpinBox.setValue(float(prefs.locationRangeEast))
-#         self.locationRangeSouthDoubleSpinBox.setValue(float(prefs.locationRangeSouth))
-#         self.locationRangeNorthDoubleSpinBox.setValue(float(prefs.locationRangeNorth))
-#         self.distanceFromPointMinRadiusDoubleSpinBox.setValue(float(prefs.distanceFromPointMinRadius))
-#         self.distanceFromPointMaxRadiusDoubleSpinBox.setValue(float(prefs.distanceFromPointMaxRadius))
-#         self.distanceFromPointEastDoubleSpinBox.setValue(float(prefs.distanceFromPointEast))
-#         self.distanceFromPointNorthDoubleSpinBox.setValue(float(prefs.distanceFromPointNorth))
-
-        # Initialize the date selectors # TODO: using preferences
-        #self.starttimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-        #self.endtimeDateTimeEdit.setDisplayFormat('yyyy-MM-dd hh:mm:ss UTC')
-#         today = QtCore.QDateTime.currentDateTimeUtc()
-#         monthAgo = today.addMonths(-1)
-#         self.starttimeDateTimeEdit.setDateTime(monthAgo)
-#         self.endtimeDateTimeEdit.setDateTime(today)
-#
-#         # Intialize time and location type selection using preferences
-#         getattr(self, prefs.selectedTimeButton).setChecked(True)
-#         getattr(self, prefs.selectedLocationButton).setChecked(True)
+        # Hook up the shortcut buttons
+        self.time30DaysPushButton.clicked.connect(self.setTime30Days)
+        self.time1YearPushButton.clicked.connect(self.setTime1Year)
 
     def setOptions(self, options):
         self.adapter.write_to_widget(options)
@@ -117,5 +96,21 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
         """
         return self.adapter.read_from_widget()
 
+    def setTime30Days(self):
+        """
+        Set the start/end times to cover the last 30 days
+        """
+        end = QtCore.QDateTime.currentDateTimeUtc()
+        start = end.addDays(-30)
+        self.starttimeDateTimeEdit.setDateTime(start)
+        self.endtimeDateTimeEdit.setDateTime(end)
 
+    def setTime1Year(self):
+        """
+        Set the start/end times to cover the last 30 days
+        """
+        end = QtCore.QDateTime.currentDateTimeUtc()
+        start = end.addYears(-1)
+        self.starttimeDateTimeEdit.setDateTime(start)
+        self.endtimeDateTimeEdit.setDateTime(end)
 
