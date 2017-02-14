@@ -11,6 +11,7 @@ from logging import getLogger
 from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
 from gui.TableItems import TableItems
+import time
 
 LOGGER = getLogger(__name__)
 
@@ -19,6 +20,7 @@ LOGGER = getLogger(__name__)
 STATUS_READY = "ready"  # Waiting for user to initiate
 STATUS_WORKING = "working"  # Working
 STATUS_DONE = "done"  # Finished
+STATUS_ERROR = "error"  # Something went wrong
 
 
 class WaveformTableItems(TableItems):
@@ -270,13 +272,13 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         else:
             self.downloadGroupBox.setEnabled(True)
             self.downloadPushButton.setChecked(False)
-            if self.waveformsDownloadStatus == STATUS_READY:
-                # Normal operation
-                self.downloadPushButton.setText('Download')
-                self.downloadPushButton.setEnabled(True)
-            else:
-                self.downloadPushButton.setText('Download Complete')
+            if self.waveformsDownloadStatus == STATUS_DONE:
+                # Disabled if download has finished (and nothing has changed)
                 self.downloadPushButton.setEnabled(False)
+                self.downloadPushButton.setText('Download Complete')
+            else:
+                self.downloadPushButton.setEnabled(True)
+                self.downloadPushButton.setText('Download')
 
         # Save controls
         if self.waveformsSaveStatus == STATUS_WORKING:
@@ -286,25 +288,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.savePushButton.setChecked(True)
             # May be waiting for download to finish
             if self.waveformsDownloadStatus != STATUS_DONE:
-                self.saveStatusLabel.setText('Waiting for downloads to finish')
+                self.saveStatusLabel.setText('Waiting for downloads')
             else:
                 self.saveStatusLabel.setText('Saving...')
         else:
+            # Available
+            self.saveGroupBox.setEnabled(True)
             self.savePushButton.setText('Save')
             self.savePushButton.setChecked(False)
-            if self.waveformsDownloadStatus == STATUS_READY:
-                # Data hasn't been downloaded yet
-                self.saveGroupBox.setEnabled(False)
-                self.saveStatusLabel.setText('Download waveforms first!')
-            else:
-                # Available
-                # Note that if we just saved, we show a message but (unlike download) the save button
-                # is still active (so the user can save to a different format/path)
-                self.saveGroupBox.setEnabled(True)
-                if self.waveformsSaveStatus == STATUS_READY:
-                    self.saveStatusLabel.setText('')
-                else:
-                    self.saveStatusLabel.setText('Data saved')
+            if self.waveformsSaveStatus == STATUS_READY:
+                self.saveStatusLabel.setText('')
+            elif self.waveformsSaveStatus == STATUS_DONE:
+                self.saveStatusLabel.setText('Data saved')
 
     def onSavePushButton(self):
         """
@@ -449,6 +444,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         try:
             outputDir = self.waveformDirectory
 
+            if not os.path.exists(outputDir):
+                try:
+                    os.makedirs(outputDir, 0700)
+                except Exception as e:
+                    raise Exception("Could not create the output path: %s" % str(e))
+
             # Handle user format choice
             formatChoice = str(self.saveFormatComboBox.currentText())
             if formatChoice == 'ASCII':
@@ -476,38 +477,37 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             savedCount = 0
             for row in range(self.waveformsHandler.currentDF.shape[0]):
                 keep = self.waveformsHandler.currentDF.Keep.iloc[row]
-                waveformID = self.waveformsHandler.currentDF.WaveformID.iloc[row]
                 waveformImagePath = self.waveformsHandler.currentDF.WaveformImagePath.iloc[row]
                 if keep and (waveformImagePath != "NO DATA AVAILABLE"):
-                    mseedPath = waveformImagePath.replace('.png','.MSEED')
+                    mseedPath = waveformImagePath.replace('.png', '.MSEED')
                     mseedFile = os.path.basename(mseedPath)
-                    outputFile = mseedFile.replace('MSEED',extension)
-                    outputPath = os.path.join(outputDir,outputFile)
+                    outputFile = mseedFile.replace('MSEED', extension)
+                    outputPath = os.path.join(outputDir, outputFile)
                     # Don't repeat any work that has already been done
                     if not os.path.exists(outputPath):
-                        statusText = "Saving %s " % (outputFile)
                         LOGGER.debug('reading %s', mseedFile)
                         st = obspy.core.read(mseedPath)
                         LOGGER.debug('writing %s', outputPath)
                         st.write(outputPath, format=outputFormat)
-
                     savedCount += 1
                     self.saveStatusLabel.setText("Saved %d / %d waveforms as %s" % (savedCount,totalCount,formatChoice))
                     self.saveStatusLabel.repaint()
                     QtGui.QApplication.processEvents() # update GUI
 
-                    # Return early if the user has toggled off the savePushButton
+                    # Return early if the user has toggled off the savePushButton (TODO: nonworking!)
+                    # time.sleep(1)  # Need a delay to test this
                     if not self.savePushButton.isChecked():
-                        break
+                        raise Exception("Cancelled")
+
+            self.waveformsSaveStatus = STATUS_DONE
         except Exception as e:
             LOGGER.error(e)
+            self.waveformsSaveStatus = STATUS_ERROR
             self.saveStatusLabel.setText(e.message)
         finally:
-            self.waveformsSaveStatus = STATUS_DONE
             self.updateToolbars()
 
         LOGGER.debug('COMPLETED saving all waveforms')
-
 
     @QtCore.pyqtSlot()
     def getWaveformDirectory(self):
