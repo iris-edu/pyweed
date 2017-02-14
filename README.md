@@ -2,8 +2,6 @@
 
 PyWEED is a cross-platform downloadable app for retrieving event-based seismic data
 
-*(version 0.0.9)*
-
 # Installation
 
 The [Anaconda](https://docs.continuum.io/anaconda/) package manager is by far the 
@@ -12,32 +10,17 @@ easiest way to install the packages and resources need for Pyweed. Begin by down
 system and then follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
 instructions.
 
-## Installing conda
-
-`bash ~/Downloads/Miniconda2-latest-MacOSX-x86_64.sh`
-
-Accept all defaults and just hit spacebar when you see a `:` prompt while reviewing the license.
-
-This should install the Anaconda environment, and update the `PATH` in your `~/.bash_profile` so that this is the version of Python that is run by default:
-
-```
-# added by Miniconda2 4.1.11 installer
-export PATH="/Users/jonathan/miniconda2/bin:$PATH"
-```
-
-If you now `source ~/.bash_profile` you will get conda and the Anaconda version of python by default.
-The first thing to do is update conda itself:
-
-`conda update conda`
+The installation process should put the `conda` command in your shell `PATH`. If you have
+multiple instances of Anaconda installed, you may need to tweak some of the following commands
+to include the specific path to the newly installed version (labeled as `$CONDA_PATH` below).
 
 ## Get the PyWEED project
 
-This README reflects changes on one branch of the project, so you need to use Git to download the project and checkout that branch:
+You can use Git to download the project:
 
 ```
 git clone https://github.com/iris-edu-int/pyweed.git
 cd pyweed
-git checkout adam
 ```
 
 ## Creating a Python environment
@@ -46,15 +29,30 @@ The packages necessary to run PyWEED are defined in the `environment.yml` file i
 
 From the root directory, run:
 
-`conda env create`
+`conda env create`  
+or  
+`$CONDA_PATH/bin/conda env create`
 
 This will create an environment named `pyweed` in your Anaconda system. You can activate this environment by running:
 
-`source activate pyweed`
+`source activate pyweed`  
+or  
+`source $CONDA_PATH/bin/activate pyweed`
 
 You can return to the default Anaconda environment by running:
 
-`source deactivate`
+`source deactivate`  
+or  
+`source $CONDA_PATH/bin/deactivate`
+
+# Running PyWEED
+
+The code is in the `pyweed` subdirectory.
+
+```
+cd pyweed
+python pyweed_gui.py
+```
 
 # Configuration
 
