@@ -137,7 +137,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
         """
         Fill the selectionTable with all SNCL-Event combinations selected in the MainWindow.
-        This funciton is triggered whenever the "Get Waveforms" button in the MainWindow is clicked.
+        This function is triggered whenever the "Get Waveforms" button in the MainWindow is clicked.
         """
 
         LOGGER.debug('Loading waveform choices...')
@@ -158,8 +158,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         LOGGER.debug('Finished building dataframe for %d waveforms', waveformsDF.shape[0])
 
-        # Add event-SNCL combintations to the selection table
-        self.loadSelectionTable(waveformsDF)
+        # Add event-SNCL combinations to the selection table
+        self.loadSelectionTable(waveformsDF, initial=True)
 
         # Tighten up the table
         self.selectionTable.resizeColumnsToContents()
@@ -195,9 +195,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         LOGGER.debug('Finished loading waveform choices')
 
     @QtCore.pyqtSlot()
-    def loadSelectionTable(self, waveformsDF):
+    def loadSelectionTable(self, waveformsDF, initial=False):
         """
         Add event-SNCL combinations to the selection table
+
+        @param waveformsDF: The DataFrame to show
+        @param initial: True if this is the initial load (ie. not filtering existing data)
         """
 
         LOGGER.debug('Loading waveform selection table...')
@@ -221,8 +224,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Restore table sorting
         self.selectionTable.setSortingEnabled(True)
 
-        # Start downloading the waveform data if this is the full dataframe (ie. we didn't just filter)
-        if waveformsDF.equals(self.waveformsHandler.currentDF):
+        # Start downloading the waveform data if this is an initial load
+        if initial:
             self.downloadWaveformData()
 
         LOGGER.debug('Finished loading waveform selection table')
@@ -245,12 +248,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             waveformsDF = waveformsDF[waveformsDF.Station == station]
         LOGGER.debug('Finished filtering waveformsDF')
         self.loadSelectionTable(waveformsDF)
-
-        # Tighten up the table
-        #self.selectionTable.resizeColumnsToContents()
-        #self.selectionTable.resizeRowsToContents()
-
-        return
 
     def onDownloadPushButton(self):
         """
