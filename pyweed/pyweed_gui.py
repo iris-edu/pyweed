@@ -98,8 +98,8 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         Load events
         """
         # TODO: this is a patch for https://github.com/obspy/obspy/issues/1629
-        #if self.events:
-        #    self.events.clear()
+        if self.events:
+            self.events.clear()
 
         if not options:
             options = self.get_event_obspy_options()

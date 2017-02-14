@@ -28,6 +28,7 @@ import numpy as np
 from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from gui.EventOptionsWidget import EventOptionsWidget
 from gui.StationOptionsWidget import StationOptionsWidget
+from gui.TableItems import TableItems
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,9 @@ def make_exclusive(widget1, widget2):
 
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
+
+    eventTableItems = None
+    stationTableItems = None
 
     def __init__(self, pyweed):
         super(self.__class__, self).__init__()
@@ -112,43 +116,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
         self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
 
-    def fillTable(self, table, dataframe, visibleColumns, numericColumns):
-        """
-        Common code for filling event/station tables with data
-        """
-        LOGGER.info("Filling table")
-
-        # Clear existing contents
-        table.clearSelection() # This is important!
-        while (table.rowCount() > 0):
-            table.removeRow(0)
-
-        # Column names
-        columnNames = dataframe.columns.tolist()
-
-        # Create new table
-        table.setRowCount(dataframe.shape[0])
-        table.setColumnCount(dataframe.shape[1])
-        table.setHorizontalHeaderLabels(columnNames)
-        table.verticalHeader().hide()
-
-        # Hidden columns
-        for i, column in enumerate(columnNames):
-            table.setColumnHidden(i, column not in visibleColumns)
-
-        # Add new contents
-        for i in range(dataframe.shape[0]):
-            for j in range(dataframe.shape[1]):
-                # Guarantee that all elements are converted to strings for display but apply proper sorting
-                if columnNames[j] in numericColumns:
-                    table.setItem(i, j, MyNumericTableWidgetItem(str(dataframe.iat[i, j])))
-                else:
-                    table.setItem(i, j, QtGui.QTableWidgetItem(str(dataframe.iat[i, j])))
-
-        # Tighten up the table
-        table.resizeColumnsToContents()
-        table.resizeRowsToContents()
-
     def updateOptions(self):
         """
         Update the event and station options from the GUI
@@ -180,15 +147,17 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.statusBar.showMessage(msg)
             return
 
-        visibleColumns = [
-            'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
-            'MagType', 'EventLocationName',
-        ]
-        numericColumns = [
-            'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
-        ]
+        if not self.eventTableItems:
+            visibleColumns = [
+                'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
+                'MagType', 'EventLocationName',
+            ]
+            numericColumns = [
+                'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
+            ]
+            self.eventTableItems = TableItems(self.eventsTable, visibleColumns, numericColumns)
 
-        self.fillTable(self.eventsTable, eventsDF, visibleColumns, numericColumns)
+        self.eventTableItems.build(eventsDF)
 
         # Add items to the map -------------------------------------------------
 
@@ -240,15 +209,17 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.statusBar.showMessage(msg)
             return
 
-        visibleColumns = [
-            'Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude',
-        ]
-        numericColumns = [
-            'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip',
-            'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate',
-        ]
+        if not self.stationTableItems:
+            visibleColumns = [
+                'Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude',
+            ]
+            numericColumns = [
+                'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip',
+                'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate',
+            ]
+            self.stationTableItems = TableItems(self.stationsTable, visibleColumns, numericColumns)
 
-        self.fillTable(self.stationsTable, stationsDF, visibleColumns, numericColumns)
+        self.stationTableItems.build(stationsDF)
 
         # Add items to the map -------------------------------------------------
 
