@@ -57,22 +57,33 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     def initialize(self):
         prefs = self.pyweed.preferences
+
         # Set MainWindow properties
         self.setWindowTitle('%s version %s' % (prefs.App.name, prefs.App.version))
 
+        # Options widgets, mostly common code
+        def initializeOptionsWidget(widget, options, dockWidget, toggle):
+            widget.setOptions(options)
+            dockWidget.setWidget(widget)
+            toggle.toggled.connect(dockWidget.setVisible)
+            dockWidget.visibilityChanged.connect(toggle.setChecked)
+
         self.eventOptionsWidget = EventOptionsWidget(parent=self)
-        self.eventOptionsWidget.setOptions(self.pyweed.event_options)
-        self.eventOptionsDockWidget.setWidget(self.eventOptionsWidget)
-        self.toggleEventOptions.toggled.connect(self.eventOptionsDockWidget.setVisible)
-        self.eventOptionsDockWidget.visibilityChanged.connect(self.toggleEventOptions.setChecked)
-
+        initializeOptionsWidget(
+            self.eventOptionsWidget,
+            self.pyweed.event_options,
+            self.eventOptionsDockWidget,
+            self.toggleEventOptions
+        )
         self.stationOptionsWidget = StationOptionsWidget(parent=self)
-        self.stationOptionsWidget.setOptions(self.pyweed.station_options)
-        self.stationOptionsDockWidget.setWidget(self.stationOptionsWidget)
-        self.toggleStationOptions.toggled.connect(self.stationOptionsDockWidget.setVisible)
-        self.stationOptionsDockWidget.visibilityChanged.connect(self.toggleStationOptions.setChecked)
+        initializeOptionsWidget(
+            self.stationOptionsWidget,
+            self.pyweed.station_options,
+            self.stationOptionsDockWidget,
+            self.toggleStationOptions
+        )
 
-        # Connect the interdependent event/station options settings
+        # Connect the mutually exclusive event/station options
         make_exclusive(
             self.eventOptionsWidget.timeFromStationsRadioButton,
             self.stationOptionsWidget.timeFromEventsRadioButton)
@@ -80,22 +91,33 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.eventOptionsWidget.locationFromStationsRadioButton,
             self.stationOptionsWidget.locationFromEventsRadioButton)
 
+        # Table selection
         self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
         self.stationsTable.itemSelectionChanged.connect(self.onStationSelectionChanged)
 
+        # Main window buttons
         self.getWaveformsButton.setEnabled(False)
-
-        # Connect the main window buttons
         self.getEventsButton.clicked.connect(self.getEvents)
         self.getStationsButton.pressed.connect(self.getStations)
         self.getWaveformsButton.pressed.connect(self.getWaveforms)
 
+        # Map
+        self.initializeMap()
+
+        # Size and placement according to preferences
+        self.resize(
+            safe_int(prefs.MainWindow.width, 1000),
+            safe_int(prefs.MainWindow.height, 800))
+        self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
+        self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
+
+    def initializeMap(self):
         # Get the Figure object from the map_canvas
         LOGGER.info('Setting up main map...')
         self.map_figure = self.mapCanvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
         self.map_axes.clear()
-        self.seismap = Seismap(projection=prefs.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
+        self.seismap = Seismap(projection=self.pyweed.preferences.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
 
         # TODO: Basic mouse event handling
@@ -108,13 +130,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
                 LOGGER.debug('you pressed %d x %d', lat, lon)
                 self.seismap.add_events_toroid(lat, lon, 0, 20)
         cid = self.mapCanvas.mpl_connect('button_press_event', on_press)
-
-        # Size and placement according to preferences
-        self.resize(
-            safe_int(prefs.MainWindow.width, 1000),
-            safe_int(prefs.MainWindow.height, 800))
-        self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
-        self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
 
     def updateOptions(self):
         """
