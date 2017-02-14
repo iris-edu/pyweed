@@ -119,7 +119,7 @@ class WaveformLoader(SignalingThread):
                 # In order to really customize the plotting, we need to return the figure and modify it
                 h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
                 # Resize the subplot to a hard size, because otherwise it will do it inconsistently
-                h.subplots_adjust(bottom=.1, left=.1, right=.95, top=1)
+                h.subplots_adjust(bottom=.2, left=.1, right=.95, top=.95)
                 # Remove the title
                 for c in h.get_children():
                     if isinstance(c, matplotlib.text.Text):
