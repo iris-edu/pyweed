@@ -22,7 +22,31 @@ STATUS_DONE = "done"  # Finished
 
 
 class WaveformTableItems(TableItems):
-    pass
+    def buildOne(self, df, i, j):
+        if df.columns[j] == 'Waveform':
+            # NOTE:  What to put in the Waveform column depends on what is in the WaveformImagePath column.
+            # NOTE:  It could be plain text or an imageWidget.
+            if df.WaveformImagePath.iloc[i] == '':
+                self.table.setItem(i, j, QtGui.QTableWidgetItem(''))
+            elif df.WaveformImagePath.iloc[i] == 'NO DATA AVAILABLE':
+                self.table.setItem(i, j, QtGui.QTableWidgetItem('NO DATA AVAILABLE'))
+            else:
+                imagePath = df.WaveformImagePath.iloc[i]
+                imageItem = MyTableWidgetImageItem(imagePath)
+                self.table.setItem(i, j, imageItem)
+
+        elif df.columns[j] == 'Keep':
+            checkBoxItem = QtGui.QTableWidgetItem()
+            checkBoxItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            if df.Keep.iloc[i]:
+                checkBoxItem.setCheckState(QtCore.Qt.Checked)
+            else:
+                checkBoxItem.setCheckState(QtCore.Qt.Unchecked)
+            self.table.setItem(i, j, checkBoxItem)
+
+        else:
+            # Default behavior
+            super(WaveformTableItems, self).buildOne(df, i, j)
 
 
 class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
@@ -170,8 +194,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         LOGGER.debug('Finished loading waveform choices')
 
-        self.resetDownload()
-
     @QtCore.pyqtSlot()
     def loadSelectionTable(self, waveformsDF):
         """
@@ -187,26 +209,20 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # NOTE:  the row number
         self.selectionTable.setSortingEnabled(False)
 
-        # Note:  Display information should be in the GUI code but needs to match
-        # NOTE:  the columns which are created by the waveforms_handler.
-        hidden_column = self.waveformsHandler.getColumnHidden()
-        numeric_column = self.waveformsHandler.getColumnNumeric()
-
         # Use WaveformTableItems to put the DF into the table
         if not self.tableItems:
             self.tableItems = WaveformTableItems(
                 self.selectionTable,
-                hidden_column,
-                numeric_column
+                self.waveformsHandler.getVisibleColumns(),
+                self.waveformsHandler.getNumericColumns()
             )
         self.tableItems.build(waveformsDF)
 
         # Restore table sorting
         self.selectionTable.setSortingEnabled(True)
 
-        # Start downloading the waveform data unless this is a filtered DF
-        if waveformsDF == self.waveformsHandler.currentDF:
-            LOGGER.debug('Starting download of waveform data')
+        # Start downloading the waveform data if this is the full dataframe (ie. we didn't just filter)
+        if waveformsDF.equals(self.waveformsHandler.currentDF):
             self.downloadWaveformData()
 
         LOGGER.debug('Finished loading waveform selection table')
@@ -271,10 +287,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.saveGroupBox.setEnabled(False)
             self.savePushButton.setText('Saving...')
             self.savePushButton.setChecked(True)
+            # May be waiting for download to finish
             if self.waveformsDownloadStatus != STATUS_DONE:
                 self.saveStatusLabel.setText('Waiting for downloads to finish')
             else:
-                self.saveStatusLabel.setText('')
+                self.saveStatusLabel.setText('Saving...')
         else:
             self.savePushButton.setText('Save')
             self.savePushButton.setChecked(False)
@@ -284,14 +301,19 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.saveStatusLabel.setText('Download waveforms first!')
             else:
                 # Available
+                # Note that if we just saved, we show a message but (unlike download) the save button
+                # is still active (so the user can save to a different format/path)
                 self.saveGroupBox.setEnabled(True)
-                self.saveStatusLabel.setText('')
+                if self.waveformsSaveStatus == STATUS_READY:
+                    self.saveStatusLabel.setText('')
+                else:
+                    self.saveStatusLabel.setText('Data saved')
 
     def onSavePushButton(self):
         """
         Triggered after savePushButton is toggled.
         """
-        if self.waveformsSaveStatus == STATUS_READY:
+        if self.waveformsSaveStatus != STATUS_WORKING:
             self.waveformsSaveStatus = STATUS_WORKING
             if self.waveformsDownloadStatus == STATUS_DONE:
                 self.saveWaveformData()
@@ -484,7 +506,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             LOGGER.error(e)
             self.saveStatusLabel.setText(e.message)
         finally:
-            self.waveformsSaveStatus = STATUS_READY
+            self.waveformsSaveStatus = STATUS_DONE
             self.updateToolbars()
 
         LOGGER.debug('COMPLETED saving all waveforms')

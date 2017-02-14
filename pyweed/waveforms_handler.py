@@ -377,18 +377,13 @@ class WaveformsHandler(SignalingObject):
         return
 
     def getColumnNames(self):
-        columnNames = ['Keep', 'EventName', 'SNCL', 'Distance', 'Magnitude', 'MagType', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
-        return(columnNames)
+        return ['Keep', 'EventName', 'SNCL', 'Distance', 'Magnitude', 'MagType', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
 
-    def getColumnHidden(self):
-        shown = ['Keep', 'EventName', 'Distance', 'SNCL', 'Waveform']
-        is_hidden = [(c not in shown) for c in self.getColumnNames()]
-        return(is_hidden)
+    def getVisibleColumns(self):
+        return ['Keep', 'EventName', 'Distance', 'SNCL', 'Waveform']
 
-    def getColumnNumeric(self):
-        numeric = ['Distance', 'Magnitude', 'Depth', 'Event_Lon', 'Event_Lat', 'Station_Lon', 'Station_Lat']
-        is_numeric = [(c in numeric) for c in self.getColumnNames()]
-        return(is_numeric)
+    def getNumericColumns(self):
+        return ['Distance', 'Magnitude', 'Depth', 'Event_Lon', 'Event_Lat', 'Station_Lon', 'Station_Lat']
 
 
 

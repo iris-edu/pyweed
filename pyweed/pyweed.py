@@ -127,7 +127,7 @@ class PyWeed(object):
                 raise
 
     def set_event_options(self, options):
-        LOGGER.debug("Set event options: %s", options)
+        LOGGER.debug("Set event options: %s", repr(options))
         self.event_options.set_options(options)
 
     def get_event_obspy_options(self):
@@ -147,7 +147,7 @@ class PyWeed(object):
         self.selected_event_ids = event_ids
 
     def set_station_options(self, options):
-        LOGGER.debug("Set station options: %s", options)
+        LOGGER.debug("Set station options: %s", repr(options))
         self.station_options.set_options(options)
 
     def get_station_obspy_options(self):
