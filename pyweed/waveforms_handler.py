@@ -83,7 +83,7 @@ class WaveformLoader(SignalingThread):
             LOGGER.debug("%s calculate travel time", self.waveform.SNCL)
             model = TauPyModel(model='iasp91') # TODO:  should TauP model be an optional parameter?
             tt = model.get_travel_times_geo(
-                self.waveform.Depth,
+                self.waveform.Event_Depth,
                 self.waveform.Event_Lat,
                 self.waveform.Event_Lon,
                 self.waveform.Station_Lat,
@@ -194,11 +194,11 @@ class WaveformsHandler(SignalingObject):
 
         # Subset eventsDF for pertinent information
         eventsDF = eventsDF[['Time','Magnitude','MagType','Depth/km','Longitude','Latitude','EventID']]
-        eventsDF.columns = ['Time','Magnitude','MagType','Depth','Event_Lon','Event_Lat','EventID']
+        eventsDF.columns = ['Time','Magnitude','MagType','Event_Depth','Event_Lon','Event_Lat','EventID']
 
         #  Subset stationsDF for pertinent information
-        stationsDF = stationsDF[['SNCL','Network','Station','Longitude','Latitude']]
-        stationsDF.columns = ['SNCL','Network','Station','Station_Lon','Station_Lat']
+        stationsDF = stationsDF[['SNCL','Network','Station','Longitude','Latitude','Depth','Elevation']]
+        stationsDF.columns = ['SNCL','Network','Station','Station_Lon','Station_Lat','Station_Depth','Station_Elevation']
 
         # For each unique SNCL, add columns of SNCL info to eventsDF
         waveformDFs = []
@@ -209,6 +209,8 @@ class WaveformsHandler(SignalingObject):
             df['Station'] = stationsDF.Station.iloc[i]
             df['Station_Lon'] = stationsDF.Station_Lon.iloc[i]
             df['Station_Lat'] = stationsDF.Station_Lat.iloc[i]
+            df['Station_Depth'] = stationsDF.Station_Depth.iloc[i]
+            df['Station_Elevation'] = stationsDF.Station_Elevation.iloc[i]
             waveformDFs.append(df)
 
         # Now combine all SNCL-specific eventsDFs
@@ -377,15 +379,21 @@ class WaveformsHandler(SignalingObject):
         return
 
     def getColumnNames(self):
-        return ['Keep', 'EventName', 'SNCL', 'Distance', 'Magnitude', 'MagType', 'Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID', 'Network', 'Station', 'Station_Lon', 'Station_Lat', 'WaveformID', 'WaveformStationID', 'WaveformImagePath']
+        return [
+            'Keep', 'EventName', 'SNCL', 'Distance', 'Magnitude', 'MagType',
+            'Event_Depth', 'Time', 'Waveform', 'Event_Lon', 'Event_Lat', 'EventID',
+            'Network', 'Station', 'Station_Lon', 'Station_Lat', 'Station_Depth', 'Station_Elevation',
+            'WaveformID', 'WaveformStationID', 'WaveformImagePath'
+        ]
 
     def getVisibleColumns(self):
         return ['Keep', 'EventName', 'Distance', 'SNCL', 'Waveform']
 
     def getNumericColumns(self):
-        return ['Distance', 'Magnitude', 'Depth', 'Event_Lon', 'Event_Lat', 'Station_Lon', 'Station_Lat']
-
-
+        return [
+            'Distance', 'Magnitude', 'Event_Depth', 'Event_Lon', 'Event_Lat',
+            'Station_Lon', 'Station_Lat', 'Station_Depth', 'Station_Elevation'
+        ]
 
 
 # ------------------------------------------------------------------------------

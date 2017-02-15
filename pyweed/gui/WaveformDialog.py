@@ -12,6 +12,7 @@ from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
 from gui.TableItems import TableItems
 import time
+from obspy.io.sac.sactrace import SACTrace
 
 LOGGER = getLogger(__name__)
 
@@ -487,8 +488,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                     if not os.path.exists(outputPath):
                         LOGGER.debug('reading %s', mseedFile)
                         st = obspy.core.read(mseedPath)
-                        LOGGER.debug('writing %s', outputPath)
-                        st.write(outputPath, format=outputFormat)
+                        self.saveOneWaveform(st, outputPath, outputFormat, self.waveformsHandler.currentDF.loc[row])
                     savedCount += 1
                     self.saveStatusLabel.setText("Saved %d / %d waveforms as %s" % (savedCount,totalCount,formatChoice))
                     self.saveStatusLabel.repaint()
@@ -508,6 +508,22 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.updateToolbars()
 
         LOGGER.debug('COMPLETED saving all waveforms')
+
+    def saveOneWaveform(self, st, outputPath, outputFormat, dfRow):
+        LOGGER.debug('writing %s', outputPath)
+        if outputFormat == 'SAC':
+            # For SAC output, we need to pull header data from the row in the DataFrame
+            st = SACTrace.from_obspy_trace(st[0])
+            st.evla = dfRow.Event_Lat
+            st.evlo = dfRow.Event_Lon
+            st.evdp = dfRow.Event_Depth * 1000  # NOTE: see events_handler.py:145
+            st.stla = dfRow.Station_Lat
+            st.stlo = dfRow.Station_Lon
+            st.stdp = dfRow.Station_Depth
+            st.stel = dfRow.Station_Elevation
+            st.write(outputPath)
+        else:
+            st.write(outputPath, format=outputFormat)
 
     @QtCore.pyqtSlot()
     def getWaveformDirectory(self):
