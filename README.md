@@ -61,17 +61,9 @@ python pyweed_gui.py
 ```pycon
 >>> from pyweed import PyWeed
 >>> pyweed = PyWeed()
-2017-02-17 14:28:36 - INFO - pyweed - Logging configured
-2017-02-17 14:28:36 - INFO - pyweed - Loading preferences
-2017-02-17 14:28:36 - DEBUG - pyweed - Set event options: {'time_choice': 'timeBetween', 'mindepth': '0.0', 'maxlongitude': '180.0', 'maxdepth': '6800.0', 'location_choice': 'locationDistanceFromPoint', 'minlatitude': '-90.0', 'minlongitude': '-180.0', 'maxlatitude': '90.0', 'minmagnitude': '5.0', 'maxmagnitude': '10.0', 'longitude': '30.0', 'starttime': '2017-01-14T23:51:47', 'latitude': '50.0', 'endtime': '2017-02-13T23:51:47', 'maxradius': '50.0', 'minradius': '0.0'}
-2017-02-17 14:28:36 - DEBUG - pyweed - Set station options: {'time_choice': 'timeFromEvents', 'longitude': '0.0', 'maxlongitude': '180.0', 'maxlatitude': '90.0', 'location_choice': 'locationFromEvents', 'minlatitude': '-90.0', 'minlongitude': '-180.0', 'network': '_GSN', 'station': '*', 'location': '*', 'starttime': '2017-01-14T23:51:49', 'latitude': '0.0', 'endtime': '2017-02-13T23:51:49', 'maxradius': '30.0', 'channel': 'BHZ', 'minradius': '0.0'}
-2017-02-17 14:28:36 - INFO - pyweed - Checking on download directory...
-2017-02-17 14:28:36 - DEBUG - pyweed_utils - Removed 0 files to keep /Users/adam/.pyweed_downloads below 10 megabytes
-2017-02-17 14:28:36 - INFO - pyweed - Creating ObsPy client for IRIS
 >>> pyweed.event_options
 {'time_choice': 'timeBetween', 'mindepth': 0.0, 'longitude': 30.0, 'maxlongitude': 180.0, 'endtime': UTCDateTime(2017, 2, 13, 23, 51, 47), 'location_choice': 'locationDistanceFromPoint', 'minlatitude': -90.0, 'maxlatitude': 90.0, 'minmagnitude': 5.0, 'maxmagnitude': 10.0, 'maxdepth': 6800.0, 'starttime': UTCDateTime(2017, 1, 14, 23, 51, 47), 'latitude': 50.0, 'minlongitude': -180.0, 'maxradius': 50.0, 'minradius': 0.0}
 >>> pyweed.fetch_events()
-2017-02-17 14:28:55 - INFO - pyweed - Set events
 >>> print pyweed.events
 20 Event(s) in Catalog:
 2017-02-12T13:48:15.660000Z | +39.600,  +26.092 | 5.2 Mwr
