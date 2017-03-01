@@ -6,57 +6,67 @@ import numpy as np
 from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from PyQt4 import QtGui, QtCore
 from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
+from logging import getLogger
+
+LOGGER = getLogger(__name__)
 
 
 class TableItems(object):
 
-    def __init__(self, table, visibleColumns, numericColumns):
+    columnNames = None
+    table = None
+
+    def __init__(self, table, *args):
         self.table = table
-        self.visibleColumns = visibleColumns
-        self.numericColumns = numericColumns
-        self.columnNames = []
 
-    def build(self, df):
+    def rows(self, data):
         """
-        Build table contents from the given dataframe
+        Turn the data into rows (an iterable of lists) of QTableWidgetItems
+        Subclasses should implement this
         """
+        pass
 
+    def stringWidget(self, s):
+        return QtGui.QTableWidgetItem(s)
+
+    def numericWidget(self, i):
+        return MyNumericTableWidgetItem(str(i))
+
+    def checkboxWidget(self, b):
+        checkboxItem = QtGui.QTableWidgetItem()
+        checkboxItem.setFlags(QtCore.Qt.ItemIsEnabled)
+        if b:
+            checkboxItem.setCheckState(QtCore.Qt.Checked)
+        else:
+            checkboxItem.setCheckState(QtCore.Qt.Unchecked)
+        return checkboxItem
+
+    def fill(self, data):
+        """
+        Fill the table
+        """
         # Clear existing contents
         self.table.clear() # This is important!
         while (self.table.rowCount() > 0):
             self.table.removeRow(0)
 
-        # Column names
-        self.columnNames = df.columns.tolist()
-
         # Create new table
-        self.table.setRowCount(df.shape[0])
-        self.table.setColumnCount(df.shape[1])
+        self.table.setColumnCount(len(self.columnNames))
         self.table.setHorizontalHeaderLabels(self.columnNames)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().hide()
 
-        # Hidden columns
-        for i, column in enumerate(self.columnNames):
-            self.table.setColumnHidden(i, column not in self.visibleColumns)
+        # Use the first column for identification
+        self.table.setColumnHidden(0, True)
 
         # Add new contents
-        for i in range(df.shape[0]):
-            for j in range(df.shape[1]):
-                self.buildOne(df, i, j)
+        for rowidx, row in enumerate(self.rows(data)):
+            self.table.insertRow(rowidx)
+            if len(row) != len(self.columnNames):
+                LOGGER.error("Row length doesn't match column count: %s / %s", str(row), str(self.columnNames))
+            for cellidx, cell in enumerate(row):
+                self.table.setItem(rowidx, cellidx, cell)
 
         # Tighten up the table
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
-
-    def buildOne(self, df, i, j):
-        """
-        Fill in a single cell of the table from the dataframe
-        Subclasses should extend this to handle any unusual data type
-        """
-        if self.columnNames[j] in self.numericColumns:
-            # Guarantee that all elements are converted to strings for display but apply proper sorting
-            self.table.setItem(i, j, MyNumericTableWidgetItem(str(df.iat[i,j])))
-        else:
-            # Anything else is converted to normal text
-            self.table.setItem(i, j, QtGui.QTableWidgetItem(str(df.iat[i,j])))

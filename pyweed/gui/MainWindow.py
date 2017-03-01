@@ -14,18 +14,8 @@ from PyQt4 import QtGui, QtCore
 from gui.uic import MainWindow
 from preferences import Preferences, safe_int, safe_bool, bool_to_str
 import logging
-from gui.LoggingDialog import LoggingDialog
-from gui.SplashScreenHandler import SplashScreenHandler
-import os
-from pyweed_utils import manageCache
-from obspy.clients import fdsn
+from pyweed_utils import manageCache, iter_channels, get_preferred_origin, get_preferred_magnitude
 from seismap import Seismap
-from events_handler import EventsHandler
-from stations_handler import StationsHandler
-from gui.WaveformDialog import WaveformDialog
-from gui.ConsoleDialog import ConsoleDialog
-import numpy as np
-from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from gui.EventOptionsWidget import EventOptionsWidget
 from gui.StationOptionsWidget import StationOptionsWidget
 from gui.TableItems import TableItems
@@ -43,6 +33,85 @@ def make_exclusive(widget1, widget2):
         lambda b: widget1.setEnabled(not b))
     widget2.setEnabled(not widget1.isChecked())
     widget1.setEnabled(not widget2.isChecked())
+
+
+class EventTableItems(TableItems):
+    """
+    Defines the event table contents
+    """
+    columnNames = [
+        'Id',
+        'Time',
+        'Magnitude',
+        'Longitude',
+        'Latitude',
+        'Depth (km)',
+        'MagType',
+        'Location'
+    ]
+
+    def rows(self, data):
+        """
+        Turn the data into rows (an iterable of lists) of QTableWidgetItems
+        """
+        for i, event in enumerate(data):
+            origin = get_preferred_origin(event)
+            if not origin:
+                continue
+            magnitude = get_preferred_magnitude(event)
+            if not magnitude:
+                continue
+            time = origin.time.strftime("%Y-%m-%d %H:%M:%S") # use strftime to remove milliseconds
+            event_description = "no description"
+            if len(event.event_descriptions) > 0:
+                event_description = event.event_descriptions[0].text
+
+            yield [
+                self.numericWidget(i),
+                self.stringWidget(time),
+                self.numericWidget(magnitude.mag),
+                self.numericWidget(origin.longitude),
+                self.numericWidget(origin.latitude),
+                self.numericWidget(origin.depth / 1000),  # we wish to report in km # TODO:  is this correct?
+                self.stringWidget(magnitude.magnitude_type),
+                self.stringWidget(event_description),
+            ]
+
+
+class StationTableItems(TableItems):
+    """
+    Defines the event table contents
+    """
+    columnNames = [
+        'SNCL',
+        'Network',
+        'Station',
+        'Location',
+        'Channel',
+        'Longitude',
+        'Latitude',
+    ]
+
+    def rows(self, data):
+        """
+        Turn the data into rows (an iterable of lists) of QTableWidgetItems
+        """
+        sncls = set()
+        for (network, station, channel) in iter_channels(data):
+            sncl = '.'.join((network.code, station.code, channel.location_code, channel.code))
+            if sncl in sncls:
+                LOGGER.info("Found duplicate SNCL: %s", sncl)
+            else:
+                sncls.add(sncl)
+                yield [
+                    self.stringWidget(sncl),
+                    self.stringWidget(network.code),
+                    self.stringWidget(station.code),
+                    self.stringWidget(channel.location_code),
+                    self.stringWidget(channel.code),
+                    self.numericWidget(channel.longitude),
+                    self.numericWidget(channel.latitude),
+                ]
 
 
 class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
@@ -141,7 +210,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     @QtCore.pyqtSlot()
     def getEvents(self):
         """
-        Get events dataframe from IRIS.
+        Trigger the event retrieval from web services
         """
         self.getEventsButton.setEnabled(False)
         LOGGER.info('Loading events...')
@@ -150,33 +219,25 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.updateOptions()
         self.pyweed.fetch_events()
 
-    def onEventsLoaded(self, eventsDF):
+    def onEventsLoaded(self, events):
         """
         Handler triggered when the EventsHandler finishes loading events
         """
         self.getEventsButton.setEnabled(True)
 
-        if isinstance(eventsDF, Exception):
-            msg = "Error loading events: %s" % eventsDF
+        if isinstance(events, Exception):
+            msg = "Error loading events: %s" % events
             LOGGER.error(msg)
             self.statusBar.showMessage(msg)
             return
 
         if not self.eventTableItems:
-            visibleColumns = [
-                'Time', 'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
-                'MagType', 'EventLocationName',
-            ]
-            numericColumns = [
-                'Magnitude', 'Longitude', 'Latitude', 'Depth/km',
-            ]
-            self.eventTableItems = TableItems(self.eventsTable, visibleColumns, numericColumns)
-
-        self.eventTableItems.build(eventsDF)
+            self.eventTableItems = EventTableItems(self.eventsTable)
+        self.eventTableItems.fill(events)
 
         # Add items to the map -------------------------------------------------
 
-        self.seismap.add_events(eventsDF)
+        self.seismap.add_events(events)
 
         event_options = self.pyweed.event_options
         if event_options.location_choice == event_options.LOCATION_BOX:
@@ -196,13 +257,15 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.seismap.clear_events_bounds()
 
-        LOGGER.info('Loaded %d events', eventsDF.shape[0])
-        self.statusBar.showMessage('Loaded %d events' % (eventsDF.shape[0]))
+        numEvents = len(events)
+        status = 'Loaded %d events' % numEvents
+        LOGGER.info(status)
+        self.statusBar.showMessage(status)
 
     @QtCore.pyqtSlot()
     def getStations(self):
         """
-        Get events dataframe from IRIS.
+        Trigger the channel metadata retrieval from web services
         """
         self.getStationsButton.setEnabled(False)
         LOGGER.info('Loading channels...')
@@ -211,34 +274,26 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.updateOptions()
         self.pyweed.fetch_stations()
 
-    def onStationsLoaded(self, stationsDF):
+    def onStationsLoaded(self, stations):
         """
         Handler triggered when the StationsHandler finishes loading stations
         """
 
         self.getStationsButton.setEnabled(True)
 
-        if isinstance(stationsDF, Exception):
-            msg = "Error loading stations: %s" % stationsDF
+        if isinstance(stations, Exception):
+            msg = "Error loading stations: %s" % stations
             LOGGER.error(msg)
             self.statusBar.showMessage(msg)
             return
 
         if not self.stationTableItems:
-            visibleColumns = [
-                'Network', 'Station', 'Location', 'Channel', 'Longitude', 'Latitude',
-            ]
-            numericColumns = [
-                'Longitude', 'Latitude', 'Elevation', 'Depth', 'Azimuth', 'Dip',
-                'Scale', 'ScaleFreq', 'ScaleUnits', 'SampleRate',
-            ]
-            self.stationTableItems = TableItems(self.stationsTable, visibleColumns, numericColumns)
-
-        self.stationTableItems.build(stationsDF)
+            self.stationTableItems = StationTableItems(self.stationsTable)
+        self.stationTableItems.fill(stations)
 
         # Add items to the map -------------------------------------------------
 
-        self.seismap.add_stations(stationsDF)
+        self.seismap.add_stations(stations)
 
         station_options = self.pyweed.station_options
         if station_options.location_choice == station_options.LOCATION_BOX:
@@ -258,8 +313,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.seismap.clear_stations_bounds()
 
-        LOGGER.info('Loaded %d channels', stationsDF.shape[0])
-        self.statusBar.showMessage('Loaded %d channels' % (stationsDF.shape[0]))
+        numChannels = sum(1 for _ in iter_channels(stations))
+        status = 'Loaded %d channels' % numChannels
+        LOGGER.info(status)
+        self.statusBar.showMessage(status)
 
     @QtCore.pyqtSlot()
     def getWaveforms(self):
@@ -269,58 +326,52 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Handle a click anywhere in the table.
         """
-        # Get selected rows
-        rows = []
+        # Get selected ids
+        ids = []
         for idx in self.eventsTable.selectionModel().selectedRows():
-            rows.append(idx.row())
+            ids.append(int(self.eventsTable.item(idx.row(), 0).text()))
 
-        LOGGER.debug('%d events currently selected', len(rows))
+        LOGGER.debug('%d events currently selected', len(ids))
 
-        # Get lons, lats and
-        # TODO:  Automatically detect column indexes
-        lons = []
-        lats = []
+        # Get locations and event IDs
+        points = []
         eventIDs = []
-        for row in rows:
-            lon = float(self.eventsTable.item(row,2).text())
-            lons.append(lon)
-            lat = float(self.eventsTable.item(row,3).text())
-            lats.append(lat)
-            eventID = str(self.eventsTable.item(row,12).text())
-            eventIDs.append(eventID)
+        for id in ids:
+            event = self.pyweed.events[id]
+            origin = get_preferred_origin(event)
+            if not origin:
+                continue
+            points.append((origin.latitude, origin.longitude))
+            eventIDs.append(event.resource_id.id)
 
         # Update the events_handler with the latest selection information
         self.pyweed.set_selected_event_ids(eventIDs)
 
-        self.seismap.add_events_highlighting(lons, lats)
+        self.seismap.add_events_highlighting(points)
 
         self.manageGetWaveformsButton()
 
     def onStationSelectionChanged(self):
-        # Get selected rows
-        rows = []
+        # Get selected sncls
+        sncls = []
         for idx in self.stationsTable.selectionModel().selectedRows():
-            rows.append(idx.row())
+            sncls.append(self.stationsTable.item(idx.row(), 0).text())
 
-        LOGGER.debug('%d stations currently selected', len(rows))
+        LOGGER.debug('%d stations currently selected', len(sncls))
 
-        # Get lons and lats
-        # TODO:  Automatically detect longitude and latitude columns
-        lons = []
-        lats = []
-        SNCLs = []
-        for row in rows:
-            lon = float(self.stationsTable.item(row,4).text())
-            lons.append(lon)
-            lat = float(self.stationsTable.item(row,5).text())
-            lats.append(lat)
-            SNCL = str(self.stationsTable.item(row,17).text())
-            SNCLs.append(SNCL)
+        # Get locations
+        points = []
+        for sncl in sncls:
+            try:
+                coordinates = self.pyweed.stations.get_coordinates(sncl)
+                points.append((coordinates['latitude'], coordinates['longitude']))
+            except:
+                pass
 
         # Update the stations_handler with the latest selection information
-        self.pyweed.set_selected_station_ids(SNCLs)
+        self.pyweed.set_selected_station_ids(sncls)
 
-        self.seismap.add_stations_highlighting(lons, lats)
+        self.seismap.add_stations_highlighting(points)
 
         self.manageGetWaveformsButton()
 
@@ -329,11 +380,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         Handle enabled/disabled status of the "Get Waveforms" button
         based on the presence/absence of selected events and stations
         """
-        # http://stackoverflow.com/questions/3345785/getting-number-of-elements-in-an-iterator-in-python
-        selectedEventsCount = sum(1 for idx in self.eventsTable.selectionModel().selectedRows() )
-        selectedStationsCount = sum(1 for idx in self.stationsTable.selectionModel().selectedRows() )
-
-        if selectedEventsCount > 0 and selectedStationsCount > 0:
+        if self.pyweed.selected_event_ids and self.pyweed.selected_station_ids:
             self.getWaveformsButton.setEnabled(True)
         else:
             self.getWaveformsButton.setEnabled(False)

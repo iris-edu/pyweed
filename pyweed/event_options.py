@@ -51,7 +51,7 @@ class EventOptions(Options):
         else:
             return {}
 
-    def get_obspy_options(self, station_options):
+    def get_obspy_options(self, station_options=None):
         base_keys = ['minmagnitude', 'maxmagnitude', 'magtype', 'mindepth', 'maxdepth']
         options = self.get_options(keys=base_keys)
         options.update(self.get_time_options(station_options))

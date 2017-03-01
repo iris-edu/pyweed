@@ -16,6 +16,7 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 
 from mpl_toolkits.basemap import Basemap
+from pyweed_utils import get_preferred_origin
 
 
 class MapMarkers(object):
@@ -27,6 +28,9 @@ class MapMarkers(object):
     marker_type = 'o'
     marker_size = 6
     highlight_marker_size = 12
+    bounds_linewidth = 2
+    bounds_linestyle = 'dashed'
+    bounds_alpha = 0.5
     markers = None
     highlights = None
     box_markers = None
@@ -122,7 +126,7 @@ class Seismap(Basemap):
         self.drawmeridians(np.arange(0, 360, 30))
         self.drawparallels(np.arange(-90, 90, 30))
 
-    def add_markers(self, markers, dataframe):
+    def add_markers(self, markers, points):
         """
         Display marker locations
 
@@ -132,43 +136,37 @@ class Seismap(Basemap):
         self.clear_markers(markers, redraw=False)
         self.clear_highlights(markers, redraw=False)
 
-        # Get locations to plot
-        lons = dataframe.Longitude.tolist()
-        lats = dataframe.Latitude.tolist()
-
-        # Plot in projection coordinates
-        x, y = self(lons, lats)
-        markers.markers.extend(
-            self.plot(
-                x, y, linestyle='None', marker=markers.marker_type, markersize=markers.marker_size,
-                color=markers.color, markeredgecolor=markers.color
+        if len(points):
+            (lats, lons) = zip(*points)
+            # Plot in projection coordinates
+            x, y = self(lons, lats)
+            markers.markers.extend(
+                self.plot(
+                    x, y, linestyle='None', marker=markers.marker_type, markersize=markers.marker_size,
+                    color=markers.color, markeredgecolor=markers.color
+                )
             )
-        )
-
-        # NOTE:  Cannot use self.plots(lons, lats, latlon=True, ...) because we run into this error:
-        # NOTE:    http://stackoverflow.com/questions/31839047/valueerror-in-python-basemap
-        # NOTE:    https://github.com/matplotlib/basemap/issues/214
-        ### lons = self.shiftdata(lons)
-        ### self.events = self.plot(lons, lats, latlon=True, linestyle='None', marker=self.event_marker, markersize=self.event_markersize, color=self.event_color, markeredgecolor=self.event_color)
 
         self.ax.figure.canvas.draw()
 
-    def add_highlights(self, markers, lons, lats):
+    def add_highlights(self, markers, points):
         """
         Highlights selected items
         """
 
         self.clear_highlights(markers, redraw=False)
 
-        # Plot in projection coordinates
-        # TODO:  Use self.scatter() with zorder=99 to keep highlighting on top?
-        x, y = self(lons, lats)
-        markers.highlights.extend(
-            self.plot(
-                x, y, linestyle='None', marker=markers.marker_type, markersize=markers.highlight_marker_size,
-                color=markers.highlight_color
+        if len(points):
+            (lats, lons) = zip(*points)
+            # Plot in projection coordinates
+            # TODO:  Use self.scatter() with zorder=99 to keep highlighting on top?
+            x, y = self(lons, lats)
+            markers.highlights.extend(
+                self.plot(
+                    x, y, linestyle='None', marker=markers.marker_type, markersize=markers.highlight_marker_size,
+                    color=markers.highlight_color
+                )
             )
-        )
 
         self.ax.figure.canvas.draw()
 
@@ -266,17 +264,23 @@ class Seismap(Basemap):
         if redraw:
             self.ax.figure.canvas.draw()
 
-    def add_events(self, dataframe):
+    def add_events(self, catalog):
         """
         Display event locations
         """
-        self.add_markers(self.event_markers, dataframe)
+        points = [
+            (o.latitude, o.longitude)
+            for o in
+            [get_preferred_origin(e) for e in catalog]
+            if o
+        ]
+        self.add_markers(self.event_markers, points)
 
-    def add_events_highlighting(self, lons, lats):
+    def add_events_highlighting(self, points):
         """
         Highlights selected events
         """
-        self.add_highlights(self.event_markers, lons, lats)
+        self.add_highlights(self.event_markers, points)
 
     def add_events_box(self, n, e, s, w):
         """
@@ -296,17 +300,22 @@ class Seismap(Basemap):
         """
         self.clear_bounding_markers(self.event_markers)
 
-    def add_stations(self, dataframe):
+    def add_stations(self, inventory):
         """
         Display station locations
         """
-        self.add_markers(self.station_markers, dataframe)
+        points = [
+            (s.latitude, s.longitude)
+            for n in inventory.networks
+            for s in n.stations
+        ]
+        self.add_markers(self.station_markers, points)
 
-    def add_stations_highlighting(self, lons, lats):
+    def add_stations_highlighting(self, points):
         """
         Highlight selected stations
         """
-        self.add_highlights(self.station_markers, lons, lats)
+        self.add_highlights(self.station_markers, points)
 
     def add_stations_box(self, n, e, s, w):
         """

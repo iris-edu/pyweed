@@ -14,17 +14,16 @@ from __future__ import (absolute_import, division, print_function)
 
 # Basic packages
 import os
-import sys
 import logging
 
 # For debugging, raise an exception on attempted chained assignment
 # See http://pandas.pydata.org/pandas-docs/version/0.19.1/indexing.html#returning-a-view-versus-a-copy
-import pandas as pd
-pd.set_option('mode.chained_assignment', 'raise')
+# import pandas as pd
+# pd.set_option('mode.chained_assignment', 'raise')
 
 # Pyweed UI components
 from preferences import Preferences
-from pyweed_utils import manageCache
+from pyweed_utils import manageCache, iter_channels, get_sncl
 from obspy.clients import fdsn
 from event_options import EventOptions
 from station_options import StationOptions
@@ -74,7 +73,9 @@ class PyWeed(object):
         self.client = fdsn.Client(self.preferences.Data.dataCenter)
 
     def load_preferences(self):
-        # Load configurable preferences from ~/.pyweed/config.ini
+        """
+        Load configurable preferences from ~/.pyweed/config.ini
+        """
         LOGGER.info("Loading preferences")
         self.preferences = Preferences()
         try:
@@ -85,6 +86,9 @@ class PyWeed(object):
             LOGGER.error("Unable to load configuration preferences -- using defaults.\n%s", e)
 
     def save_preferences(self):
+        """
+        Save preferences to ~/.pyweed/config.ini
+        """
         LOGGER.info("Saving preferences")
         try:
             self.preferences.EventOptions.update(self.event_options.get_options(stringify=True))
@@ -127,6 +131,9 @@ class PyWeed(object):
                 raise
 
     def set_event_options(self, options):
+        """
+        Update the event options
+        """
         LOGGER.debug("Set event options: %s", repr(options))
         self.event_options.set_options(options)
 
@@ -137,14 +144,33 @@ class PyWeed(object):
         return self.event_options.get_obspy_options(self.station_options)
 
     def fetch_events(self, options=None):
-        raise NotImplementedError("PyWEED subclass should implement this")
+        """
+        NOT THREAD SAFE: The GUI subclass should override this
+        """
+        if not options:
+            options = self.get_event_obspy_options()
+        self.set_events(self.client.get_events(**options))
 
     def set_events(self, events):
+        """
+        Set the current event list
+
+        @param events: a Catalog
+        """
         LOGGER.info("Set events")
         self.events = events
 
     def set_selected_event_ids(self, event_ids):
         self.selected_event_ids = event_ids
+
+    def iter_selected_events(self):
+        """
+        Iterate over the selected events
+        """
+        for event in self.events:
+            event_id = event.resource_id.id
+            if event_id in self.selected_event_ids:
+                yield event
 
     def set_station_options(self, options):
         LOGGER.debug("Set station options: %s", repr(options))
@@ -157,14 +183,34 @@ class PyWeed(object):
         return self.station_options.get_obspy_options(self.event_options)
 
     def fetch_stations(self, options=None):
-        raise NotImplementedError("PyWEED subclass should implement this")
+        """
+        NOT THREAD SAFE: The GUI subclass should override this
+        """
+        if not options:
+            options = self.get_station_obspy_options()
+        self.set_stations(self.client.get_stations(**options))
 
     def set_stations(self, stations):
+        """
+        Set the current station list
+
+        @param stations: an Inventory
+        """
         LOGGER.info("Set stations")
         self.stations = stations
 
     def set_selected_station_ids(self, station_ids):
         self.selected_station_ids = station_ids
+
+    def iter_selected_stations(self):
+        """
+        Iterate over the selected stations (channels)
+        Yields (network, station, channel) for each selected channel
+        """
+        for (network, station, channel) in iter_channels(self.stations):
+            sncl = get_sncl(network, station, channel)
+            if sncl in self.selected_station_ids:
+                yield (network, station, channel)
 
     def close(self):
         self.manage_cache(init=False)

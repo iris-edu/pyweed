@@ -13,8 +13,15 @@ from __future__ import (absolute_import, division, print_function)
 # Basic packages
 import os
 import logging
+import re
+from geographiclib.geodesic import Geodesic
+from obspy.taup.tau import TauPyModel
+from obspy.core.util.attribdict import AttribDict
+from obspy.core.utcdatetime import UTCDateTime
 
 LOGGER = logging.getLogger(__name__)
+GEOD = Geodesic.WGS84
+TAUP = TauPyModel()
 
 
 def manageCache(downloadDir, cacheSize):
@@ -55,9 +62,106 @@ def manageCache(downloadDir, cacheSize):
 
         LOGGER.debug('Removed %d files to keep %s below %.0f megabytes' % (deletionCount, downloadDir, cacheSize))
 
-
     except Exception, e:
         LOGGER.error(str(e))
 
 
+def iter_channels(inventory):
+    """
+    Iterate over every channel in an inventory.
+    For each channel, yields (network, station, channel)
+    """
+    for network in inventory.networks:
+        for station in network.stations:
+            for channel in station.channels:
+                yield (network, station, channel)
 
+
+def get_sncl(network, station, channel):
+    """
+    Generate the SNCL for the given network/station/channel
+    """
+    return '.'.join((network.code, station.code, channel.location_code, channel.code))
+
+
+def get_event_id(event):
+    """
+    Get a unique ID for a given event
+    """
+    # We use the resource id, which is a URI, and we pull off only the final (alphanumeric) component
+    # ex:
+    #
+    # quakeml:nc.anss.org/Event/NC/72734605 -> 72734605
+    return re.sub(r'^.*?(\w+)\W*$', r'\1', event.resource_id.id)
+
+
+def get_event_name(event):
+    origin = get_preferred_origin(event)
+    time_str = origin.time.isoformat(sep=' ').split('.')[0]
+    mag = get_preferred_magnitude(event)
+    mag_str = "%s%s" % (mag.mag, mag.magnitude_type)
+    region_str = str(event.event_descriptions[0].text).title()
+    return "%s | %s | %s" % (time_str, mag_str, region_str)
+
+
+def get_preferred_origin(event):
+    """
+    Get the preferred origin for the event, or None if not defined
+    """
+    origin = event.preferred_origin()
+    if not origin:
+        LOGGER.error("No preferred origin found for event %s", event.resource_id)
+        if len(event.origins):
+            origin = event.origins[0]
+    return origin
+
+
+def get_preferred_magnitude(event):
+    """
+    Get the preferred magnitude for the event, or None if not defined
+    """
+    magnitude = event.preferred_magnitude()
+    if not magnitude:
+        LOGGER.error("No preferred magnitude found for event %s", event.resource_id)
+        if len(event.magnitudes):
+            magnitude = event.magnitudes[0]
+    return magnitude
+
+
+class Distances(AttribDict):
+    defaults = dict(
+        distance=0,
+        azimuth=0,
+        arrival=UTCDateTime(),
+    )
+
+
+def calculate_distances(event, station, phase_list=None):
+    """
+    Calculate distance, azimuth, arrival time, etc.
+    """
+    origin = get_preferred_origin(event)
+    if not origin:
+        raise Exception("No origin")
+    distaz = GEOD.Inverse(
+        origin.latitude, origin.longitude,
+        station.latitude, station.longitude)
+
+    if not phase_list:
+        phase_list = ['ttp']
+
+    tt = TAUP.get_travel_times(
+        origin.depth / 1000,
+        distaz['a12'],
+        phase_list
+    )
+    if tt:
+        offset = tt[0].time
+    else:
+        offset = 0
+
+    return Distances(
+        distance=distaz['a12'],
+        azimuth=distaz['azi1'],
+        arrival=(origin.time + offset),
+    )
