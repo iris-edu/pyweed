@@ -63,13 +63,11 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         # Events
         LOGGER.info('Setting up event options dialog...')
         self.events_handler = EventsHandler(self)
-        self.events_handler.catalog_loaded.connect(self.on_event_catalog_loaded)
         self.events_handler.done.connect(self.on_events_loaded)
 
         # Stations
         LOGGER.info('Setting up station options dialog...')
         self.stations_handler = StationsHandler(self)
-        self.stations_handler.inventory_loaded.connect(self.on_station_inventory_loaded)
         self.stations_handler.done.connect(self.on_stations_loaded)
 
         # Waveforms
@@ -111,20 +109,16 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         if self.mainWindow:
             self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
 
-    def on_event_catalog_loaded(self, catalog):
-        if isinstance(catalog, Exception):
-            LOGGER.error("Error loading events")
-        else:
-            self.set_events(catalog)
-
-    def on_events_loaded(self, eventsDF):
+    def on_events_loaded(self, events):
         """
         Handler triggered when the EventsHandler finishes loading events
         """
-        if isinstance(eventsDF, Exception):
-            msg = "Error loading events: %s" % eventsDF
+        if isinstance(events, Exception):
+            msg = "Error loading events: %s" % events
             LOGGER.error(msg)
-        self.mainWindow.onEventsLoaded(eventsDF)
+        else:
+            self.set_events(events)
+        self.mainWindow.onEventsLoaded(events)
 
     ###############
     # Stations
@@ -144,17 +138,16 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         if self.mainWindow:
             self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
 
-    def on_station_inventory_loaded(self, inventory):
-        self.set_stations(inventory)
-
-    def on_stations_loaded(self, stationsDF):
+    def on_stations_loaded(self, stations):
         """
         Handler triggered when the StationsHandler finishes loading stations
         """
-        if isinstance(stationsDF, Exception):
-            msg = "Error loading stations: %s" % stationsDF
+        if isinstance(stations, Exception):
+            msg = "Error loading stations: %s" % stations
             LOGGER.error(msg)
-        self.mainWindow.onStationsLoaded(stationsDF)
+        else:
+            self.set_stations(stations)
+        self.mainWindow.onStationsLoaded(stations)
 
     ###############
     # Waveforms

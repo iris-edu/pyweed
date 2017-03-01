@@ -9,6 +9,9 @@ class SignalingThread(QtCore.QThread):
     # Signal to indicate success
     done = QtCore.pyqtSignal(object)
 
+    def __del__(self):
+        self.wait()
+
 
 class SignalingObject(QtCore.QObject):
     # Signal to indicate success
