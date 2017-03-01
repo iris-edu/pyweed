@@ -423,14 +423,44 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="locationRangeRadioButton">
-        <property name="text">
-         <string>Within lat/lon box</string>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <property name="spacing">
+         <number>0</number>
         </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
+        <item>
+         <widget class="QRadioButton" name="locationRangeRadioButton">
+          <property name="text">
+           <string>Within lat/lon box</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_18">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="drawLocationRangeToolButton">
+          <property name="text">
+           <string>Draw on map</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="locationRangeLayout" stretch="0,1">
@@ -577,14 +607,44 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
-        <property name="enabled">
-         <bool>true</bool>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <property name="spacing">
+         <number>0</number>
         </property>
-        <property name="text">
-         <string>Distance from point</string>
-        </property>
-       </widget>
+        <item>
+         <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Distance from point</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_19">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="drawDistanceFromPointToolButton">
+          <property name="text">
+           <string>Draw on map</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="locationDistanceFromPointLayout" stretch="0,1">

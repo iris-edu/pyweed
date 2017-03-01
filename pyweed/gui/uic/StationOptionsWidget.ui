@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>309</width>
-    <height>699</height>
+    <height>703</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -127,7 +127,7 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
         <property name="spacing">
          <number>0</number>
         </property>
@@ -289,14 +289,41 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="locationRangeRadioButton">
-        <property name="text">
-         <string>Within lat/lon box</string>
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <property name="spacing">
+         <number>0</number>
         </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
+        <item>
+         <widget class="QRadioButton" name="locationRangeRadioButton">
+          <property name="text">
+           <string>Within lat/lon box</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Expanding</enum>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="drawLocationRangeToolButton">
+          <property name="text">
+           <string>Draw on map</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
@@ -309,10 +336,13 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <property name="spacing">
-           <number>2</number>
+           <number>0</number>
           </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="spacing">
+             <number>0</number>
+            </property>
             <item>
              <spacer name="horizontalSpacer_12">
               <property name="orientation">
@@ -357,7 +387,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <property name="spacing">
-             <number>12</number>
+             <number>2</number>
             </property>
             <item>
              <widget class="QDoubleSpinBox" name="locationRangeWestDoubleSpinBox">
@@ -383,6 +413,9 @@
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <property name="spacing">
+             <number>0</number>
+            </property>
             <item>
              <spacer name="horizontalSpacer_7">
               <property name="orientation">
@@ -446,14 +479,47 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
-        <property name="enabled">
-         <bool>true</bool>
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <property name="spacing">
+         <number>0</number>
         </property>
-        <property name="text">
-         <string>Distance from point</string>
-        </property>
-       </widget>
+        <item>
+         <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Distance from point</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Expanding</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QToolButton" name="drawDistanceFromPointToolButton">
+          <property name="text">
+           <string>Draw on map</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,1">
@@ -627,6 +693,7 @@
    </item>
   </layout>
  </widget>
+ <layoutdefault spacing="0" margin="0"/>
  <tabstops>
   <tabstop>networkLineEdit</tabstop>
   <tabstop>stationLineEdit</tabstop>
@@ -636,8 +703,6 @@
   <tabstop>starttimeDateTimeEdit</tabstop>
   <tabstop>endtimeDateTimeEdit</tabstop>
   <tabstop>timeFromEventsRadioButton</tabstop>
-  <tabstop>locationRangeRadioButton</tabstop>
-  <tabstop>locationDistanceFromPointRadioButton</tabstop>
   <tabstop>locationFromEventsRadioButton</tabstop>
  </tabstops>
  <resources/>
