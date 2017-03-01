@@ -14,11 +14,12 @@ from PyQt4 import QtGui, QtCore
 from gui.uic import MainWindow
 from preferences import Preferences, safe_int, safe_bool, bool_to_str
 import logging
-from pyweed_utils import manageCache, iter_channels, get_preferred_origin, get_preferred_magnitude
+from pyweed_utils import manageCache, iter_channels, get_preferred_origin, get_preferred_magnitude, get_distance
 from seismap import Seismap
 from gui.EventOptionsWidget import EventOptionsWidget
 from gui.StationOptionsWidget import StationOptionsWidget
 from gui.TableItems import TableItems
+from event_options import EventOptions
 
 LOGGER = logging.getLogger(__name__)
 
@@ -189,16 +190,151 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap = Seismap(projection=self.pyweed.preferences.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
         self.map_figure.canvas.draw()
 
-        # TODO: Basic mouse event handling
+        # Map drawing mode
+        self.drawMode = None
+        # Indicates that we are actually drawing (ie. mouse button is down)
+        self.drawing = False
+        # If drawing, the start and end points
+        self.drawPoints = []
+        # Handler functions for mouse down/move/up, these are created when drawing is activated
+        self.drawHandlers = []
+        # Map of buttons to the relevant draw modes
+        self.drawButtons = {
+            'events.box': self.eventOptionsWidget.drawLocationRangeToolButton,
+            'events.toroid': self.eventOptionsWidget.drawDistanceFromPointToolButton,
+            'stations.box': self.stationOptionsWidget.drawLocationRangeToolButton,
+            'stations.toroid': self.stationOptionsWidget.drawDistanceFromPointToolButton,
+        }
+
+        # Generate a handler to toggle a given drawing mode
+        def drawModeFn(mode):
+            return lambda checked: self.toggleDrawMode(mode, checked)
+        # Register draw mode toggle handlers
+        for mode, button in self.drawButtons.iteritems():
+            button.clicked.connect(drawModeFn(mode))
+
+    def setDrawMode(self, mode):
+        """
+        Initialize the given drawing mode
+        """
+        LOGGER.info("Drawing %s", mode)
+        self.clearDrawMode()
+        self.drawMode = mode
         # See http://matplotlib.org/users/event_handling.html
-        def on_press(event):
+        self.drawHandlers = [
+            self.mapCanvas.mpl_connect('button_press_event', self.onMapMouseClick),
+            self.mapCanvas.mpl_connect('button_release_event', self.onMapMouseRelease),
+            self.mapCanvas.mpl_connect('motion_notify_event', self.onMapMouseMove),
+        ]
+
+    def clearDrawMode(self):
+        """
+        Clear the drawing mode
+        """
+        # Ensure the button is unchecked
+        if self.drawMode:
+            self.drawButtons[self.drawMode].setChecked(False)
+        self.drawing = False
+        self.drawMode = None
+        for handler in self.drawHandlers:
+            self.mapCanvas.mpl_disconnect(handler)
+        self.drawHandlers = []
+
+    def toggleDrawMode(self, mode, checked):
+        """
+        Event handler when a draw mode button is clicked
+        """
+        if not checked:
+            self.clearDrawMode()
+        else:
+            self.setDrawMode(mode)
+
+    def drawPointsToBox(self):
+        """
+        Convert self.drawPoints to a tuple of (n, e, s, w)
+        """
+        (lat1, lon1) = self.drawPoints[0]
+        (lat2, lon2) = self.drawPoints[1]
+        return (
+            max(lat1, lat2),
+            max(lon1, lon2),
+            min(lat1, lat2),
+            min(lon1, lon2)
+        )
+
+    def drawPointsToToroid(self):
+        """
+        Convert self.drawPoints to a tuple of (lat, lon, radius)
+        """
+        (lat1, lon1) = self.drawPoints[0]
+        (lat2, lon2) = self.drawPoints[1]
+        radius = get_distance(lat1, lon1, lat2, lon2)
+        return (lat1, lon1, radius)
+
+    def onMapMouseClick(self, event):
+        """
+        Handle a mouse click on the map, this should only be called if drawMode is active
+        """
+        if self.drawMode:
             (lon, lat) = self.seismap(event.xdata, event.ydata, inverse=True)
-            if lat is None or lon is None:
-                LOGGER.debug('Mouse click outside of map')
-            else:
-                LOGGER.debug('you pressed %d x %d', lat, lon)
-                self.seismap.add_events_toroid(lat, lon, 0, 20)
-        cid = self.mapCanvas.mpl_connect('button_press_event', on_press)
+            if lat is not None and lon is not None:
+                self.drawing = True
+                self.drawPoints = [[lat, lon], [lat, lon]]
+
+    def onMapMouseRelease(self, event):
+        """
+        Handle a mouse up event, this should only be called if drawMode is active
+        """
+        if self.drawing:
+            options = {}
+            # Build options values based on box or toroid
+            if 'box' in self.drawMode:
+                (n, e, s, w) = self.drawPointsToBox()
+                options = {
+                    'location_choice': EventOptions.LOCATION_BOX,  # StationOptions must use the same value here!
+                    'maxlatitude': n,
+                    'maxlongitude': e,
+                    'minlatitude': s,
+                    'minlongitude': w,
+                }
+            elif 'toroid' in self.drawMode:
+                (lat, lon, dist) = self.drawPointsToToroid()
+                options = {
+                    'location_choice': EventOptions.LOCATION_POINT,  # StationOptions must use the same value here!
+                    'latitude': lat,
+                    'longitude': lon,
+                    'maxradius': dist
+                }
+            # Set event or station options
+            if 'events' in self.drawMode:
+                self.pyweed.set_event_options(options)
+            elif 'stations' in self.drawMode:
+                self.pyweed.set_station_options(options)
+            # Exit drawing mode
+            self.clearDrawMode()
+
+    def onMapMouseMove(self, event):
+        if self.drawing:
+            (lon, lat) = self.seismap(event.xdata, event.ydata, inverse=True)
+            if lat is not None and lon is not None:
+                self.drawPoints[1] = [lat, lon]
+                LOGGER.debug("Draw points: %s" % self.drawPoints)
+            self.updateDrawing()
+
+    def updateDrawing(self):
+        # Build options values based on box or toroid
+        if 'box' in self.drawMode:
+            (n, e, s, w) = self.drawPointsToBox()
+            if 'events' in self.drawMode:
+                self.seismap.add_events_box(n, e, s, w)
+            elif 'stations' in self.drawMode:
+                self.seismap.add_stations_box(n, e, s, w)
+        elif 'toroid' in self.drawMode:
+            (lat, lon, maxradius) = self.drawPointsToToroid()
+            if 'events' in self.drawMode:
+                self.seismap.add_events_toroid(lat, lon, 0, maxradius)
+            elif 'stations' in self.drawMode:
+                self.seismap.add_stations_toroid(lat, lon, 0, maxradius)
 
     def updateOptions(self):
         """
@@ -207,7 +343,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.pyweed.set_event_options(self.eventOptionsWidget.getOptions())
         self.pyweed.set_station_options(self.stationOptionsWidget.getOptions())
 
-    @QtCore.pyqtSlot()
     def getEvents(self):
         """
         Trigger the event retrieval from web services
@@ -262,7 +397,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info(status)
         self.statusBar.showMessage(status)
 
-    @QtCore.pyqtSlot()
     def getStations(self):
         """
         Trigger the channel metadata retrieval from web services
@@ -318,7 +452,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info(status)
         self.statusBar.showMessage(status)
 
-    @QtCore.pyqtSlot()
     def getWaveforms(self):
         self.pyweed.open_waveforms_dialog()
 

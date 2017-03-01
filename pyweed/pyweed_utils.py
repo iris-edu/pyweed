@@ -136,6 +136,14 @@ class Distances(AttribDict):
     )
 
 
+def get_distance(lat1, lon1, lat2, lon2):
+    """
+    Get the distance between two points in degrees
+    """
+    dist = GEOD.Inverse(lat1, lon1, lat2, lon2, Geodesic.DISTANCE)
+    return dist['a12']
+
+
 def calculate_distances(event, station, phase_list=None):
     """
     Calculate distance, azimuth, arrival time, etc.
@@ -165,3 +173,16 @@ def calculate_distances(event, station, phase_list=None):
         azimuth=distaz['azi1'],
         arrival=(origin.time + offset),
     )
+
+
+def get_bounding_circle(lat, lon, radius, num_points=36):
+    """
+    Returns groups of lat/lon pairs representing a circle on the map
+    """
+    return [
+        (g['lat2'], g['lon2'])
+        for g in [
+            GEOD.ArcDirect(lat, lon, (i * 360) / num_points, radius)
+            for i in range(0, num_points + 1)
+        ]
+    ]

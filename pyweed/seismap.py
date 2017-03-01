@@ -16,12 +16,13 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 
 from mpl_toolkits.basemap import Basemap
-from pyweed_utils import get_preferred_origin
+from pyweed_utils import get_bounding_circle, get_preferred_origin
 
 
 class MapMarkers(object):
     """
-    Handles the markers (for items on the map and bounding boxes/toroids) of a particular type
+    Configures and tracks the markers (for items on the map and bounding boxes/toroids) on the map
+    This handles a single type, so there is one instance of this class for events and
     """
     color = '#FFFFFF'
     highlight_color = '#FFFF00'
@@ -59,61 +60,12 @@ class Seismap(Basemap):
     """
     Seismap is a subclass of Basemap, specialized for handling seismic data.
     """
+    def __init__(self, **kwargs):
+        super(Seismap, self).__init__(**kwargs)
 
-    def __init__(self, llcrnrlon=None, llcrnrlat=None,
-                 urcrnrlon=None, urcrnrlat=None,
-                 llcrnrx=None, llcrnry=None,
-                 urcrnrx=None, urcrnry=None,
-                 width=None, height=None,
-                 projection='cyl', resolution='c',
-                 area_thresh=1000.0, rsphere=6370997.0,
-                 ellps=None, lat_ts=None,
-                 lat_1=None, lat_2=None,
-                 lat_0=None, lon_0=0,
-                 lon_1=None, lon_2=None,
-                 o_lon_p=None, o_lat_p=None,
-                 k_0=None,
-                 no_rot=False,
-                 suppress_ticks=True,
-                 satellite_height=35786000,
-                 boundinglat=None,
-                 fix_aspect=True,
-                 anchor='C',
-                 celestial=False,
-                 round=False,
-                 epsg=None,
-                 ax=None):
-
+        # Trackers for the markers
         self.event_markers = EventMarkers()
         self.station_markers = StationMarkers()
-
-        # Use Basemap's init, enforcing the values of many parameters that
-        # aren't used or whose Basemap defaults would not be altered for all-sky
-        # celestial maps.
-
-        Basemap.__init__(self, llcrnrlon=None, llcrnrlat=None,
-                         urcrnrlon=None, urcrnrlat=None,
-                         llcrnrx=None, llcrnry=None,
-                         urcrnrx=None, urcrnry=None,
-                         width=None, height=None,
-                         projection=projection, resolution=resolution,
-                         area_thresh=area_thresh, rsphere=6370997.0,
-                         ellps=None, lat_ts=None,
-                         lat_1=lat_1, lat_2=lat_2,
-                         lat_0=lat_0, lon_0=lon_0,
-                         lon_1=lon_1, lon_2=lon_2,
-                         o_lon_p=None, o_lat_p=None,
-                         k_0=None,
-                         no_rot=False,
-                         suppress_ticks=True,
-                         satellite_height=35786000,
-                         boundinglat=None,
-                         fix_aspect=True,
-                         anchor='C',
-                         celestial=False,
-                         round=False,
-                         epsg=None,
-                         ax=ax)
 
         # Basic map features
         self.add_base()
@@ -130,12 +82,14 @@ class Seismap(Basemap):
         """
         Display marker locations
 
-        See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
+        @param markers: either self.event_markers or self.station_markers
+        @param points: a list of (lat, lon) values
         """
 
         self.clear_markers(markers, redraw=False)
         self.clear_highlights(markers, redraw=False)
 
+        # See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         if len(points):
             (lats, lons) = zip(*points)
             # Plot in projection coordinates
@@ -151,7 +105,10 @@ class Seismap(Basemap):
 
     def add_highlights(self, markers, points):
         """
-        Highlights selected items
+        Highlight selected items
+
+        @param markers: either self.event_markers or self.station_markers
+        @param points: a list of (lat, lon) values
         """
 
         self.clear_highlights(markers, redraw=False)
@@ -177,55 +134,61 @@ class Seismap(Basemap):
 
         self.clear_bounding_markers(markers, redraw=False)
 
-        # Get locations to plot
-        lon_top = np.linspace(w,e)
-        lon_right = np.linspace(e,e)
-        lon_bottom = np.linspace(e,w)
-        lon_left = np.linspace(w,w)
-        lons = np.concatenate((lon_top, lon_right, lon_bottom, lon_left))
+        # Check for box wrapping around the map edge
+        if e < w:
+            # Need to create two paths
+            paths = [
+                [[s, 180], [s, w], [n, w], [n, 180]],
+                [[s, -180], [s, e], [n, e], [n, -180]]
+            ]
+        else:
+            paths = [
+                [[n, w], [n, e], [s, e], [s, w], [n, w]]
+            ]
 
-        lat_top = np.linspace(n,n)
-        lat_right = np.linspace(n,s)
-        lat_bottom = np.linspace(s,s)
-        lat_left = np.linspace(s,n)
-        lats = np.concatenate((lat_top, lat_right, lat_bottom, lat_left))
-
-        # Plot in projection coordinates
-        x, y = self(lons, lats)
-        markers.box_markers.extend(
-            self.plot(x, y, lineStyle='solid', color=markers.color, alpha=0.7, linewidth=2)
-        )
+        for path in paths:
+            (lats, lons) = zip(*path)
+            (x, y) = self(lons, lats)
+            markers.box_markers.extend(
+                self.plot(
+                    x, y,
+                    color=markers.color,
+                    linewidth=markers.bounds_linewidth,
+                    linestyle=markers.bounds_linestyle,
+                    alpha=markers.bounds_alpha
+                ))
 
         self.ax.figure.canvas.draw()
 
-    def add_marker_toroid(self, markers, n, e, minradius, maxradius):
+    def add_marker_toroid(self, markers, lat, lon, minradius, maxradius):
         """
         Display a toroidal bounding area
         """
 
         self.clear_bounding_markers(markers, redraw=False)
 
-        # Get locations to plot
-        lons1, lats1 = self._geocircle(e, n, minradius)
-        lons2, lats2 = self._geocircle(e, n, maxradius)
-
-        # Plot in projection coordinates
-        x1, y1 = self(lons1, lats1)
-        markers.toroid_markers.extend(
-            self.plot(x1, y1, lineStyle='solid', color=markers.color, alpha=0.7, linewidth=2)
-        )
-        x2, y2 = self(lons2, lats2)
-        markers.toroid_markers.extend(
-            self.plot(x2, y2, lineStyle='solid', color=markers.color, alpha=0.7, linewidth=2)
-        )
+        for r in (minradius, maxradius):
+            if r > 0:
+                paths = self.wrap_path(get_bounding_circle(lat, lon, r))
+                for path in paths:
+                    (lats, lons) = zip(*path)
+                    (x, y) = self(lons, lats)
+                    markers.toroid_markers.extend(
+                        self.plot(
+                            x, y,
+                            color=markers.color,
+                            linewidth=markers.bounds_linewidth,
+                            linestyle=markers.bounds_linestyle,
+                            alpha=markers.bounds_alpha
+                        ))
 
         self.ax.figure.canvas.draw()
 
     def clear_markers(self, markers, redraw=True):
         """
         Remove existing marker elements
-        See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
         """
+        # See http://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
         try:
             while markers.markers:
                 markers.markers.pop(0).remove()
@@ -288,11 +251,11 @@ class Seismap(Basemap):
         """
         self.add_marker_box(self.event_markers, n, e, s, w)
 
-    def add_events_toroid(self, n, e, minradius, maxradius):
+    def add_events_toroid(self, lat, lon, minradius, maxradius):
         """
         Display event locations
         """
-        self.add_marker_toroid(self.event_markers, n, e, minradius, maxradius)
+        self.add_marker_toroid(self.event_markers, lat, lon, minradius, maxradius)
 
     def clear_events_bounds(self):
         """
@@ -323,11 +286,11 @@ class Seismap(Basemap):
         """
         self.add_marker_box(self.station_markers, n, e, s, w)
 
-    def add_stations_toroid(self, n, e, minradius, maxradius):
+    def add_stations_toroid(self, lat, lon, minradius, maxradius):
         """
         Display station locations
         """
-        self.add_marker_toroid(self.station_markers, n, e, minradius, maxradius)
+        self.add_marker_toroid(self.station_markers, lat, lon, minradius, maxradius)
 
     def clear_stations_bounds(self):
         """
@@ -335,24 +298,60 @@ class Seismap(Basemap):
         """
         self.clear_bounding_markers(self.station_markers)
 
-    def _geocircle(self, lon, lat, radius, n=50):
-        """Calculate lons and lats associated with a circle."""
+    def wrap_path(self, path):
+        """
+        Split a path of (lat, lon) values into a list of paths none of which crosses the map boundary
 
-        # Calculate circle
-        step = 2.0*np.pi / n
-        lons = lon + radius*np.cos(np.arange(0,2*np.pi,step))
-        lons = lons.tolist()
-        lons.append(lon + radius)
-        lats = lat + radius*np.sin(np.arange(0,2*np.pi,step))
-        lats = lats.tolist()
-        lats.append(lat)
+        This is a workaround for https://github.com/matplotlib/basemap/issues/214
+        """
+        last_point = None
+        current_subpath = []
+        subpaths = [current_subpath]
+        for point in path:
+            # Detect the path wrapping around the map boundary
+            midpoints = self.wrap_point(last_point, point)
+            if midpoints:
+                # The first midpoint goes at the end of the previous subpath
+                current_subpath.append(midpoints[0])
+                current_subpath = []
+                subpaths.append(current_subpath)
+                # The second midpoint goes at the start of the new subpath
+                current_subpath.append(midpoints[1])
+            current_subpath.append(point)
+            last_point = point
+        # If the path crosses the map boundary, we will (usually?) have 3 subpaths, and the
+        # first and last subpaths are actually contiguous so join them together
+        if len(subpaths) > 2:
+            subpaths[-1].extend(subpaths[0])
+            subpaths = subpaths[1:]
+        return subpaths
 
-        # TODO:  _geocircle: Handle branch cut at boundaries
+    def wrap_point(self, p1, p2):
+        """
+        Given two lat/lon pairs representing a line segment to be plotted, if the segment crosses
+        the map boundary this returns two points (one at each edge of the map) where the segment
+        crosses the boundary, or None if the segment doesn't cross the boundary.
 
-        coords = (lons,lats)
+        For example:
+        wrap_point([20, 170], [10, -170])
+        returns
+        [[15, 180], [15, -180]]
 
-        return(coords)
-
-
-
-
+        This means that the segment should be split into:
+        [20, 170] - [15, 180]
+        [15, -180] - [10, -170]
+        """
+        if p1 and p2:
+            dlon = p2[1] - p1[1]
+            if abs(dlon) > 180:
+                # Interpolate the point where the segment crosses the boundary
+                dlat = p2[0] - p1[0]
+                if dlon < 0:
+                    # Wraps from east to west
+                    midlat = p1[0] + (180 - p1[1]) * dlat / (dlon + 360)
+                    return [[midlat, 180], [midlat, -180]]
+                else:
+                    # Wraps from west to east
+                    midlat = p1[0] + (-180 - p1[1]) * dlat / (dlon - 360)
+                    return [[midlat, -180], [midlat, 180]]
+        return None
