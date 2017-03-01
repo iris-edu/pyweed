@@ -126,6 +126,7 @@ class Preferences(object):
         config = ConfigParser.SafeConfigParser()
 
         sections = [
+            self.Data,
             self.Waveforms,
             self.Logging,
             self.Map,
@@ -144,7 +145,6 @@ class Preferences(object):
                 return
         f = open(os.path.join(user_config_path(), "config.ini"), "w")
         config.write(f)
-
 
     def load(self):
         """
@@ -166,6 +166,7 @@ class Preferences(object):
             config.readfp(f)
 
             sections = [
+                self.Data,
                 self.Waveforms,
                 self.Logging,
                 self.Map,
