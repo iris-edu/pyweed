@@ -87,11 +87,43 @@ def get_sncl(network, station, channel):
 def get_event_id(event):
     """
     Get a unique ID for a given event
+
+    Event IDs are given differently by different data centers.
+
+    Examples compiled by crotwell@seis.sc.edu:
+
+    IRIS
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3337497">
+
+    NCEDC
+    <event publicID="quakeml:nc.anss.org/Event/NC/71377596"
+    catalog:datasource="nc" catalog:dataid="nc71377596"
+    catalog:eventsource="nc" catalog:eventid="71377596">
+
+    SCEDC
+    <event publicID="quakeml:service.scedc.caltech.edu/fdsnws/event/1/query?eventid=37300872"
+    catalog:datasource="ci" catalog:dataid="ci37300872"
+    catalog:eventsource="ci" catalog:eventid="37300872">
+
+    USGS
+    <event catalog:datasource="us" catalog:eventsource="us"
+    catalog:eventid="c000lvb5"
+    publicID="quakeml:earthquake.usgs.gov/fdsnws/event/1/query?eventid=usc000lvb5&format=quakeml">
+
+    ETHZ
+    <event publicID="smi:ch.ethz.sed/sc3a/2017eemfch">
+
+    INGV
+    <event publicID="smi:webservices.ingv.it/fdsnws/event/1/query?eventId=863301">
+
+    ISC
+    <event publicID="smi:ISC/evid=600516598">
     """
-    # We use the resource id, which is a URI, and we pull off only the final (alphanumeric) component
-    # ex:
-    #
-    # quakeml:nc.anss.org/Event/NC/72734605 -> 72734605
+    # Look for "eventid=" as a URL query parameter
+    m = re.search(r'eventid=([^\&]+)', event.resource_id.id, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    # Otherwise, return the trailing segment of alphanumerics
     return re.sub(r'^.*?(\w+)\W*$', r'\1', event.resource_id.id)
 
 
