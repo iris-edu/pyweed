@@ -54,5 +54,7 @@ class StationOptions(Options):
         options = self.get_options(keys=base_keys)
         options.update(self.get_time_options(event_options))
         options.update(self.get_location_options(event_options))
+        # Default level is 'station' but we always(?) want 'channel'
+        options['level'] = 'channel'
         return options
 
