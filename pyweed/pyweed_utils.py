@@ -66,14 +66,23 @@ def manageCache(downloadDir, cacheSize):
         LOGGER.error(str(e))
 
 
-def iter_channels(inventory):
+def iter_channels(inventory, dedupe=True):
     """
     Iterate over every channel in an inventory.
     For each channel, yields (network, station, channel)
+
+    If dedupe=True, repeated channels are filtered out -- this can occur if the inventory includes
+    multiple epochs for a given channel. Only the first channel will be included in this case.
     """
+    last_sncl = None
     for network in inventory.networks:
         for station in network.stations:
             for channel in station.channels:
+                if dedupe:
+                    sncl = get_sncl(network, station, channel)
+                    if sncl == last_sncl:
+                        continue
+                    last_sncl = sncl
                 yield (network, station, channel)
 
 
