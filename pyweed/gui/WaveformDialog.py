@@ -210,11 +210,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         LOGGER.debug('Loading waveform selection table...')
 
-        # NOTE:  You must disable sorting before populating the table. Otherwise rows get
-        # NOTE:  sorted as soon as the sortable column gets filled in, thus invalidating
-        # NOTE:  the row number
-        self.selectionTable.setSortingEnabled(False)
-
         # Use WaveformTableItems to put the data into the table
         if not self.tableItems:
             self.tableItems = WaveformTableItems(
@@ -222,9 +217,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 self.filters
             )
         self.tableItems.fill(self.iterWaveforms(visible_only=True))
-
-        # Restore table sorting
-        self.selectionTable.setSortingEnabled(True)
 
         # Start downloading the waveform data if this is an initial load
         if initial:

@@ -46,18 +46,18 @@ class TableItems(object):
         Fill the table
         """
         # Clear existing contents
-        self.table.clear() # This is important!
-        while (self.table.rowCount() > 0):
-            self.table.removeRow(0)
+        self.table.setRowCount(0)
 
-        # Create new table
+        # Initialize the table (TODO: should be done only once!)
         self.table.setColumnCount(len(self.columnNames))
         self.table.setHorizontalHeaderLabels(self.columnNames)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().hide()
-
         # Use the first column for identification
         self.table.setColumnHidden(0, True)
+
+        # Need to turn off sorting before inserting items
+        self.table.setSortingEnabled(False)
 
         # Add new contents
         for rowidx, row in enumerate(self.rows(data)):
@@ -66,6 +66,9 @@ class TableItems(object):
                 LOGGER.error("Row length doesn't match column count: %s / %s", str(row), str(self.columnNames))
             for cellidx, cell in enumerate(row):
                 self.table.setItem(rowidx, cellidx, cell)
+
+        # Turn sorting back on
+        self.table.setSortingEnabled(True)
 
         # Tighten up the table
         self.table.resizeColumnsToContents()
