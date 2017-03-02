@@ -35,9 +35,6 @@ class StationsLoader(SignalingThread):
         """
         Make a webservice request for events using the passed in options.
         """
-        # Add level='channel'
-        self.parameters['level'] = 'channel'
-
         # Sanity check
         try:
             if not self.parameters.has_key('starttime') or not self.parameters.has_key('endtime'):
