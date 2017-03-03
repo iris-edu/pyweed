@@ -8,6 +8,7 @@ from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
 from gui.TableItems import TableItems
 from obspy.io.sac.sactrace import SACTrace
 from pyweed_utils import get_event_name, get_preferred_magnitude, get_preferred_origin
+from preferences import safe_int
 
 LOGGER = getLogger(__name__)
 
@@ -67,16 +68,17 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     """
     def __init__(self, pyweed, parent=None):
         super(self.__class__, self).__init__(parent=parent)
+
+        LOGGER.debug('Initializing waveform dialog...')
+
         self.setupUi(self)
         self.setWindowTitle('Waveforms')
 
         # Keep a reference to globally shared components
         self.pyweed = pyweed
-        self.preferences = pyweed.preferences
-        self.client = pyweed.client
 
-        # Configured properties
-        self.waveformDirectory = pyweed.preferences.Waveforms.saveDir
+        # Initialize any preference-based settings
+        self.loadPreferences()
 
         # Modify default GUI settings
         self.saveDirectoryPushButton.setText(self.waveformDirectory)
@@ -86,10 +88,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveFormatComboBox.addItems(['ASCII', 'GSE2', 'MSEED', 'SAC'])
         self.saveFormatComboBox.setCurrentIndex(2)
 
-        LOGGER.debug('Initializing waveform dialog...')
-
         # Waveforms
-        self.waveformsHandler = WaveformsHandler(LOGGER, self.preferences, self.client)
+        self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.client)
         self.waveformsHandler.progress.connect(self.on_waveform_downloaded)
         self.waveformsHandler.done.connect(self.on_all_downloaded)
 
@@ -337,9 +337,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         LOGGER.debug("Download button reset")
         self.waveformsDownloadStatus = STATUS_READY
         self.resetSave()
-        #self.waveformsHandler.currentDF.WaveformImagePath = ''
-        #self.loadSelectionTable(self.waveformsHandler.currentDF)
-
 
     @QtCore.pyqtSlot()
     def resetSave(self):
@@ -351,7 +348,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         LOGGER.debug("Save button reset")
         self.waveformsSaveStatus = STATUS_READY
         self.updateToolbars()
-
 
     @QtCore.pyqtSlot()
     def downloadWaveformData(self):
@@ -573,3 +569,24 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.waveformDirectory = newDirectory
             self.saveDirectoryPushButton.setText(self.waveformDirectory)
             self.resetSave()
+
+    def loadPreferences(self):
+        """
+        Load preferences relevant to this widget
+        """
+        prefs = self.pyweed.preferences
+
+        self.waveformDirectory = prefs.Waveforms.saveDir
+        self.secondsBeforeSpinBox.setValue(safe_int(prefs.Waveforms.timeWindowBefore, 60))
+        self.secondsAfterSpinBox.setValue(safe_int(prefs.Waveforms.timeWindowAfter, 600))
+
+    def savePreferences(self):
+        """
+        Save preferences related to the controls on this widget
+        """
+        prefs = self.pyweed.preferences
+
+        prefs.Waveforms.saveDir = self.waveformDirectory
+        prefs.Waveforms.timeWindowBefore = self.secondsBeforeSpinBox.value()
+        prefs.Waveforms.timeWindowAfter = self.secondsAfterSpinBox.value()
+
