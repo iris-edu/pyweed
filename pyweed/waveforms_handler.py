@@ -89,7 +89,8 @@ class WaveformEntry(AttribDict):
 
     def update_config(self, config=None):
         """
-        Set the config (if one is passed) and recalculate dependencies
+        Called with something about the config (usually the time window offsets) changes.
+        Recalculates various dependent values (eg. mseed and image filenames)
         """
         if config:
             self.config = config
@@ -128,10 +129,10 @@ class WaveformResult(object):
 
 class WaveformLoader(SignalingThread):
     """
-    Thread to handle event requests
+    Thread to download waveform data and generate an image
     """
 
-    def __init__(self, client, waveform, preferences, secondsBefore, secondsAfter):
+    def __init__(self, client, waveform, preferences):
         """
         Initialization.
         """
@@ -142,8 +143,6 @@ class WaveformLoader(SignalingThread):
         # TODO:  plot_width, plot_height should come from preferences
         self.plot_width = 600
         self.plot_height = 120  # This this must be >100!
-        self.secondsBefore = secondsBefore
-        self.secondsAfter = secondsAfter
         super(WaveformLoader, self).__init__()
 
     def run(self):
@@ -279,11 +278,12 @@ class WaveformsHandler(SignalingObject):
         LOGGER.info('Downloading waveforms')
         LOGGER.debug("Priority IDs: %s" % (priority_ids,))
         LOGGER.debug("Other IDs: %s" % (other_ids,))
+
+        self.seconds_before = seconds_before
+        self.seconds_after = seconds_after
         config = WaveformEntry.create_config(self)
         for waveform in self.waveforms:
             waveform.update_config(config)
-        self.seconds_before = seconds_before
-        self.seconds_after = seconds_after
         self.queue.extend(priority_ids)
         self.queue.extend(other_ids)
         for _ in range(self.num_threads):
@@ -317,9 +317,11 @@ class WaveformsHandler(SignalingObject):
         if not waveform:
             raise Exception("No such waveform %s" % waveform_id)
         if waveform.image_exists:
+            # No download needed, but we still want to emit the result event
+            self.progress.emit(WaveformResult(waveform_id, waveform.image_path))
             raise Exception("Waveform %s already has an image" % waveform_id)
         LOGGER.debug("Spawning download thread for waveform %s", waveform_id)
-        thread = WaveformLoader(self.client, waveform, self.preferences, self.seconds_before, self.seconds_after)
+        thread = WaveformLoader(self.client, waveform, self.preferences)
         thread.done.connect(self.on_downloaded)
         self.threads[waveform_id] = thread
         thread.start()
