@@ -100,8 +100,10 @@ class Preferences(object):
 
         self.Waveforms = Section.create("Waveforms")
         self.Waveforms.downloadDir = user_download_path()
-        self.Waveforms.cacheSize = "50" # megabytes
+        self.Waveforms.cacheSize = "50"  # megabytes
         self.Waveforms.saveDir = user_save_path()
+        self.Waveforms.timeWindowBefore = "60"  # seconds
+        self.Waveforms.timeWindowAfter = "600"  # seconds
 
         self.Logging = Section.create("Logging")
         self.Logging.level = "DEBUG"
@@ -113,7 +115,7 @@ class Preferences(object):
         self.MainWindow.width = "1000"
         self.MainWindow.height = "800"
         self.MainWindow.eventOptionsFloat = "n"
-        self.MainWindow.stationOptionsFloat = "y"
+        self.MainWindow.stationOptionsFloat = "n"
 
         self.EventOptions = Section.create("EventOptions")
 

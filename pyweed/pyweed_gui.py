@@ -233,6 +233,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         LOGGER.info('Closing application...')
         # Update preferences
         self.mainWindow.savePreferences()
+        self.waveformsDialog.savePreferences()
         self.close()
         QtGui.QApplication.quit()
 
