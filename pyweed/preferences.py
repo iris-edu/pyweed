@@ -123,7 +123,7 @@ class Preferences(object):
 
     def save(self):
         """
-        Saves the user's preferences to ~/.pyweed/config.ini
+        Saves the user's preferences to config file
         """
         config = ConfigParser.SafeConfigParser()
 
@@ -145,14 +145,14 @@ class Preferences(object):
             except Exception as e:
                 print("Creation of user configuration directory failed with" + " error: \"%s\'""" % e)
                 return
-        f = open(os.path.join(user_config_path(), "config.ini"), "w")
+        f = open(os.path.join(user_config_path(), "pyweed.ini"), "w")
         config.write(f)
 
     def load(self):
         """
-        Loads the user's preferences from ~/.pyweed/config.ini
+        Loads the user's preferences from saved config file
         '"""
-        path = os.path.join(user_config_path(), "config.ini")
+        path = os.path.join(user_config_path(), "pyweed.ini")
 
         if not os.path.exists(path):
             # Save the default configuration info
@@ -187,68 +187,56 @@ class Preferences(object):
 
 def user_config_path():
     """
-    Option to support different paths for different operatiing systems.
+    Option to support different paths for different operating systems.
 
-    Adapted from:  https://github.com/claysmith/oldArcD/blob/master/tools/arctographer/arcmap/datafiles.py
+    Based on the paths listed at http://doc.qt.io/qt-5/qstandardpaths.html
 
     @rtype: str
     @return: the directory for storing user configuration files
     """
     if platform.system() == "Darwin":
-        path = os.path.join(os.path.expanduser("~"), ".pyweed")
-        return(path)
-    #elif platform.system() == "Linux":
-        #path = os.path.join(os.path.expanduser("~"), ".config", "pyweed")
-        #return path
-    #elif platform.system() == "Windows":
-        #path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed")
-        #return path
+        return os.path.join(os.path.expanduser("~"), "Library", "Preferences")
+    elif platform.system() == "Windows":
+        return os.path.join(os.path.expanduser("~"), "AppData", "Local")
     else:
-        raise Exception("Unsupported operating system")
+        # Assume a Linux-like system
+        return os.path.join(os.path.expanduser("~"), ".config")
 
 
 def user_download_path():
     """
     Option to support different paths for different operating systems.
 
-    Adapted from:  https://github.com/claysmith/oldArcD/blob/master/tools/arctographer/arcmap/datafiles.py
+    Based on the paths listed at http://doc.qt.io/qt-5/qstandardpaths.html
 
     @rtype: str
     @return: the default directory for saving waveform files
     """
     if platform.system() == "Darwin":
-        path = os.path.join(os.path.expanduser("~"), ".pyweed_downloads")
-        return(path)
-    #elif platform.system() == "Linux":
-        #path = os.path.join(os.path.expanduser("~"), ".config", "pyweed")
-        #return path
-    #elif platform.system() == "Windows":
-        #path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed")
-        #return path
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "pyweed_data")
+    elif platform.system() == "Windows":
+        return os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed_data")
     else:
-        raise Exception("Unsupported operating system")
+        # Assume a Linux-like system
+        return os.path.join(os.path.expanduser("~"), ".config", "pyweed_data")
 
 
 def user_save_path():
     """
     Option to support different paths for different operating systems.
 
-    Adapted from:  https://github.com/claysmith/oldArcD/blob/master/tools/arctographer/arcmap/datafiles.py
+    Based on the paths listed at http://doc.qt.io/qt-5/qstandardpaths.html
 
     @rtype: str
     @return: the default directory for saving waveform files
     """
     if platform.system() == "Darwin":
-        path = os.path.join(os.path.expanduser("~"), "Downloads", "PyWEED")
-        return(path)
-    #elif platform.system() == "Linux":
-        #path = os.path.join(os.path.expanduser("~"), ".config", "pyweed")
-        #return path
-    #elif platform.system() == "Windows":
-        #path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed")
-        #return path
+        return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
+    elif platform.system() == "Windows":
+        return os.path.join(os.path.expanduser("~"), "Documents", "pyweed")
     else:
-        raise Exception("Unsupported operating system")
+        # Assume a Linux-like system
+        return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
 
 
 # ------------------------------------------------------------------------------
