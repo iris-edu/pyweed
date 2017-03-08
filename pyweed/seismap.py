@@ -17,12 +17,15 @@ import numpy as np
 
 from mpl_toolkits.basemap import Basemap
 from pyweed_utils import get_bounding_circle, get_preferred_origin
+from logging import getLogger
+
+LOGGER = getLogger(__name__)
 
 
 class MapMarkers(object):
     """
-    Configures and tracks the markers (for items on the map and bounding boxes/toroids) on the map
-    This handles a single type, so there is one instance of this class for events and
+    Configures and tracks the markers (for items on the map and bounding boxes/toroids) on the map.
+    This handles a single type, so there is one instance of this class for events and one for stations.
     """
     color = '#FFFFFF'
     highlight_color = '#FFFF00'
@@ -56,27 +59,52 @@ class StationMarkers(MapMarkers):
     marker_type = 'v'  # inverted triangle
 
 
-class Seismap(Basemap):
+class Seismap(object):
     """
-    Seismap is a subclass of Basemap, specialized for handling seismic data.
+    Map display using Basemap
     """
-    def __init__(self, **kwargs):
-        super(Seismap, self).__init__(**kwargs)
+    # Default kwargs
+    DEFAULT_BASEMAP_KWARGS = dict(
+        projection='cyl',  # We only support cylindrical projection for now
+    )
+
+    def __init__(self, canvas):
+        self.canvas = canvas
+        self.map_figure = canvas.fig
+        self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
 
         # Trackers for the markers
         self.event_markers = EventMarkers()
         self.station_markers = StationMarkers()
 
         # Basic map features
-        self.add_base()
+        self.init_basemap()
 
-    def add_base(self):
+    def init_basemap(self):
         # NOTE:  http://matplotlib.org/basemap/api/basemap_api.html
         # NOTE:  https://gist.github.com/dannguyen/eb1c4e70565d8cb82d63
-        self.bluemarble(scale=0.1, alpha=0.42)
-        self.drawcoastlines(color='#555566', linewidth=1)
-        self.drawmeridians(np.arange(0, 360, 30))
-        self.drawparallels(np.arange(-90, 90, 30))
+        self.map_axes.clear()
+
+        basemap_kwargs = {}
+        basemap_kwargs.update(self.DEFAULT_BASEMAP_KWARGS)
+        basemap_kwargs.update(
+            ax=self.map_axes
+        )
+        self.basemap = Basemap(**basemap_kwargs)
+
+        self.basemap.bluemarble(scale=0.1, alpha=0.42)
+        self.basemap.drawcoastlines(color='#555566', linewidth=1)
+        self.basemap.drawmeridians(np.arange(0, 360, 30))
+        self.basemap.drawparallels(np.arange(-90, 90, 30))
+
+        self.canvas.draw()
+
+    def get_latlon(self, x, y):
+        """
+        Translate a canvas x/y coordinate to lat/lon
+        """
+        (lon, lat) = self.basemap(x, y, inverse=True)
+        return (lat, lon)
 
     def add_markers(self, markers, points):
         """
@@ -93,15 +121,15 @@ class Seismap(Basemap):
         if len(points):
             (lats, lons) = zip(*points)
             # Plot in projection coordinates
-            x, y = self(lons, lats)
+            x, y = self.basemap(lons, lats)
             markers.markers.extend(
-                self.plot(
+                self.basemap.plot(
                     x, y, linestyle='None', marker=markers.marker_type, markersize=markers.marker_size,
                     color=markers.color, markeredgecolor=markers.color
                 )
             )
 
-        self.ax.figure.canvas.draw()
+        self.canvas.draw()
 
     def add_highlights(self, markers, points):
         """
@@ -117,15 +145,15 @@ class Seismap(Basemap):
             (lats, lons) = zip(*points)
             # Plot in projection coordinates
             # TODO:  Use self.scatter() with zorder=99 to keep highlighting on top?
-            x, y = self(lons, lats)
+            x, y = self.basemap(lons, lats)
             markers.highlights.extend(
-                self.plot(
+                self.basemap.plot(
                     x, y, linestyle='None', marker=markers.marker_type, markersize=markers.highlight_marker_size,
                     color=markers.highlight_color
                 )
             )
 
-        self.ax.figure.canvas.draw()
+        self.canvas.draw()
 
     def add_marker_box(self, markers, n, e, s, w):
         """
@@ -148,9 +176,9 @@ class Seismap(Basemap):
 
         for path in paths:
             (lats, lons) = zip(*path)
-            (x, y) = self(lons, lats)
+            (x, y) = self.basemap(lons, lats)
             markers.box_markers.extend(
-                self.plot(
+                self.basemap.plot(
                     x, y,
                     color=markers.color,
                     linewidth=markers.bounds_linewidth,
@@ -158,7 +186,7 @@ class Seismap(Basemap):
                     alpha=markers.bounds_alpha
                 ))
 
-        self.ax.figure.canvas.draw()
+        self.canvas.draw()
 
     def add_marker_toroid(self, markers, lat, lon, minradius, maxradius):
         """
@@ -172,9 +200,9 @@ class Seismap(Basemap):
                 paths = self.wrap_path(get_bounding_circle(lat, lon, r))
                 for path in paths:
                     (lats, lons) = zip(*path)
-                    (x, y) = self(lons, lats)
+                    (x, y) = self.basemap(lons, lats)
                     markers.toroid_markers.extend(
-                        self.plot(
+                        self.basemap.plot(
                             x, y,
                             color=markers.color,
                             linewidth=markers.bounds_linewidth,
@@ -182,7 +210,7 @@ class Seismap(Basemap):
                             alpha=markers.bounds_alpha
                         ))
 
-        self.ax.figure.canvas.draw()
+        self.canvas.draw()
 
     def clear_markers(self, markers, redraw=True):
         """
@@ -196,7 +224,7 @@ class Seismap(Basemap):
         except IndexError:
             pass
         if redraw:
-            self.ax.figure.canvas.draw()
+            self.canvas.draw()
 
     def clear_highlights(self, markers, redraw=True):
         """
@@ -209,7 +237,7 @@ class Seismap(Basemap):
         except IndexError:
             pass
         if redraw:
-            self.ax.figure.canvas.draw()
+            self.canvas.draw()
 
     def clear_bounding_markers(self, markers, redraw=True):
         """
@@ -225,7 +253,7 @@ class Seismap(Basemap):
         except IndexError:
             pass
         if redraw:
-            self.ax.figure.canvas.draw()
+            self.canvas.draw()
 
     def add_events(self, catalog):
         """
