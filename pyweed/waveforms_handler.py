@@ -97,7 +97,7 @@ class WaveformEntry(AttribDict):
 
         self.error = None
 
-        self.start_time = self.distances.arrival + self.config.offsets[0]
+        self.start_time = self.distances.arrival - self.config.offsets[0]
         self.end_time = self.distances.arrival + self.config.offsets[1]
 
         self.start_string = UTCDateTime(self.start_time).format_iris_web_service().replace(':', '_')
