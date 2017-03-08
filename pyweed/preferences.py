@@ -109,7 +109,6 @@ class Preferences(object):
         self.Logging.level = "DEBUG"
 
         self.Map = Section.create("Map")
-        self.Map.projection = "robin"
 
         self.MainWindow = Section.create("MainWindow")
         self.MainWindow.width = "1000"

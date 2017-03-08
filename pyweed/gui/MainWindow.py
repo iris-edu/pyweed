@@ -73,7 +73,7 @@ class EventTableItems(TableItems):
                 self.numericWidget(magnitude.mag),
                 self.numericWidget(origin.longitude),
                 self.numericWidget(origin.latitude),
-                self.numericWidget(origin.depth / 1000),  # we wish to report in km # TODO:  is this correct?
+                self.numericWidget(origin.depth / 1000),  # we wish to report in km
                 self.stringWidget(magnitude.magnitude_type),
                 self.stringWidget(event_description),
             ]
@@ -182,13 +182,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
 
     def initializeMap(self):
-        # Get the Figure object from the map_canvas
         LOGGER.info('Setting up main map...')
-        self.map_figure = self.mapCanvas.fig
-        self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
-        self.map_axes.clear()
-        self.seismap = Seismap(projection=self.pyweed.preferences.Map.projection, ax=self.map_axes) # 'cyl' or 'robin' or 'mill'
-        self.map_figure.canvas.draw()
+        self.seismap = Seismap(self.mapCanvas)
 
         # Map drawing mode
         self.drawMode = None
@@ -276,14 +271,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         Handle a mouse click on the map, this should only be called if drawMode is active
         """
         if self.drawMode:
-            (lon, lat) = self.seismap(event.xdata, event.ydata, inverse=True)
+            (lat, lon) = self.seismap.get_latlon(event.xdata, event.ydata)
             if lat is not None and lon is not None:
                 self.drawing = True
                 self.drawPoints = [[lat, lon], [lat, lon]]
 
     def onMapMouseRelease(self, event):
         """
-        Handle a mouse up event, this should only be called if drawMode is active
+        Handle a mouse up event, this should only be called while the user is drawing on the map
         """
         if self.drawing:
             options = {}
@@ -314,14 +309,20 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.clearDrawMode()
 
     def onMapMouseMove(self, event):
+        """
+        Handle a mouse move event, this should only be called while the user is drawing on the map
+        """
         if self.drawing:
-            (lon, lat) = self.seismap(event.xdata, event.ydata, inverse=True)
+            (lat, lon) = self.seismap.get_latlon(event.xdata, event.ydata)
             if lat is not None and lon is not None:
                 self.drawPoints[1] = [lat, lon]
                 LOGGER.debug("Draw points: %s" % self.drawPoints)
-            self.updateDrawing()
+                self.updateDrawBounds()
 
-    def updateDrawing(self):
+    def updateDrawBounds(self):
+        """
+        Update the displayed bounding box/toroid as the user is drawing it
+        """
         # Build options values based on box or toroid
         if 'box' in self.drawMode:
             (n, e, s, w) = self.drawPointsToBox()
