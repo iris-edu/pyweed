@@ -20,7 +20,6 @@ import logging
 # version of some internal libraries. This must be done before the first import of the PyQt4 libraries.
 # See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
 import os
-from preferences import safe_int
 os.environ['QT_API'] = 'pyqt'
 import sip
 sip.setapi("QString", 2)
@@ -32,7 +31,7 @@ from PyQt4 import QtGui
 import matplotlib
 matplotlib.use('AGG')
 
-import gui.qrc
+import gui.qrc  # NOQA: F401
 from gui.MainWindow import MainWindow
 from gui.LoggingDialog import LoggingDialog
 from gui.SplashScreenHandler import SplashScreenHandler
@@ -244,5 +243,3 @@ if __name__ == "__main__":
     pyweed = PyWeedGUI()
     splashScreenHandler.finish(pyweed.mainWindow)
     sys.exit(app.exec_())
-
-

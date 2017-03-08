@@ -1,6 +1,6 @@
 from qtconsole.rich_ipython_widget import RichIPythonWidget
 from qtconsole.inprocess import QtInProcessKernelManager
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 
 
 class EmbedIPython(RichIPythonWidget):

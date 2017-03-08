@@ -37,7 +37,7 @@ class StationsLoader(SignalingThread):
         """
         # Sanity check
         try:
-            if not self.parameters.has_key('starttime') or not self.parameters.has_key('endtime'):
+            if 'starttime' not in self.parameters or 'endtime' not in self.parameters:
                 raise ValueError('starttime or endtime is missing')
             LOGGER.info('Loading stations...')
             inventory = self.client.get_stations(**self.parameters)

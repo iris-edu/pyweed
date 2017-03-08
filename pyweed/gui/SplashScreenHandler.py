@@ -23,5 +23,3 @@ class SplashScreenHandler(logging.Handler):
     def finish(self, mainWin):
         super(SplashScreenHandler, self).close()
         self.splash.finish(mainWin)
-
-

@@ -105,10 +105,13 @@ class PyWeed(object):
         try:
             log_level = getattr(logging, self.preferences.Logging.level)
             logger.setLevel(log_level)
-        except Exception as e:
+        except Exception:
             logger.setLevel(logging.DEBUG)
         handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
         handler.setFormatter(formatter)
         handler.addFilter(NoConsoleLoggingFilter())
         logger.addHandler(handler)
@@ -220,4 +223,3 @@ class PyWeed(object):
 if __name__ == "__main__":
     pyweed = PyWeed()
     # Do something?
-

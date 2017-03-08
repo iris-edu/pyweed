@@ -53,6 +53,7 @@ class WaveformTableItems(TableItems):
                 self.imageWidget(waveform),
             ]
 
+
 # Convenience values for some commonly used table column values
 WAVEFORM_ID_COLUMN = WaveformTableItems.columnNames.index('Id')
 WAVEFORM_KEEP_COLUMN = WaveformTableItems.columnNames.index('Keep')
@@ -105,7 +106,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
-        # NOTE:  currentIndexChanged() responds to both user and programmatic changes. Use activated() for user initiated changes
+        # NOTE:  currentIndexChanged() responds to both user and programmatic changes.
+        #        Use activated() for user initiated changes
         self.eventComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
@@ -439,7 +441,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             if self.waveformsSaveStatus == STATUS_WORKING:
                 self.saveWaveformData()
 
-
     @QtCore.pyqtSlot()
     def saveWaveformData(self):
         """
@@ -494,7 +495,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 savedCount += 1
                 self.saveStatusLabel.setText("Saved %d waveforms as %s" % (savedCount, formatChoice))
                 self.saveStatusLabel.repaint()
-                QtGui.QApplication.processEvents() # update GUI
+                QtGui.QApplication.processEvents()  # update GUI
 
                 # Return early if the user has toggled off the savePushButton (TODO: nonworking!)
                 # time.sleep(1)  # Need a delay to test this
@@ -589,4 +590,3 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         prefs.Waveforms.saveDir = self.waveformDirectory
         prefs.Waveforms.timeWindowBefore = self.secondsBeforeSpinBox.value()
         prefs.Waveforms.timeWindowAfter = self.secondsAfterSpinBox.value()
-

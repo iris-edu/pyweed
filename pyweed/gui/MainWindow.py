@@ -10,11 +10,11 @@ Main window
 
 from __future__ import (absolute_import, division, print_function)
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from gui.uic import MainWindow
-from preferences import Preferences, safe_int, safe_bool, bool_to_str
+from preferences import safe_int, safe_bool, bool_to_str
 import logging
-from pyweed_utils import manageCache, iter_channels, get_preferred_origin, get_preferred_magnitude, get_distance
+from pyweed_utils import iter_channels, get_preferred_origin, get_preferred_magnitude, get_distance
 from seismap import Seismap
 from gui.EventOptionsWidget import EventOptionsWidget
 from gui.StationOptionsWidget import StationOptionsWidget
@@ -62,7 +62,7 @@ class EventTableItems(TableItems):
             magnitude = get_preferred_magnitude(event)
             if not magnitude:
                 continue
-            time = origin.time.strftime("%Y-%m-%d %H:%M:%S") # use strftime to remove milliseconds
+            time = origin.time.strftime("%Y-%m-%d %H:%M:%S")  # use strftime to remove milliseconds
             event_description = "no description"
             if len(event.event_descriptions) > 0:
                 event_description = event.event_descriptions[0].text

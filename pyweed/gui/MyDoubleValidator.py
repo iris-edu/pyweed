@@ -7,6 +7,7 @@ from sys import float_info
 from PyQt4.QtGui import QValidator
 from PyQt4.QtGui import QDoubleValidator
 
+
 class MyDoubleValidator(QDoubleValidator):
     '''
     Custom QDoubleValidator that pays attention to ranges
@@ -16,9 +17,9 @@ class MyDoubleValidator(QDoubleValidator):
     Note that the Validate API is different for QString v2
     '''
 
-    def __init__(self, bottom = float_info.min, \
-                 top = float_info.max, \
-                 decimals = float_info.dig, parent = None):
+    def __init__(self, bottom=float_info.min,
+                 top=float_info.max,
+                 decimals=float_info.dig, parent=None):
 
         super(MyDoubleValidator, self).__init__(bottom, top, decimals, parent)
 
@@ -33,5 +34,3 @@ class MyDoubleValidator(QDoubleValidator):
             return QValidator.Invalid, value, pos
 
         return QValidator.Acceptable, value, pos
-
-

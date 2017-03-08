@@ -84,5 +84,3 @@ class OptionsAdapter(object):
             else:
                 LOGGER.warning("Don't know how to write input %s (%s)", k, input)
         return self.inputs_to_options(inputs)
-
-

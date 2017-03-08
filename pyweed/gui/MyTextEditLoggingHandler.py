@@ -4,6 +4,7 @@
 
 import logging
 
+
 class MyTextEditLoggingHandler(logging.Handler):
     def __init__(self, widget=None):
         super(self.__class__, self).__init__(logging.INFO)
@@ -12,4 +13,3 @@ class MyTextEditLoggingHandler(logging.Handler):
     def emit(self, record):
         msg = self.format(record)
         self.widget.appendPlainText(msg)
-

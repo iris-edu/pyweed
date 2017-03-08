@@ -155,10 +155,7 @@ class Preferences(object):
 
         if not os.path.exists(path):
             # Save the default configuration info
-            try:
-                self.save()
-            except Exception as e:
-                raise
+            self.save()
 
         else:
             # Override defaults with anything found in config.ini
