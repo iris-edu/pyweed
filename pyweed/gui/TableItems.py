@@ -2,10 +2,8 @@
 Common library for adding data to a QTableWidget.
 """
 
-import numpy as np
 from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from PyQt4 import QtGui, QtCore
-from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
 from logging import getLogger
 
 LOGGER = getLogger(__name__)

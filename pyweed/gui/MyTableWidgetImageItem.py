@@ -14,8 +14,7 @@ class MyTableWidgetImageItem(QtGui.QTableWidgetItem):
         super(MyTableWidgetImageItem, self).__init__()
         pic = QtGui.QPixmap(imagePath)
         # NOTE:  From QPixmap we could use scaledToWidth() but the resulting images aren't so pretty
-        ### pic = pic.scaledToWidth(500)
+        # pic = pic.scaledToWidth(500)
         self.setData(QtCore.Qt.DecorationRole, pic)
         # NOTE:  From QLabel we could use setScaledContents() but this doesn't preserve the aspect ratio
-        ###self.setScaledContents(True)
-
+        # self.setScaledContents(True)

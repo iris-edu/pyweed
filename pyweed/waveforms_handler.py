@@ -265,8 +265,8 @@ class WaveformsHandler(SignalingObject):
         Clear the download queue and release any active threads
         """
         LOGGER.info('Clearing existing downloads')
-        #for thread in self.threads.values():
-        #    thread.quit()
+        # for thread in self.threads.values():
+        #     thread.quit()
         # self.threads = {}
         self.queue.clear()
 
@@ -365,7 +365,6 @@ class WaveformsHandler(SignalingObject):
 # ------------------------------------------------------------------------------
 # Helper functions
 # ------------------------------------------------------------------------------
-
 
 
 # ------------------------------------------------------------------------------

@@ -1,11 +1,8 @@
 from PyQt4 import QtGui, QtCore
 from gui.uic import EventOptionsWidget
-from gui.MyDoubleValidator import MyDoubleValidator
 import logging
-from obspy.core.utcdatetime import UTCDateTime
 from distutils.util import strtobool
 from utils import OptionsAdapter
-from copy import copy
 from event_options import EventOptions
 
 LOGGER = logging.getLogger(__name__)
@@ -113,4 +110,3 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
         start = end.addYears(-1)
         self.starttimeDateTimeEdit.setDateTime(start)
         self.endtimeDateTimeEdit.setDateTime(end)
-

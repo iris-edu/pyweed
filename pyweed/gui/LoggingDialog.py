@@ -22,5 +22,3 @@ class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
         loggingHandler.setFormatter(formatter)
 
         logging.getLogger().addHandler(loggingHandler)
-
-

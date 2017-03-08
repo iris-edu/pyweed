@@ -35,7 +35,7 @@ def manageCache(downloadDir, cacheSize):
         totalSize = 0
         for root, dirs, files in os.walk(downloadDir):
             for file in files:
-                path = os.path.join(root,file)
+                path = os.path.join(root, file)
                 statList = os.stat(path)
                 # path, size, atime
                 newStatList = [path, statList.st_size, statList.st_atime]

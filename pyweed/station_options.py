@@ -57,4 +57,3 @@ class StationOptions(Options):
         # Default level is 'station' but we always(?) want 'channel'
         options['level'] = 'channel'
         return options
-
