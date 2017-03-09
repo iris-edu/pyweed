@@ -39,6 +39,7 @@ from events_handler import EventsHandler
 from stations_handler import StationsHandler
 from gui.WaveformDialog import WaveformDialog
 from gui.ConsoleDialog import ConsoleDialog
+from gui.PreferencesDialog import PreferencesDialog
 from pyweed import PyWeed, __app_name__, __version__
 
 LOGGER = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
     def __init__(self):
         super(PyWeedGUI, self).__init__()
 
+        LOGGER.info('Setting up main window...')
         self.mainWindow = MainWindow(self)
 
         # Logging
@@ -74,7 +76,9 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         LOGGER.info('Setting up waveforms dialog...')
         self.waveformsDialog = WaveformDialog(self)
 
-        LOGGER.info('Setting up main window...')
+        # Preferences
+        self.preferencesDialog = PreferencesDialog(self)
+        self.preferencesDialog.accepted.connect(self.onPreferencesDialogAccepted)
 
         # Python console
         self.console = ConsoleDialog(self, self.mainWindow)
@@ -149,6 +153,15 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         self.mainWindow.onStationsLoaded(stations)
 
     ###############
+    # Preferences
+    ###############
+
+    def onPreferencesDialogAccepted(self):
+        data_center = self.preferencesDialog.getSelectedDataCenter()
+        if data_center != self.data_center:
+            self.set_data_center(data_center)
+
+    ###############
     # Waveforms
     ###############
 
@@ -181,6 +194,10 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         showConsoleAction = QtGui.QAction("Show Python Console", self)
         showConsoleAction.triggered.connect(self.console.show)
         optionsMenu.addAction(showConsoleAction)
+
+        showPreferencesAction = QtGui.QAction("Preferences", self)
+        showPreferencesAction.triggered.connect(self.preferencesDialog.open)
+        optionsMenu.addAction(showPreferencesAction)
 
         helpMenu = mainMenu.addMenu('Help')
 

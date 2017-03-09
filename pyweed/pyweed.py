@@ -24,7 +24,7 @@ import logging
 # Pyweed UI components
 from preferences import Preferences
 from pyweed_utils import manageCache, iter_channels, get_sncl
-from obspy.clients import fdsn
+from obspy.clients.fdsn import Client
 from event_options import EventOptions
 from station_options import StationOptions
 
@@ -52,6 +52,7 @@ class NoConsoleLoggingFilter(logging.Filter):
 class PyWeed(object):
 
     client = None
+    data_center = None
     preferences = None
     event_options = None
     events = None
@@ -68,9 +69,11 @@ class PyWeed(object):
         self.load_preferences()
         self.manage_cache()
 
+    def set_data_center(self, data_center):
         # Instantiate a client
-        LOGGER.info("Creating ObsPy client for %s", self.preferences.Data.dataCenter)
-        self.client = fdsn.Client(self.preferences.Data.dataCenter)
+        self.data_center = data_center
+        LOGGER.info("Creating ObsPy client for %s", self.data_center)
+        self.client = Client(self.data_center)
 
     def load_preferences(self):
         """
@@ -80,10 +83,11 @@ class PyWeed(object):
         self.preferences = Preferences()
         try:
             self.preferences.load()
-            self.set_event_options(self.preferences.EventOptions)
-            self.set_station_options(self.preferences.StationOptions)
         except Exception as e:
             LOGGER.error("Unable to load configuration preferences -- using defaults.\n%s", e)
+        self.set_event_options(self.preferences.EventOptions)
+        self.set_station_options(self.preferences.StationOptions)
+        self.set_data_center(self.preferences.Data.dataCenter)
 
     def save_preferences(self):
         """
