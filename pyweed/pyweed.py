@@ -30,7 +30,7 @@ from station_options import StationOptions
 
 
 __app_name__ = "PyWEED"
-__version__ = "0.1.1"
+__app_version__ = "0.1.1"
 
 
 LOGGER = logging.getLogger(__name__)
@@ -50,6 +50,9 @@ class NoConsoleLoggingFilter(logging.Filter):
 
 
 class PyWeed(object):
+
+    app_name = __app_name__
+    app_version = __app_version__
 
     client = None
     data_center = None

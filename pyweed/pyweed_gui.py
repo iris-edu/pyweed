@@ -40,7 +40,7 @@ from stations_handler import StationsHandler
 from gui.WaveformDialog import WaveformDialog
 from gui.ConsoleDialog import ConsoleDialog
 from gui.PreferencesDialog import PreferencesDialog
-from pyweed import PyWeed, __app_name__, __version__
+from pyweed import PyWeed
 
 LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,6 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
 
         # Preferences
         self.preferencesDialog = PreferencesDialog(self)
-        self.preferencesDialog.accepted.connect(self.onPreferencesDialogAccepted)
 
         # Python console
         self.console = ConsoleDialog(self, self.mainWindow)
@@ -153,15 +152,6 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         self.mainWindow.onStationsLoaded(stations)
 
     ###############
-    # Preferences
-    ###############
-
-    def onPreferencesDialogAccepted(self):
-        data_center = self.preferencesDialog.getSelectedDataCenter()
-        if data_center != self.data_center:
-            self.set_data_center(data_center)
-
-    ###############
     # Waveforms
     ###############
 
@@ -196,7 +186,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         optionsMenu.addAction(showConsoleAction)
 
         showPreferencesAction = QtGui.QAction("Preferences", self)
-        showPreferencesAction.triggered.connect(self.preferencesDialog.open)
+        showPreferencesAction.triggered.connect(self.preferencesDialog.exec_)
         optionsMenu.addAction(showPreferencesAction)
 
         helpMenu = mainMenu.addMenu('Help')
@@ -226,9 +216,9 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         msgBox.setTextFormat(QtCore.Qt.RichText)
         # msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
         msgBox.setText("<br><br><br>" +
-                       __app_name__ +
+                       self.app_name +
                        " v" +
-                       __version__ +
+                       self.app_version +
                        "<br><br>" +
                        "Pyweed is a cross-platform GUI application for retrieving event-based seismic data." +
                        "<br><br>" +

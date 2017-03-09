@@ -129,7 +129,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         prefs = self.pyweed.preferences
 
         # Set MainWindow properties
-        self.setWindowTitle('%s version %s' % (prefs.App.name, prefs.App.version))
+        self.setWindowTitle('%s version %s' % (self.pyweed.app_name, self.pyweed.app_version))
 
         # Options widgets, mostly common code
         def initializeOptionsWidget(widget, options, dockWidget, toggle):
