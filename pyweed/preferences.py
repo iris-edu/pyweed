@@ -16,10 +16,6 @@ import os
 import platform
 import ConfigParser
 
-__appName__ = "PyWEED"
-__version__ = "0.1.1"
-
-
 def safe_bool(s, default=False):
     try:
         return s.startswith('y')
@@ -90,10 +86,6 @@ class Preferences(object):
 
 #         for (section, prefs) in DEFAULTS.items():
 #             setattr(self, section, Section.create(section, **prefs))
-
-        self.App = Section.create("App")
-        self.App.name = __appName__
-        self.App.version = __version__
 
         self.Data = Section.create("Data")
         self.Data.dataCenter = "IRIS"
