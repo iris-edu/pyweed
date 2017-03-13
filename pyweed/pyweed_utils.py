@@ -169,11 +169,75 @@ def get_preferred_magnitude(event):
     return magnitude
 
 
+class Phase(object):
+    """
+    Represents a single phase option
+    """
+    def __init__(self, name, label):
+        self.name = name
+        self.label = label
+
+
+class TimeWindow(object):
+    """
+    Represents a time window for data based on phase arrivals at a particular location
+    """
+    # Name we use to represent the event time
+    EVENT_TIME = 'Event'
+    PHASES = [
+        Phase('P', 'P wave arrival'),
+        Phase('S', 'S wave arrival'),
+        Phase(EVENT_TIME, 'Event time')
+    ]
+    PHASES_BY_NAME = dict(((phase.name, phase) for phase in PHASES))
+    PHASES_BY_LABEL = dict(((phase.label, phase) for phase in PHASES))
+
+    start_offset = 0
+    end_offset = 0
+    start_phase = None
+    end_phase = None
+
+    def __init__(self, start_offset=0, end_offset=0, start_phase='P', end_phase='P'):
+        self.update(start_offset, end_offset, start_phase, end_phase)
+
+    def update(self, start_offset, end_offset, start_phase, end_phase):
+        """
+        Set all values. Phases can be specified by name or label.
+        """
+        self.start_offset = start_offset
+        self.end_offset = end_offset
+        self.start_phase = self.find_phase(start_phase)
+        self.end_phase = self.find_phase(end_phase)
+
+    def find_phase(self, phase):
+        """
+        Given a name or label, find the phase
+        """
+        if phase in self.PHASES_BY_NAME:
+            return self.PHASES_BY_NAME[phase]
+        elif phase in self.PHASES_BY_LABEL:
+            return self.PHASES_BY_LABEL[phase]
+        else:
+            return self.PHASES[0]
+
+    def calculate_window(self, event_time, arrivals):
+        """
+        Given an event time and a dictionary of arrival times (see Distances below)
+        calculate the full time window
+        """
+        start_arrival = arrivals.get(self.start_phase.name, event_time)
+        end_arrival = arrivals.get(self.end_phase.name, event_time)
+        return (
+            start_arrival - self.start_offset,
+            end_arrival + self.end_offset
+        )
+
+
 class Distances(AttribDict):
     defaults = dict(
         distance=0,
         azimuth=0,
-        arrival=UTCDateTime(),
+        arrivals={}
     )
 
 
@@ -185,9 +249,12 @@ def get_distance(lat1, lon1, lat2, lon2):
     return dist['a12']
 
 
-def calculate_distances(event, station, phase_list=None):
+def calculate_distances(event, station):
     """
     Calculate distance, azimuth, arrival time, etc.
+
+    :param event: an Obspy Event
+    :param station: an Obspy Station
     """
     origin = get_preferred_origin(event)
     if not origin:
@@ -196,23 +263,26 @@ def calculate_distances(event, station, phase_list=None):
         origin.latitude, origin.longitude,
         station.latitude, station.longitude)
 
-    if not phase_list:
-        phase_list = ['ttp']
-
-    tt = TAUP.get_travel_times(
+    arrivals = TAUP.get_travel_times(
         origin.depth / 1000,
         distaz['a12'],
-        phase_list
+        ['tts+', 'ttp+']  # Get P and S arrivals
     )
-    if tt:
-        offset = tt[0].time
-    else:
-        offset = 0
+
+    # From the travel time and origin, calculate the actual first arrival time for each basic phase type
+    first_arrivals = {}
+    for arrival in arrivals:
+        # The basic phase name is the uppercase first letter of the full phase name
+        # We assume this matches Phase.name as defined in TimeWindow
+        phase_name = arrival.name[0].upper()
+        if phase_name not in first_arrivals:
+            first_arrivals[phase_name] = origin.time + arrival.time
 
     return Distances(
         distance=distaz['a12'],
         azimuth=distaz['azi1'],
-        arrival=(origin.time + offset),
+        event_time=origin.time,
+        arrivals=first_arrivals
     )
 
 

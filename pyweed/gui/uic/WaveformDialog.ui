@@ -63,22 +63,37 @@
           <number>2</number>
          </property>
          <item>
-          <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0,1">
+          <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0,0,0">
            <property name="verticalSpacing">
             <number>2</number>
            </property>
-           <item row="0" column="3">
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>secs before</string>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="secondsBeforeLabel">
+             <property name="text">
+              <string>Start:</string>
              </property>
-            </spacer>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="secondsAfterLabel">
+             <property name="text">
+              <string>End:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>secs after</string>
+             </property>
+            </widget>
            </item>
            <item row="0" column="1">
             <widget class="QSpinBox" name="secondsBeforeSpinBox">
@@ -90,20 +105,6 @@
              </property>
              <property name="value">
               <number>60</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>secs after P-wave</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="secondsBeforeLabel">
-             <property name="text">
-              <string>Waveform start</string>
              </property>
             </widget>
            </item>
@@ -120,19 +121,24 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>secs before P-wave</string>
+           <item row="0" column="4">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
              </property>
-            </widget>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="secondsAfterLabel">
-             <property name="text">
-              <string>Waveform end</string>
-             </property>
-            </widget>
+           <item row="0" column="3">
+            <widget class="QComboBox" name="secondsBeforePhaseComboBox"/>
+           </item>
+           <item row="1" column="3">
+            <widget class="QComboBox" name="secondsAfterPhaseComboBox"/>
            </item>
           </layout>
          </item>

@@ -16,6 +16,7 @@ import os
 import platform
 import ConfigParser
 
+
 def safe_bool(s, default=False):
     try:
         return s.startswith('y')
@@ -95,7 +96,9 @@ class Preferences(object):
         self.Waveforms.cacheSize = "50"  # megabytes
         self.Waveforms.saveDir = user_save_path()
         self.Waveforms.timeWindowBefore = "60"  # seconds
+        self.Waveforms.timeWindowBeforePhase = "P"  # P|S|Event
         self.Waveforms.timeWindowAfter = "600"  # seconds
+        self.Waveforms.timeWindowAfterPhase = "P"  # P|S|Event
 
         self.Logging = Section.create("Logging")
         self.Logging.level = "DEBUG"

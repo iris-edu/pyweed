@@ -19,7 +19,7 @@ import obspy
 from logging import getLogger
 import matplotlib
 import weakref
-from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name
+from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow
 from obspy.core.util.attribdict import AttribDict
 
 LOGGER = getLogger(__name__)
@@ -63,9 +63,8 @@ class WaveformEntry(AttribDict):
         Generate a WaveformEntry.config value from WaveformHandler
         """
         return dict(
-            phase='P',
             download_dir=waveform_handler.downloadDir,
-            offsets=[waveform_handler.seconds_before, waveform_handler.seconds_after]
+            time_window=waveform_handler.time_window
         )
 
     def __init__(self, event, network, station, channel, *args, **kwargs):
@@ -79,7 +78,7 @@ class WaveformEntry(AttribDict):
             raise Exception("No config!")
 
         if not self.distances:
-            self.distances = calculate_distances(event, station, self.config.phase)
+            self.distances = calculate_distances(event, station)
 
         self.sncl = get_sncl(network, station, channel)
         self.event_name = get_event_name(event)
@@ -97,11 +96,11 @@ class WaveformEntry(AttribDict):
 
         self.error = None
 
-        self.start_time = self.distances.arrival - self.config.offsets[0]
-        self.end_time = self.distances.arrival + self.config.offsets[1]
+        (start_time, end_time) = self.config.time_window.calculate_window(
+            self.distances.event_time, self.distances.arrivals)
 
-        self.start_string = UTCDateTime(self.start_time).format_iris_web_service().replace(':', '_')
-        self.end_string = UTCDateTime(self.end_time).format_iris_web_service().replace(':', '_')
+        self.start_string = UTCDateTime(start_time).format_iris_web_service().replace(':', '_')
+        self.end_string = UTCDateTime(end_time).format_iris_web_service().replace(':', '_')
 
         self.base_filename = "%s_%s_%s" % (self.sncl, self.start_string, self.end_string)
         self.mseed_path = os.path.join(self.config.download_dir, "%s.mseed" % self.base_filename)
@@ -224,8 +223,8 @@ class WaveformsHandler(SignalingObject):
         # Number of threads to track
         self.num_threads = 5
 
-        self.seconds_before = 0
-        self.seconds_after = 0
+        # A TimeWindow object giving offsets and phase arrivals
+        self.time_window = TimeWindow()
 
         # Current list of waveform entries
         self.waveforms = None
@@ -252,7 +251,7 @@ class WaveformsHandler(SignalingObject):
                 # Lazy calculate distances based on station
                 event_station_id = '.'.join((network.code, station.code, get_event_id(event)))
                 if event_station_id not in distances:
-                    distances[event_station_id] = calculate_distances(event, station, ['ttp'])
+                    distances[event_station_id] = calculate_distances(event, station)
                 waveform = WaveformEntry(
                     event, network, station, channel,
                     distances=distances[event_station_id], config=config
@@ -270,7 +269,7 @@ class WaveformsHandler(SignalingObject):
         # self.threads = {}
         self.queue.clear()
 
-    def download_waveforms(self, priority_ids, other_ids, seconds_before, seconds_after):
+    def download_waveforms(self, priority_ids, other_ids, time_window):
         """
         Initiate a download of all the given waveforms
         """
@@ -279,8 +278,8 @@ class WaveformsHandler(SignalingObject):
         LOGGER.debug("Priority IDs: %s" % (priority_ids,))
         LOGGER.debug("Other IDs: %s" % (other_ids,))
 
-        self.seconds_before = seconds_before
-        self.seconds_after = seconds_after
+        # All the variable information should be captured in the config
+        self.time_window = time_window
         config = WaveformEntry.create_config(self)
         for waveform in self.waveforms:
             waveform.update_config(config)
