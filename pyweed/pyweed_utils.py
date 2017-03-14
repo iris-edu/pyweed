@@ -297,3 +297,19 @@ def get_bounding_circle(lat, lon, radius, num_points=36):
             for i in range(0, num_points + 1)
         ]
     ]
+
+
+def get_file_extension(output_format):
+    """
+    Given an output format supported by ObsPy, return a file extension to use.
+    For most format, this is the format itself, eg "SAC" output files use ".sac" extension
+    """
+    # Specific extensions to use
+    extensions = {
+        'TSPAIR': 'ascii',
+        'GSE2': 'gse',
+    }
+    if output_format in extensions:
+        return extensions[output_format]
+    # Otherwise, use the (lowercase) name of the output format itself
+    return output_format.lower()
