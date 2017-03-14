@@ -1,14 +1,12 @@
 from PyQt4 import QtGui, QtCore
 from gui.uic import WaveformDialog
-import os
 from waveforms_handler import WaveformsHandler
-import obspy
 from logging import getLogger
 from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
 from gui.TableItems import TableItems
-from obspy.io.sac.sactrace import SACTrace
-from pyweed_utils import get_event_name, get_preferred_magnitude, get_preferred_origin, TimeWindow
+from pyweed_utils import get_event_name, TimeWindow
 from preferences import safe_int
+from PyQt4.QtGui import QTableWidgetItem
 
 LOGGER = getLogger(__name__)
 
@@ -159,8 +157,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Waveforms
         self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.client)
-        self.waveformsHandler.progress.connect(self.on_waveform_downloaded)
-        self.waveformsHandler.done.connect(self.on_all_downloaded)
+        self.waveformsHandler.progress.connect(self.onWaveformDownloaded)
+        self.waveformsHandler.done.connect(self.onAllDownloaded)
 
         # Connect signals associated with the main table
         self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents)
@@ -190,6 +188,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
     # NOTE:  http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
     # NOTE:  http://stackoverflow.com/questions/30462078/using-a-checkbox-in-pyqt
+    @QtCore.pyqtSlot(QTableWidgetItem)
     def handleTableItemClicked(self, item):
         """
         Triggered whenever an item in the waveforms table is clicked.
@@ -239,8 +238,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Add events to the eventComboBox -------------------------------
 
-        for i in range(self.eventComboBox.count()):
-            self.eventComboBox.removeItem(0)
+        self.eventComboBox.clear()
 
         self.eventComboBox.addItem('All events')
         for event in self.pyweed.iter_selected_events():
@@ -248,12 +246,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Add networks/stations to the networkComboBox and stationsComboBox ---------------------------
 
-        for i in range(self.networkComboBox.count()):
-            self.networkComboBox.removeItem(0)
+        self.networkComboBox.clear()
         self.networkComboBox.addItem('All networks')
 
-        for i in range(self.stationComboBox.count()):
-            self.stationComboBox.removeItem(0)
+        self.stationComboBox.clear()
         self.stationComboBox.addItem('All stations')
 
         found_networks = set()
@@ -337,6 +333,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 return False
         return True
 
+    @QtCore.pyqtSlot()
     def onDownloadPushButton(self):
         """
         Triggered when downloadPushButton is clicked.
@@ -382,11 +379,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.saveGroupBox.setEnabled(True)
             self.savePushButton.setText('Save')
             self.savePushButton.setChecked(False)
+            # When the save is complete the status will be put in the label, don't change it
+            # unless the process is reset (ie. we return to READY status)
             if self.waveformsSaveStatus == STATUS_READY:
                 self.saveStatusLabel.setText('')
-            elif self.waveformsSaveStatus == STATUS_DONE:
-                self.saveStatusLabel.setText('Data saved')
 
+    @QtCore.pyqtSlot()
     def onSavePushButton(self):
         """
         Triggered after savePushButton is toggled.
@@ -394,7 +392,11 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         if self.waveformsSaveStatus != STATUS_WORKING:
             self.waveformsSaveStatus = STATUS_WORKING
             if self.waveformsDownloadStatus == STATUS_DONE:
+                # If any downloads are complete, we can trigger the save now
                 self.saveWaveformData()
+            else:
+                # Otherwise, we have to wait -- update to indicate this to the user
+                self.updateToolbars()
 
     @QtCore.pyqtSlot()
     def resetDownload(self):
@@ -418,7 +420,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsSaveStatus = STATUS_READY
         self.updateToolbars()
 
-    @QtCore.pyqtSlot()
     def downloadWaveformData(self):
         """
         This function is triggered after the selectionTable is initially loaded
@@ -442,9 +443,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsHandler.download_waveforms(
             priority_ids, other_ids, self.timeWindowManager.timeWindow)
 
-    def on_log(self, msg):
-        LOGGER.error("Uh oh, called WaveformDialog.on_log: %s", msg)
-
     def get_table_row(self, waveform_id):
         """
         Get the table row for a given waveform
@@ -455,7 +453,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 return row
         return None
 
-    def on_waveform_downloaded(self, result):
+    @QtCore.pyqtSlot(object)
+    def onWaveformDownloaded(self, result):
         """
         Called each time a waveform request has completed
         """
@@ -490,7 +489,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.resizeRowsToContents()
         self.selectionTable.horizontalHeader().setStretchLastSection(True)
 
-    def on_all_downloaded(self, result):
+    @QtCore.pyqtSlot(object)
+    def onAllDownloaded(self, result):
         """
         Called after all waveforms have been downloaded
         """
@@ -517,46 +517,24 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Update GUI in case we came from an internal call
         QtGui.QApplication.processEvents()
 
+        errorCount = 0
+        savedCount = 0
+        skippedCount = 0
+
         try:
+            waveforms = self.iterWaveforms(saveable_only=True)
             outputDir = self.waveformDirectory
-
-            if not os.path.exists(outputDir):
-                try:
-                    os.makedirs(outputDir, 0700)
-                except Exception as e:
-                    raise Exception("Could not create the output path: %s" % str(e))
-
-            # Handle user format choice
             formatChoice = str(self.saveFormatComboBox.currentText())
-            if formatChoice == 'ASCII':
-                outputFormat = 'TSPAIR'
-                extension = 'ascii'
-            elif formatChoice == 'GSE2':
-                outputFormat = 'GSE2'
-                extension = 'gse'
-            elif formatChoice == 'MSEED':
-                outputFormat = 'MSEED'
-                extension = 'mseed'
-            elif formatChoice == 'SAC':
-                outputFormat = 'SAC'
-                extension = 'sac'
-            else:
-                raise Exception('Output format "%s" not recognized' % formatChoice)
 
-            savedCount = 0
-            for waveform in self.iterWaveforms(saveable_only=True):
-                try:
-                    outputFile = os.path.extsep.join((waveform.base_filename, extension))
-                    outputPath = os.path.join(outputDir, outputFile)
-                    # Don't repeat any work that has already been done
-                    if not os.path.exists(outputPath):
-                        LOGGER.debug('reading %s', waveform.mseed_path)
-                        st = obspy.read(waveform.mseed_path)
-                        self.saveOneWaveform(st, outputPath, outputFormat, waveform)
-                except Exception as e:
-                    LOGGER.error("Failed to save waveform %s: %s", waveform.waveform_id, e)
-                savedCount += 1
-                self.saveStatusLabel.setText("Saved %d waveforms as %s" % (savedCount, formatChoice))
+            for result in self.waveformsHandler.save_waveforms_iter(outputDir, formatChoice, waveforms):
+                if isinstance(result.result, Exception):
+                    LOGGER.error("Failed to save waveform %s: %s", result.waveform_id, result.result)
+                    errorCount += 1
+                elif result.result:
+                    savedCount += 1
+                else:
+                    skippedCount += 1
+                self.saveStatusLabel.setText("%d saved, %d skipped, %d errors" % (savedCount, skippedCount, errorCount))
                 self.saveStatusLabel.repaint()
                 QtGui.QApplication.processEvents()  # update GUI
 
@@ -565,7 +543,15 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 if not self.savePushButton.isChecked():
                     raise Exception("Cancelled")
 
+            message = "%d waveforms saved" % (savedCount + skippedCount)
+            if skippedCount > 0:
+                message = "%s (%d new)" % (message, savedCount)
+
+            if errorCount > 0:
+                raise Exception("%d errors! %s", errorCount, message)
+
             self.waveformsSaveStatus = STATUS_DONE
+            self.saveStatusLabel.setText(message)
         except Exception as e:
             LOGGER.error(e)
             self.waveformsSaveStatus = STATUS_ERROR
@@ -574,48 +560,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.updateToolbars()
 
         LOGGER.debug('COMPLETED saving all waveforms')
-
-    def saveOneWaveform(self, st, outputPath, outputFormat, waveform):
-        """
-        Save a single waveform. This should handle any special output features (eg. SAC metadata)
-        """
-        LOGGER.debug('writing %s', outputPath)
-        if outputFormat == 'SAC':
-            # For SAC output, we need to pull header data from the waveform record
-            st = self.getSACTrace(st, waveform)
-        st.write(outputPath, format=outputFormat)
-
-    def getSACTrace(self, st, waveform):
-        """
-        Return a SACTrace based on the given stream, containing metadata headers from the waveform
-        """
-        st = SACTrace.from_obspy_trace(st[0])
-        st.kevnm = waveform.event_name[:16]
-        event = waveform.event_ref()
-        if not event:
-            LOGGER.warn("Lost reference to event %s", waveform.event_name)
-        else:
-            origin = get_preferred_origin(waveform.event_ref())
-            if origin:
-                st.evla = origin.latitude
-                st.evlo = origin.longitude
-                st.evdp = origin.depth / 1000
-                st.o = origin.time - waveform.start_time
-            magnitude = get_preferred_magnitude(waveform.event_ref())
-            if magnitude:
-                st.mag = magnitude.mag
-        channel = waveform.channel_ref()
-        if not channel:
-            LOGGER.warn("Lost reference to channel %s", waveform.sncl)
-        else:
-            st.stla = channel.latitude
-            st.stlo = channel.longitude
-            st.stdp = channel.depth
-            st.stel = channel.elevation
-            st.cmpaz = channel.azimuth
-            st.cmpinc = channel.dip + 90
-            st.kinst = channel.sensor.description[:8]
-        return st
 
     @QtCore.pyqtSlot()
     def getWaveformDirectory(self):
@@ -661,4 +605,3 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         prefs.Waveforms.timeWindowAfter = timeWindow.end_offset
         prefs.Waveforms.timeWindowBeforePhase = timeWindow.start_phase.name
         prefs.Waveforms.timeWindowAfterPhase = timeWindow.end_phase.name
-

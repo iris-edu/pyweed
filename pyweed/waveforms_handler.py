@@ -19,8 +19,10 @@ import obspy
 from logging import getLogger
 import matplotlib
 import weakref
-from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow
+from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow, get_file_extension,\
+    get_preferred_origin, get_preferred_magnitude
 from obspy.core.util.attribdict import AttribDict
+from obspy.io.sac.sactrace import SACTrace
 
 LOGGER = getLogger(__name__)
 
@@ -338,27 +340,78 @@ class WaveformsHandler(SignalingObject):
         """
         return self.waveforms_by_id.get(waveform_id)
 
-    def getWaveformImagePath(self, waveformID):
-        waveform = self.get_waveform(waveformID)
-        if waveform and waveform.image_exists:
-            return waveform.image_path
+    def save_waveforms_iter(self, base_output_path, output_format, waveforms):
+        """
+        Save waveforms, returning an iterator of WaveformResult objects whose values are
+        True (saved), False (already saved), or Exception (error)
+        This is so the GUI layer can handle save progress and errors in its own fashion
+        """
+        if not os.path.exists(base_output_path):
+            try:
+                os.makedirs(base_output_path, 0700)
+            except Exception as e:
+                raise Exception("Could not create the output path: %s" % str(e))
+
+        # Get the file extension to use
+        extension = get_file_extension(output_format)
+
+        for waveform in waveforms:
+            waveform_id = waveform.waveform_id
+            try:
+                output_file = os.path.extsep.join((waveform.base_filename, extension))
+                output_path = os.path.join(base_output_path, output_file)
+                # Don't repeat any work that has already been done
+                if not os.path.exists(output_path):
+                    LOGGER.debug('reading %s', waveform.mseed_path)
+                    st = obspy.read(waveform.mseed_path)
+                    self.save_waveform(st, output_path, output_format, waveform)
+                    yield WaveformResult(waveform_id, True)
+                else:
+                    yield WaveformResult(waveform_id, False)
+            except Exception as e:
+                yield WaveformResult(waveform_id, e)
+
+    def save_waveform(self, st, output_path, output_format, waveform):
+        """
+        Save a single waveform. This should handle any special output features (eg. SAC metadata)
+        """
+        LOGGER.debug('writing %s', output_path)
+        if output_format == 'SAC':
+            # For SAC output, we need to pull header data from the waveform record
+            st = self.to_sac_trace(st, waveform)
+        st.write(output_path, format=output_format)
+
+    def to_sac_trace(self, st, waveform):
+        """
+        Return a SACTrace based on the given stream, containing metadata headers from the waveform
+        """
+        st = SACTrace.from_obspy_trace(st[0])
+        st.kevnm = waveform.event_name[:16]
+        event = waveform.event_ref()
+        if not event:
+            LOGGER.warn("Lost reference to event %s", waveform.event_name)
         else:
-            return None
-
-    def setWaveformImagePath(self, waveformID, imagePath):
-        waveform = self.get_waveform(waveformID)
-        if waveform:
-            waveform.image_path = imagePath
-            waveform.image_exists = True
-
-    def getWaveformKeep(self, waveformID):
-        waveform = self.get_waveform(waveformID)
-        return (waveform and waveform.keep)
-
-    def setWaveformKeep(self, waveformID, keep):
-        waveform = self.get_waveform(waveformID)
-        if waveform:
-            waveform.keep = keep
+            origin = get_preferred_origin(waveform.event_ref())
+            if origin:
+                st.evla = origin.latitude
+                st.evlo = origin.longitude
+                st.evdp = origin.depth / 1000
+                st.o = origin.time - waveform.start_time
+            magnitude = get_preferred_magnitude(waveform.event_ref())
+            if magnitude:
+                st.mag = magnitude.mag
+        channel = waveform.channel_ref()
+        if not channel:
+            LOGGER.warn("Lost reference to channel %s", waveform.sncl)
+        else:
+            st.stla = channel.latitude
+            st.stlo = channel.longitude
+            st.stdp = channel.depth
+            st.stel = channel.elevation
+            st.cmpaz = channel.azimuth
+            st.cmpinc = channel.dip + 90
+            st.kinst = channel.sensor.description[:8]
+        return st
 
 
 # ------------------------------------------------------------------------------
