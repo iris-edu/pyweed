@@ -520,7 +520,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Update GUI in case we came from an internal call
         QtGui.QApplication.processEvents()
 
-        errorCount = 0
+        errors = []
         savedCount = 0
         skippedCount = 0
 
@@ -532,12 +532,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             for result in self.waveformsHandler.save_waveforms_iter(outputDir, outputFormat, waveforms):
                 if isinstance(result.result, Exception):
                     LOGGER.error("Failed to save waveform %s: %s", result.waveform_id, result.result)
-                    errorCount += 1
+                    errors.append("%s: %s" % (result.waveform_id, result.result))
                 elif result.result:
                     savedCount += 1
                 else:
                     skippedCount += 1
-                self.saveStatusLabel.setText("%d saved, %d skipped, %d errors" % (savedCount, skippedCount, errorCount))
+                self.saveStatusLabel.setText("Saved %d waveforms" % (savedCount + skippedCount))
                 self.saveStatusLabel.repaint()
                 QtGui.QApplication.processEvents()  # update GUI
 
@@ -546,19 +546,25 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
                 if not self.savePushButton.isChecked():
                     raise Exception("Cancelled")
 
-            message = "%d waveforms saved" % (savedCount + skippedCount)
-            if skippedCount > 0:
-                message = "%s (%d new)" % (message, savedCount)
+            LOGGER.info("Save complete: %d saved, %d already existed, %d errors", savedCount, skippedCount, len(errors))
 
-            if errorCount > 0:
-                raise Exception("%d errors! %s", errorCount, message)
+            if errors:
+                # Truncate the list of error if it's very long
+                errorCount = len(errors)
+                if errorCount > 20:
+                    errors = errors[:20]
+                    errors.append("(see log for full list)")
+                raise Exception("%d waveforms couldn't be saved:\n%s" % (errorCount, "\n".join(errors)))
 
             self.waveformsSaveStatus = STATUS_DONE
-            self.saveStatusLabel.setText(message)
         except Exception as e:
             LOGGER.error(e)
             self.waveformsSaveStatus = STATUS_ERROR
-            self.saveStatusLabel.setText(e.message)
+            QtGui.QMessageBox.critical(
+                self,
+                "Error",
+                e.message
+            )
         finally:
             self.updateToolbars()
 
