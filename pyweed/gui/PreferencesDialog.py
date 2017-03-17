@@ -58,10 +58,11 @@ class PreferencesDialog(QtGui.QDialog, PreferencesDialog.Ui_PreferencesDialog):
             if missing_services:
                 missing_services_str = ", ".join(missing_services)
                 QtGui.QMessageBox.critical(
-                    self, "Missing services",
+                    self,
+                    "Missing services",
                     "This data center doesn't provide one or more services:\n%s" % missing_services_str
                 )
-                # Don't close the dialog
+                # Don't call super() which would close the preferences dialog
                 return
             else:
                 self.pyweed.data_center = data_center
