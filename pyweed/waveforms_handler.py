@@ -19,8 +19,8 @@ import obspy
 from logging import getLogger
 import matplotlib
 import weakref
-from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow, get_file_extension,\
-    get_preferred_origin, get_preferred_magnitude
+from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow,\
+    get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.sac.sactrace import SACTrace
 
@@ -353,7 +353,7 @@ class WaveformsHandler(SignalingObject):
                 raise Exception("Could not create the output path: %s" % str(e))
 
         # Get the file extension to use
-        extension = get_file_extension(output_format)
+        extension = OUTPUT_FORMAT_EXTENSIONS[output_format]
 
         for waveform in waveforms:
             waveform_id = waveform.waveform_id

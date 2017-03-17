@@ -99,6 +99,7 @@ class Preferences(object):
         self.Waveforms.timeWindowBeforePhase = "P"  # P|S|Event
         self.Waveforms.timeWindowAfter = "600"  # seconds
         self.Waveforms.timeWindowAfterPhase = "P"  # P|S|Event
+        self.Waveforms.saveFormat = "MSEED"
 
         self.Logging = Section.create("Logging")
         self.Logging.level = "DEBUG"
