@@ -1,6 +1,8 @@
 from PyQt4 import QtGui, QtCore
 from distutils.util import strtobool
 from logging import getLogger
+from PyQt4.QtCore import pyqtSlot
+from obspy.core.util.attribdict import AttribDict
 
 LOGGER = getLogger(__name__)
 
@@ -84,3 +86,44 @@ class OptionsAdapter(object):
             else:
                 LOGGER.warning("Don't know how to write input %s (%s)", k, input)
         return self.inputs_to_options(inputs)
+
+
+class ComboBoxAdapter(QtCore.QObject):
+    """
+    Adapter for handling the fact that QComboBox can only display strings, but usually the "real" value
+    is something else.
+    """
+
+    #: Signal emitted when the QComboBox value changes, passing the actual value
+    changed = QtCore.pyqtSignal(object)
+
+    def __init__(self, comboBox, options, default=None):
+        """
+        :param comboBox: A QComboBox
+        :param options: A list of options in the form of (value, label)
+        :param default: If nothing is selected, what should be returned?
+        """
+        super(ComboBoxAdapter, self).__init__()
+        self.comboBox = comboBox
+        self.values = [option[0] for option in options]
+        if default is None:
+            default = self.values[0]
+        self.default = default
+        labels = [option[1] for option in options]
+        self.comboBox.addItems(labels)
+        self.comboBox.currentIndexChanged.connect(self.onChanged)
+
+    def setValue(self, value):
+        self.comboBox.setCurrentIndex(self.values.index(value))
+
+    def getValue(self, index=None):
+        if index is None:
+            index = self.comboBox.currentIndex()
+        if index < 0:
+            return self.default
+        else:
+            return self.values[index]
+
+    @pyqtSlot(int)
+    def onChanged(self, index):
+        self.changed.emit(self.getValue(index))

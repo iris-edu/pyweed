@@ -4,9 +4,10 @@ from waveforms_handler import WaveformsHandler
 from logging import getLogger
 from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
 from gui.TableItems import TableItems
-from pyweed_utils import get_event_name, TimeWindow
+from pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHASES
 from preferences import safe_int
 from PyQt4.QtGui import QTableWidgetItem
+from gui.utils import ComboBoxAdapter
 
 LOGGER = getLogger(__name__)
 
@@ -58,9 +59,9 @@ WAVEFORM_KEEP_COLUMN = WaveformTableItems.columnNames.index('Keep')
 WAVEFORM_IMAGE_COLUMN = WaveformTableItems.columnNames.index('Waveform')
 
 
-class TimeWindowManager(QtCore.QObject):
+class TimeWindowAdapter(QtCore.QObject):
     """
-    Object that manages a TimeWindow based on a set of inputs
+    Adapter tying a set of inputs to a TimeWindow
     """
 
     # Signal indicating that the time window has changed
@@ -68,24 +69,24 @@ class TimeWindowManager(QtCore.QObject):
 
     def __init__(self, secondsBeforeSpinBox, secondsAfterSpinBox,
                  secondsBeforePhaseComboBox, secondsAfterPhaseComboBox):
-        super(TimeWindowManager, self).__init__()
-        self.secondsBeforeSpinBox = secondsBeforeSpinBox
-        self.secondsAfterSpinBox = secondsAfterSpinBox
-        self.secondsBeforePhaseComboBox = secondsBeforePhaseComboBox
-        self.secondsAfterPhaseComboBox = secondsAfterPhaseComboBox
+        super(TimeWindowAdapter, self).__init__()
 
         self.timeWindow = TimeWindow()
+        # Phase options
+        phaseOptions = [(phase.name, phase.label) for phase in PHASES]
 
-        # Fill the time window phase options
-        phaseOptions = [phase.label for phase in self.timeWindow.PHASES]
-        self.secondsBeforePhaseComboBox.addItems(phaseOptions)
-        self.secondsAfterPhaseComboBox.addItems(phaseOptions)
+        self.secondsBeforeSpinBox = secondsBeforeSpinBox
+        self.secondsAfterSpinBox = secondsAfterSpinBox
+        self.secondsBeforePhaseAdapter = ComboBoxAdapter(
+            secondsBeforePhaseComboBox, phaseOptions)
+        self.secondsAfterPhaseAdapter = ComboBoxAdapter(
+            secondsAfterPhaseComboBox, phaseOptions)
 
         # Connect input signals
         self.secondsBeforeSpinBox.valueChanged.connect(self.onTimeWindowChanged)
         self.secondsAfterSpinBox.valueChanged.connect(self.onTimeWindowChanged)
-        self.secondsBeforePhaseComboBox.currentIndexChanged.connect(self.onTimeWindowChanged)
-        self.secondsAfterPhaseComboBox.currentIndexChanged.connect(self.onTimeWindowChanged)
+        self.secondsBeforePhaseAdapter.changed.connect(self.onTimeWindowChanged)
+        self.secondsAfterPhaseAdapter.changed.connect(self.onTimeWindowChanged)
 
     def onTimeWindowChanged(self):
         """
@@ -94,12 +95,12 @@ class TimeWindowManager(QtCore.QObject):
         self.timeWindow.update(
             self.secondsBeforeSpinBox.value(),
             self.secondsAfterSpinBox.value(),
-            self.secondsBeforePhaseComboBox.currentText(),
-            self.secondsAfterPhaseComboBox.currentText()
+            self.secondsBeforePhaseAdapter.getValue(),
+            self.secondsAfterPhaseAdapter.getValue()
         )
         self.changed.emit()
 
-    def loadValues(self, start_offset, end_offset, start_phase, end_phase):
+    def setValues(self, start_offset, end_offset, start_phase, end_phase):
         """
         This should be called on startup to set the initial values
         """
@@ -114,8 +115,8 @@ class TimeWindowManager(QtCore.QObject):
         """
         self.secondsBeforeSpinBox.setValue(self.timeWindow.start_offset)
         self.secondsAfterSpinBox.setValue(self.timeWindow.end_offset)
-        self.secondsBeforePhaseComboBox.setEditText(self.timeWindow.start_phase.label)
-        self.secondsAfterPhaseComboBox.setEditText(self.timeWindow.end_phase.label)
+        self.secondsBeforePhaseAdapter.setValue(self.timeWindow.start_phase)
+        self.secondsAfterPhaseAdapter.setValue(self.timeWindow.end_phase)
 
 
 class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
@@ -137,11 +138,16 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.pyweed = pyweed
 
         # Time window for waveform selection
-        self.timeWindowManager = TimeWindowManager(
+        self.timeWindowAdapter = TimeWindowAdapter(
             self.secondsBeforeSpinBox,
             self.secondsAfterSpinBox,
             self.secondsBeforePhaseComboBox,
             self.secondsAfterPhaseComboBox
+        )
+
+        self.saveFormatAdapter = ComboBoxAdapter(
+            self.saveFormatComboBox,
+            [(f.value, f.label) for f in OUTPUT_FORMATS]
         )
 
         # Initialize any preference-based settings
@@ -150,10 +156,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         # Modify default GUI settings
         self.saveDirectoryPushButton.setText(self.waveformDirectory)
         self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        # Fill the format combo box
-        self.saveFormatComboBox.addItems(['ASCII', 'GSE2', 'MSEED', 'SAC'])
-        self.saveFormatComboBox.setCurrentIndex(2)
 
         # Waveforms
         self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.client)
@@ -168,7 +170,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadPushButton.clicked.connect(self.onDownloadPushButton)
         self.savePushButton.clicked.connect(self.onSavePushButton)
         self.saveDirectoryPushButton.clicked.connect(self.getWaveformDirectory)
-        self.saveFormatComboBox.activated.connect(self.resetSave)
+
+        self.saveFormatAdapter.changed.connect(self.resetSave)
 
         # Connect signals associated with comboBoxes
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
@@ -179,7 +182,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
 
         # Connect the timewindow signals
-        self.timeWindowManager.changed.connect(self.resetDownload)
+        self.timeWindowAdapter.changed.connect(self.resetDownload)
 
         # Dictionary of filter values
         self.filters = {}
@@ -441,7 +444,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         other_ids = []
 
         self.waveformsHandler.download_waveforms(
-            priority_ids, other_ids, self.timeWindowManager.timeWindow)
+            priority_ids, other_ids, self.timeWindowAdapter.timeWindow)
 
     def get_table_row(self, waveform_id):
         """
@@ -524,9 +527,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         try:
             waveforms = self.iterWaveforms(saveable_only=True)
             outputDir = self.waveformDirectory
-            formatChoice = str(self.saveFormatComboBox.currentText())
+            outputFormat = self.saveFormatAdapter.getValue()
 
-            for result in self.waveformsHandler.save_waveforms_iter(outputDir, formatChoice, waveforms):
+            for result in self.waveformsHandler.save_waveforms_iter(outputDir, outputFormat, waveforms):
                 if isinstance(result.result, Exception):
                     LOGGER.error("Failed to save waveform %s: %s", result.waveform_id, result.result)
                     errorCount += 1
@@ -586,12 +589,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.waveformDirectory = prefs.Waveforms.saveDir
 
-        self.timeWindowManager.loadValues(
+        self.timeWindowAdapter.setValues(
             safe_int(prefs.Waveforms.timeWindowBefore, 60),
             safe_int(prefs.Waveforms.timeWindowAfter, 600),
             prefs.Waveforms.timeWindowBeforePhase,
             prefs.Waveforms.timeWindowAfterPhase
         )
+
+        self.saveFormatAdapter.setValue(prefs.Waveforms.saveFormat)
 
     def savePreferences(self):
         """
@@ -600,8 +605,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         prefs = self.pyweed.preferences
 
         prefs.Waveforms.saveDir = self.waveformDirectory
-        timeWindow = self.timeWindowManager.timeWindow
+        timeWindow = self.timeWindowAdapter.timeWindow
         prefs.Waveforms.timeWindowBefore = timeWindow.start_offset
         prefs.Waveforms.timeWindowAfter = timeWindow.end_offset
-        prefs.Waveforms.timeWindowBeforePhase = timeWindow.start_phase.name
-        prefs.Waveforms.timeWindowAfterPhase = timeWindow.end_phase.name
+        prefs.Waveforms.timeWindowBeforePhase = timeWindow.start_phase
+        prefs.Waveforms.timeWindowAfterPhase = timeWindow.end_phase
+
+        prefs.Waveforms.saveFormat = self.saveFormatAdapter.getValue()

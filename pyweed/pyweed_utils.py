@@ -24,6 +24,47 @@ GEOD = Geodesic.WGS84
 TAUP = TauPyModel()
 
 
+class OutputFormat(object):
+    """
+    Simple output format definition.
+    """
+    def __init__(self, value, label=None, extension=None):
+        #: This is the name used by ObsPy, which we treat as the "real" value
+        self.value = value
+        #: This is the label used in the UI, it defaults to value
+        self.label = label or value
+        #: This is the file extension, it defaults to lowercased value
+        self.extension = extension or value.lower()
+
+# List of the output formats we support
+OUTPUT_FORMATS = [
+    OutputFormat('MSEED', 'MiniSEED'),
+    OutputFormat('SAC'),
+    OutputFormat('SACXY', 'SAC ASCII', 'sac.txt'),
+    OutputFormat('SLIST', 'ASCII (1 column)', 'ascii1.txt'),
+    OutputFormat('TSPAIR', 'ASCII (2 column)', 'ascii2.txt'),
+]
+# Map of a format to the file extension to use
+OUTPUT_FORMAT_EXTENSIONS = dict(((f.value, f.extension) for f in OUTPUT_FORMATS))
+
+
+class Phase(object):
+    """
+    Simple phase definition
+    """
+    def __init__(self, name, label):
+        self.name = name
+        self.label = label
+
+# List of phases we can use for time windows
+EVENT_TIME_PHASE = 'Event'
+PHASES = [
+    Phase('P', 'P wave arrival'),
+    Phase('S', 'S wave arrival'),
+    Phase(EVENT_TIME_PHASE, 'Event time')
+]
+
+
 def manageCache(downloadDir, cacheSize):
     """
     Maintain a cache directory at a certain size (MB) by removing the oldest files.
@@ -169,35 +210,16 @@ def get_preferred_magnitude(event):
     return magnitude
 
 
-class Phase(object):
-    """
-    Represents a single phase option
-    """
-    def __init__(self, name, label):
-        self.name = name
-        self.label = label
-
-
 class TimeWindow(object):
     """
     Represents a time window for data based on phase arrivals at a particular location
     """
-    # Name we use to represent the event time
-    EVENT_TIME = 'Event'
-    PHASES = [
-        Phase('P', 'P wave arrival'),
-        Phase('S', 'S wave arrival'),
-        Phase(EVENT_TIME, 'Event time')
-    ]
-    PHASES_BY_NAME = dict(((phase.name, phase) for phase in PHASES))
-    PHASES_BY_LABEL = dict(((phase.label, phase) for phase in PHASES))
-
     start_offset = 0
     end_offset = 0
     start_phase = None
     end_phase = None
 
-    def __init__(self, start_offset=0, end_offset=0, start_phase='P', end_phase='P'):
+    def __init__(self, start_offset=0, end_offset=0, start_phase=PHASES[0].name, end_phase=PHASES[0].name):
         self.update(start_offset, end_offset, start_phase, end_phase)
 
     def update(self, start_offset, end_offset, start_phase, end_phase):
@@ -206,27 +228,16 @@ class TimeWindow(object):
         """
         self.start_offset = start_offset
         self.end_offset = end_offset
-        self.start_phase = self.find_phase(start_phase)
-        self.end_phase = self.find_phase(end_phase)
-
-    def find_phase(self, phase):
-        """
-        Given a name or label, find the phase
-        """
-        if phase in self.PHASES_BY_NAME:
-            return self.PHASES_BY_NAME[phase]
-        elif phase in self.PHASES_BY_LABEL:
-            return self.PHASES_BY_LABEL[phase]
-        else:
-            return self.PHASES[0]
+        self.start_phase = start_phase
+        self.end_phase = end_phase
 
     def calculate_window(self, event_time, arrivals):
         """
         Given an event time and a dictionary of arrival times (see Distances below)
         calculate the full time window
         """
-        start_arrival = arrivals.get(self.start_phase.name, event_time)
-        end_arrival = arrivals.get(self.end_phase.name, event_time)
+        start_arrival = arrivals.get(self.start_phase, event_time)
+        end_arrival = arrivals.get(self.end_phase, event_time)
         return (
             start_arrival - self.start_offset,
             end_arrival + self.end_offset
@@ -273,7 +284,7 @@ def calculate_distances(event, station):
     first_arrivals = {}
     for arrival in arrivals:
         # The basic phase name is the uppercase first letter of the full phase name
-        # We assume this matches Phase.name as defined in TimeWindow
+        # We assume this matches a Phase.name defined in PHASES
         phase_name = arrival.name[0].upper()
         if phase_name not in first_arrivals:
             first_arrivals[phase_name] = origin.time + arrival.time
@@ -297,19 +308,3 @@ def get_bounding_circle(lat, lon, radius, num_points=36):
             for i in range(0, num_points + 1)
         ]
     ]
-
-
-def get_file_extension(output_format):
-    """
-    Given an output format supported by ObsPy, return a file extension to use.
-    For most format, this is the format itself, eg "SAC" output files use ".sac" extension
-    """
-    # Specific extensions to use
-    extensions = {
-        'TSPAIR': 'ascii',
-        'GSE2': 'gse',
-    }
-    if output_format in extensions:
-        return extensions[output_format]
-    # Otherwise, use the (lowercase) name of the output format itself
-    return output_format.lower()
