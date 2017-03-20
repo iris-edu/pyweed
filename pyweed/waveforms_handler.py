@@ -23,6 +23,7 @@ from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_
     get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.sac.sactrace import SACTrace
+from obspy.core.stream import Stream
 
 LOGGER = getLogger(__name__)
 
@@ -98,11 +99,11 @@ class WaveformEntry(AttribDict):
 
         self.error = None
 
-        (start_time, end_time) = self.config.time_window.calculate_window(
+        (self.start_time, self.end_time) = self.config.time_window.calculate_window(
             self.distances.event_time, self.distances.arrivals)
 
-        self.start_string = UTCDateTime(start_time).format_iris_web_service().replace(':', '_')
-        self.end_string = UTCDateTime(end_time).format_iris_web_service().replace(':', '_')
+        self.start_string = UTCDateTime(self.start_time).format_iris_web_service().replace(':', '_')
+        self.end_string = UTCDateTime(self.end_time).format_iris_web_service().replace(':', '_')
 
         self.base_filename = "%s_%s_%s" % (self.sncl, self.start_string, self.end_string)
         self.mseed_path = os.path.join(self.config.download_dir, "%s.mseed" % self.base_filename)
@@ -376,42 +377,42 @@ class WaveformsHandler(SignalingObject):
         Save a single waveform. This should handle any special output features (eg. SAC metadata)
         """
         LOGGER.debug('writing %s', output_path)
-        if output_format == 'SAC':
+        if output_format in ('SAC', 'SACXY',):
             # For SAC output, we need to pull header data from the waveform record
-            st = self.to_sac_trace(st, waveform)
+            st = self.to_sac_stream(st, waveform)
         st.write(output_path, format=output_format)
 
-    def to_sac_trace(self, st, waveform):
+    def to_sac_stream(self, st, waveform):
         """
         Return a SACTrace based on the given stream, containing metadata headers from the waveform
         """
-        st = SACTrace.from_obspy_trace(st[0])
-        st.kevnm = waveform.event_name[:16]
+        tr = SACTrace.from_obspy_trace(st[0])
+        tr.kevnm = waveform.event_name[:16]
         event = waveform.event_ref()
         if not event:
             LOGGER.warn("Lost reference to event %s", waveform.event_name)
         else:
             origin = get_preferred_origin(waveform.event_ref())
             if origin:
-                st.evla = origin.latitude
-                st.evlo = origin.longitude
-                st.evdp = origin.depth / 1000
-                st.o = origin.time - waveform.start_time
+                tr.evla = origin.latitude
+                tr.evlo = origin.longitude
+                tr.evdp = origin.depth / 1000
+                tr.o = origin.time - waveform.start_time
             magnitude = get_preferred_magnitude(waveform.event_ref())
             if magnitude:
-                st.mag = magnitude.mag
+                tr.mag = magnitude.mag
         channel = waveform.channel_ref()
         if not channel:
             LOGGER.warn("Lost reference to channel %s", waveform.sncl)
         else:
-            st.stla = channel.latitude
-            st.stlo = channel.longitude
-            st.stdp = channel.depth
-            st.stel = channel.elevation
-            st.cmpaz = channel.azimuth
-            st.cmpinc = channel.dip + 90
-            st.kinst = channel.sensor.description[:8]
-        return st
+            tr.stla = channel.latitude
+            tr.stlo = channel.longitude
+            tr.stdp = channel.depth
+            tr.stel = channel.elevation
+            tr.cmpaz = channel.azimuth
+            tr.cmpinc = channel.dip + 90
+            tr.kinst = channel.sensor.description[:8]
+        return Stream([tr.to_obspy_trace()])
 
 
 # ------------------------------------------------------------------------------
