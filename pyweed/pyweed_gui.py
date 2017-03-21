@@ -179,11 +179,17 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         quitAction.triggered.connect(self.closeApplication)
         fileMenu.addAction(quitAction)
 
-        optionsMenu = mainMenu.addMenu('Options')
+        viewMenu = mainMenu.addMenu('View')
 
         showConsoleAction = QtGui.QAction("Show Python Console", self)
         showConsoleAction.triggered.connect(self.console.show)
-        optionsMenu.addAction(showConsoleAction)
+        viewMenu.addAction(showConsoleAction)
+
+        showLogsAction = QtGui.QAction("Show Logs", self)
+        showLogsAction.triggered.connect(self.loggingDialog.show)
+        viewMenu.addAction(showLogsAction)
+
+        optionsMenu = mainMenu.addMenu('Options')
 
         showPreferencesAction = QtGui.QAction("Preferences", self)
         showPreferencesAction.triggered.connect(self.preferencesDialog.exec_)
@@ -195,9 +201,6 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         aboutPyweedAction.triggered.connect(self.showAboutDialog)
         helpMenu.addAction(aboutPyweedAction)
         helpMenu.addSeparator()
-        loggingDialogAction = QtGui.QAction("Show Logs", self)
-        QtCore.QObject.connect(loggingDialogAction, QtCore.SIGNAL('triggered()'), self.loggingDialog.show)
-        helpMenu.addAction(loggingDialogAction)
 
     def showAboutDialog(self):
         """Display About message box."""
