@@ -172,7 +172,7 @@
               <item>
                <widget class="QLabel" name="eventSelectionLabel">
                 <property name="text">
-                 <string>Selected 0 events</string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -273,7 +273,7 @@
               <item>
                <widget class="QLabel" name="stationSelectionLabel">
                 <property name="text">
-                 <string>Selected 0 stations</string>
+                 <string/>
                 </property>
                </widget>
               </item>
