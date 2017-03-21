@@ -100,7 +100,7 @@ class StationTableItems(TableItems):
         for (network, station, channel) in iter_channels(data):
             sncl = '.'.join((network.code, station.code, channel.location_code, channel.code))
             if sncl in sncls:
-                LOGGER.info("Found duplicate SNCL: %s", sncl)
+                LOGGER.debug("Found duplicate SNCL: %s", sncl)
             else:
                 sncls.add(sncl)
                 yield [
@@ -351,7 +351,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         self.getEventsButton.setEnabled(False)
         LOGGER.info('Loading events...')
-        self.statusBar.showMessage('Loading events...')
+        self.eventSelectionLabel.setText('Loading events...')
 
         self.updateOptions()
         self.pyweed.fetch_events()
@@ -363,6 +363,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.getEventsButton.setEnabled(True)
 
         if isinstance(events, Exception):
+            self.eventSelectionLabel.setText('Error! See log for details')
             msg = "Error loading events: %s" % events
             LOGGER.error(msg)
             self.statusBar.showMessage(msg)
@@ -394,8 +395,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.seismap.clear_events_bounds()
 
-        numEvents = len(events)
-        status = 'Loaded %d events' % numEvents
+        self.onEventSelectionChanged()
+        status = 'Finished loading events'
         LOGGER.info(status)
         self.statusBar.showMessage(status)
 
@@ -404,8 +405,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         Trigger the channel metadata retrieval from web services
         """
         self.getStationsButton.setEnabled(False)
-        LOGGER.info('Loading channels...')
-        self.statusBar.showMessage('Loading channels...')
+        LOGGER.info('Loading stations...')
+        self.stationSelectionLabel.setText('Loading stations...')
 
         self.updateOptions()
         self.pyweed.fetch_stations()
@@ -418,6 +419,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.getStationsButton.setEnabled(True)
 
         if isinstance(stations, Exception):
+            self.stationSelectionLabel.setText('Error! See log for details')
             msg = "Error loading stations: %s" % stations
             LOGGER.error(msg)
             self.statusBar.showMessage(msg)
@@ -449,8 +451,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.seismap.clear_stations_bounds()
 
-        numChannels = sum(1 for _ in iter_channels(stations))
-        status = 'Loaded %d channels' % numChannels
+        self.onStationSelectionChanged()
+        status = 'Finished loading stations'
         LOGGER.info(status)
         self.statusBar.showMessage(status)
 
@@ -466,9 +468,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.eventsTable.selectionModel().selectedRows():
             ids.append(int(self.eventsTable.item(idx.row(), 0).text()))
 
-        numEvents = len(ids)
+        numSelected = len(ids)
+        numTotal = self.eventsTable.rowCount()
         self.eventSelectionLabel.setText(
-            "Selected %d event%s" % (numEvents, ("" if numEvents == 1 else "s")))
+            "Selected %d of %d events" % (numSelected, numTotal))
 
         # Get locations and event IDs
         points = []
@@ -494,9 +497,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.stationsTable.selectionModel().selectedRows():
             sncls.append(self.stationsTable.item(idx.row(), 0).text())
 
-        numStations = len(sncls)
+        numSelected = len(sncls)
+        numTotal = self.stationsTable.rowCount()
         self.stationSelectionLabel.setText(
-            "Selected %d station%s" % (numStations, ("" if numStations == 1 else "s")))
+            "Selected %d of %d channels" % (numSelected, numTotal))
 
         # Get locations
         points = []

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'gui/uic/WaveformDialog.ui'
+# Form implementation generated from reading ui file 'WaveformDialog.ui'
 #
-# Created: Fri Mar 10 14:02:16 2017
-#      by: PyQt4 UI code generator 4.10.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -41,8 +40,8 @@ class Ui_WaveformDialog(object):
         self.downloadGroupBox.setEnabled(True)
         self.downloadGroupBox.setObjectName(_fromUtf8("downloadGroupBox"))
         self.verticalLayout_6 = QtGui.QVBoxLayout(self.downloadGroupBox)
-        self.verticalLayout_6.setSpacing(2)
         self.verticalLayout_6.setMargin(2)
+        self.verticalLayout_6.setSpacing(2)
         self.verticalLayout_6.setObjectName(_fromUtf8("verticalLayout_6"))
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setVerticalSpacing(2)
@@ -92,15 +91,15 @@ class Ui_WaveformDialog(object):
         self.horizontalLayout_7.addWidget(self.downloadPushButton)
         self.downloadStatusLabel = QtGui.QLabel(self.widget_5)
         self.downloadStatusLabel.setObjectName(_fromUtf8("downloadStatusLabel"))
-        self.horizontalLayout_7.addWidget(self.downloadStatusLabel)
+        self.horizontalLayout_7.addWidget(self.downloadStatusLabel, QtCore.Qt.AlignLeft)
         self.verticalLayout_6.addWidget(self.widget_5)
         self.horizontalLayout.addWidget(self.downloadGroupBox)
         self.saveGroupBox = QtGui.QGroupBox(self.topFrame)
         self.saveGroupBox.setEnabled(True)
         self.saveGroupBox.setObjectName(_fromUtf8("saveGroupBox"))
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.saveGroupBox)
-        self.verticalLayout_5.setSpacing(2)
         self.verticalLayout_5.setMargin(2)
+        self.verticalLayout_5.setSpacing(2)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.gridLayout_2 = QtGui.QGridLayout()
         self.gridLayout_2.setVerticalSpacing(2)
@@ -146,7 +145,7 @@ class Ui_WaveformDialog(object):
         self.horizontalLayout_8.addWidget(self.savePushButton)
         self.saveStatusLabel = QtGui.QLabel(self.widget_6)
         self.saveStatusLabel.setObjectName(_fromUtf8("saveStatusLabel"))
-        self.horizontalLayout_8.addWidget(self.saveStatusLabel)
+        self.horizontalLayout_8.addWidget(self.saveStatusLabel, QtCore.Qt.AlignLeft)
         self.verticalLayout_5.addWidget(self.widget_6)
         self.horizontalLayout.addWidget(self.saveGroupBox)
         self.verticalLayout.addWidget(self.topFrame)
@@ -180,13 +179,14 @@ class Ui_WaveformDialog(object):
         self.selectionTable.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
         self.selectionTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.selectionTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        self.selectionTable.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerItem)
+        self.selectionTable.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         self.selectionTable.setShowGrid(False)
-        self.selectionTable.setGridStyle(QtCore.Qt.NoPen)
+        self.selectionTable.setWordWrap(False)
         self.selectionTable.setObjectName(_fromUtf8("selectionTable"))
         self.selectionTable.setColumnCount(0)
         self.selectionTable.setRowCount(0)
-        self.selectionTable.horizontalHeader().setStretchLastSection(True)
+        self.selectionTable.horizontalHeader().setStretchLastSection(False)
+        self.selectionTable.verticalHeader().setVisible(True)
         self.verticalLayout_2.addWidget(self.selectionTable)
         self.verticalLayout.addWidget(self.selectionTableFrame)
         self.verticalLayout.setStretch(1, 1)
