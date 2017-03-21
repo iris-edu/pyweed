@@ -27,8 +27,10 @@ class TableItems(object):
     def stringWidget(self, s):
         return QtGui.QTableWidgetItem(s)
 
-    def numericWidget(self, i):
-        return MyNumericTableWidgetItem(str(i))
+    def numericWidget(self, i, text=None):
+        if text is None:
+            text = "%s" % i
+        return MyNumericTableWidgetItem(i, text)
 
     def checkboxWidget(self, b):
         checkboxItem = QtGui.QTableWidgetItem()
@@ -49,8 +51,8 @@ class TableItems(object):
         # Initialize the table (TODO: should be done only once!)
         self.table.setColumnCount(len(self.columnNames))
         self.table.setHorizontalHeaderLabels(self.columnNames)
-        self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.verticalHeader().hide()
+        # self.table.horizontalHeader().setStretchLastSection(True)
+        # self.table.verticalHeader().hide()
         # Use the first column for identification
         self.table.setColumnHidden(0, True)
 

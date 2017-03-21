@@ -47,7 +47,6 @@ class EventTableItems(TableItems):
         'Longitude',
         'Latitude',
         'Depth (km)',
-        'MagType',
         'Location'
     ]
 
@@ -70,12 +69,11 @@ class EventTableItems(TableItems):
             yield [
                 self.numericWidget(i),
                 self.stringWidget(time),
-                self.numericWidget(magnitude.mag),
+                self.numericWidget(magnitude.mag, "%s %s" % (magnitude.mag, magnitude.magnitude_type)),
                 self.numericWidget(origin.longitude),
                 self.numericWidget(origin.latitude),
                 self.numericWidget(origin.depth / 1000),  # we wish to report in km
-                self.stringWidget(magnitude.magnitude_type),
-                self.stringWidget(event_description),
+                self.stringWidget(event_description.title()),
             ]
 
 
@@ -91,6 +89,7 @@ class StationTableItems(TableItems):
         'Channel',
         'Longitude',
         'Latitude',
+        'Description',
     ]
 
     def rows(self, data):
@@ -112,6 +111,7 @@ class StationTableItems(TableItems):
                     self.stringWidget(channel.code),
                     self.numericWidget(channel.longitude),
                     self.numericWidget(channel.latitude),
+                    self.stringWidget(station.site.name),
                 ]
 
 
@@ -131,7 +131,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Set MainWindow properties
         self.setWindowTitle('%s version %s' % (self.pyweed.app_name, self.pyweed.app_version))
 
-        # Options widgets, mostly common code
+        # Common code for initializing event/station dock widgets
         def initializeOptionsWidget(widget, options, dockWidget, toggle):
             widget.setOptions(options)
             dockWidget.setWidget(widget)
@@ -164,12 +164,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Table selection
         self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
         self.stationsTable.itemSelectionChanged.connect(self.onStationSelectionChanged)
+        self.clearEventSelectionButton.clicked.connect(self.eventsTable.clearSelection)
+        self.clearStationSelectionButton.clicked.connect(self.stationsTable.clearSelection)
 
         # Main window buttons
-        self.getWaveformsButton.setEnabled(False)
         self.getEventsButton.clicked.connect(self.getEvents)
-        self.getStationsButton.pressed.connect(self.getStations)
-        self.getWaveformsButton.pressed.connect(self.getWaveforms)
+        self.getStationsButton.clicked.connect(self.getStations)
+        self.getWaveformsButton.clicked.connect(self.getWaveforms)
 
         # Map
         self.initializeMap()
@@ -465,7 +466,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.eventsTable.selectionModel().selectedRows():
             ids.append(int(self.eventsTable.item(idx.row(), 0).text()))
 
-        LOGGER.debug('%d events currently selected', len(ids))
+        numEvents = len(ids)
+        self.eventSelectionLabel.setText(
+            "Selected %d event%s" % (numEvents, ("" if numEvents == 1 else "s")))
 
         # Get locations and event IDs
         points = []
@@ -491,7 +494,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         for idx in self.stationsTable.selectionModel().selectedRows():
             sncls.append(self.stationsTable.item(idx.row(), 0).text())
 
-        LOGGER.debug('%d stations currently selected', len(sncls))
+        numStations = len(sncls)
+        self.stationSelectionLabel.setText(
+            "Selected %d station%s" % (numStations, ("" if numStations == 1 else "s")))
 
         # Get locations
         points = []
