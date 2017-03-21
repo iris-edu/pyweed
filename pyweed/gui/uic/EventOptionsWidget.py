@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'gui/uic/EventOptionsWidget.ui'
+# Form implementation generated from reading ui file 'EventOptionsWidget.ui'
 #
-# Created: Tue Feb 28 15:37:45 2017
-#      by: PyQt4 UI code generator 4.10.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +25,7 @@ except AttributeError:
 class Ui_EventOptionsWidget(object):
     def setupUi(self, EventOptionsWidget):
         EventOptionsWidget.setObjectName(_fromUtf8("EventOptionsWidget"))
-        EventOptionsWidget.resize(309, 743)
+        EventOptionsWidget.resize(309, 763)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -45,8 +44,8 @@ class Ui_EventOptionsWidget(object):
         self.timeBetweenRadioButton.setObjectName(_fromUtf8("timeBetweenRadioButton"))
         self.verticalLayout_2.addWidget(self.timeBetweenRadioButton)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
-        self.horizontalLayout_3.setSpacing(0)
         self.horizontalLayout_3.setContentsMargins(24, -1, -1, -1)
+        self.horizontalLayout_3.setSpacing(0)
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
         self.verticalLayout_7 = QtGui.QVBoxLayout()
         self.verticalLayout_7.setSpacing(0)
@@ -108,16 +107,17 @@ class Ui_EventOptionsWidget(object):
         self.magnitudeLayout.setSpacing(0)
         self.magnitudeLayout.setObjectName(_fromUtf8("magnitudeLayout"))
         self.verticalLayout_9 = QtGui.QVBoxLayout()
-        self.verticalLayout_9.setSpacing(1)
         self.verticalLayout_9.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.verticalLayout_9.setContentsMargins(0, -1, -1, -1)
+        self.verticalLayout_9.setSpacing(1)
         self.verticalLayout_9.setObjectName(_fromUtf8("verticalLayout_9"))
         self.horizontalLayout_15 = QtGui.QHBoxLayout()
-        self.horizontalLayout_15.setSpacing(4)
         self.horizontalLayout_15.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
+        self.horizontalLayout_15.setSpacing(4)
         self.horizontalLayout_15.setObjectName(_fromUtf8("horizontalLayout_15"))
         self.minMagDoubleSpinBox = QtGui.QDoubleSpinBox(self.magnitudeGroupBox)
         self.minMagDoubleSpinBox.setDecimals(1)
+        self.minMagDoubleSpinBox.setMinimum(-2.0)
         self.minMagDoubleSpinBox.setMaximum(10.0)
         self.minMagDoubleSpinBox.setObjectName(_fromUtf8("minMagDoubleSpinBox"))
         self.horizontalLayout_15.addWidget(self.minMagDoubleSpinBox)
@@ -164,8 +164,8 @@ class Ui_EventOptionsWidget(object):
         self.depthLayout.setSpacing(0)
         self.depthLayout.setObjectName(_fromUtf8("depthLayout"))
         self.horizontalLayout_16 = QtGui.QHBoxLayout()
-        self.horizontalLayout_16.setSpacing(4)
         self.horizontalLayout_16.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
+        self.horizontalLayout_16.setSpacing(4)
         self.horizontalLayout_16.setObjectName(_fromUtf8("horizontalLayout_16"))
         self.minDepthDoubleSpinBox = QtGui.QDoubleSpinBox(self.depthGroupBox)
         self.minDepthDoubleSpinBox.setDecimals(1)
@@ -217,8 +217,8 @@ class Ui_EventOptionsWidget(object):
         self.horizontalLayout_4.addWidget(self.drawLocationRangeToolButton)
         self.verticalLayout_6.addLayout(self.horizontalLayout_4)
         self.locationRangeLayout = QtGui.QHBoxLayout()
-        self.locationRangeLayout.setSpacing(0)
         self.locationRangeLayout.setContentsMargins(24, -1, -1, -1)
+        self.locationRangeLayout.setSpacing(0)
         self.locationRangeLayout.setObjectName(_fromUtf8("locationRangeLayout"))
         self.verticalLayout_8 = QtGui.QVBoxLayout()
         self.verticalLayout_8.setSpacing(1)
@@ -285,17 +285,17 @@ class Ui_EventOptionsWidget(object):
         self.horizontalLayout_5.addWidget(self.drawDistanceFromPointToolButton)
         self.verticalLayout_6.addLayout(self.horizontalLayout_5)
         self.locationDistanceFromPointLayout = QtGui.QHBoxLayout()
-        self.locationDistanceFromPointLayout.setSpacing(0)
         self.locationDistanceFromPointLayout.setContentsMargins(24, -1, -1, -1)
+        self.locationDistanceFromPointLayout.setSpacing(0)
         self.locationDistanceFromPointLayout.setObjectName(_fromUtf8("locationDistanceFromPointLayout"))
         self.verticalLayout_4 = QtGui.QVBoxLayout()
-        self.verticalLayout_4.setSpacing(1)
         self.verticalLayout_4.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.verticalLayout_4.setContentsMargins(0, -1, -1, -1)
+        self.verticalLayout_4.setSpacing(1)
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
         self.horizontalLayout_14 = QtGui.QHBoxLayout()
-        self.horizontalLayout_14.setSpacing(4)
         self.horizontalLayout_14.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
+        self.horizontalLayout_14.setSpacing(4)
         self.horizontalLayout_14.setObjectName(_fromUtf8("horizontalLayout_14"))
         self.distanceFromPointMinRadiusDoubleSpinBox = QtGui.QDoubleSpinBox(self.locationGroupBox)
         self.distanceFromPointMinRadiusDoubleSpinBox.setMinimum(0.0)
@@ -375,10 +375,10 @@ class Ui_EventOptionsWidget(object):
         self.label_11.setText(_translate("EventOptionsWidget", "-", None))
         self.label_7.setText(_translate("EventOptionsWidget", "Type", None))
         self.magTypeComboBox.setItemText(0, _translate("EventOptionsWidget", "All Types", None))
-        self.magTypeComboBox.setItemText(1, _translate("EventOptionsWidget", "TB", None))
-        self.magTypeComboBox.setItemText(2, _translate("EventOptionsWidget", "ML", None))
-        self.magTypeComboBox.setItemText(3, _translate("EventOptionsWidget", "MS", None))
-        self.magTypeComboBox.setItemText(4, _translate("EventOptionsWidget", "MW", None))
+        self.magTypeComboBox.setItemText(1, _translate("EventOptionsWidget", "Mw", None))
+        self.magTypeComboBox.setItemText(2, _translate("EventOptionsWidget", "mb", None))
+        self.magTypeComboBox.setItemText(3, _translate("EventOptionsWidget", "Ms", None))
+        self.magTypeComboBox.setItemText(4, _translate("EventOptionsWidget", "ML", None))
         self.depthGroupBox.setTitle(_translate("EventOptionsWidget", "Depth", None))
         self.label_13.setText(_translate("EventOptionsWidget", "-", None))
         self.label_12.setText(_translate("EventOptionsWidget", "km", None))

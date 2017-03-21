@@ -12,7 +12,7 @@ class EventOptions(Options):
 
     minmagnitude = FloatOption(default=5.0)
     maxmagnitude = FloatOption(default=10.0)
-    magtype = Option()
+    magnitudetype = Option()
 
     mindepth = FloatOption(default=0)
     maxdepth = FloatOption(default=6800)
@@ -52,8 +52,11 @@ class EventOptions(Options):
             return {}
 
     def get_obspy_options(self, station_options=None):
-        base_keys = ['minmagnitude', 'maxmagnitude', 'magtype', 'mindepth', 'maxdepth']
+        base_keys = ['minmagnitude', 'maxmagnitude', 'magnitudetype', 'mindepth', 'maxdepth']
         options = self.get_options(keys=base_keys)
+        # Need special handling for "All Types" value of magnitudetype
+        if options.get('magnitudetype', '').lower().startswith('all'):
+            del options['magnitudetype']
         options.update(self.get_time_options(station_options))
         options.update(self.get_location_options(station_options))
         return options

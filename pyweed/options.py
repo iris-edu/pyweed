@@ -34,6 +34,11 @@ class Option(object):
     values as Python objects, and convert them to the proper string form for the service.
     """
     def __init__(self, option_name=None, default=None, hidden=False):
+        """
+        :param options_name: The name of the option (eg. "starttime")
+        :param default: The default to use if no value is set
+        :param hidden: Indicate that this option shouldn't be included in the actual query
+        """
         self.option_name = option_name
         self.default = default
         self.hidden = hidden
