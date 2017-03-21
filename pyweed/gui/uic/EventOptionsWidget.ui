@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>309</width>
-    <height>743</height>
+    <height>763</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -204,6 +204,9 @@
               <property name="decimals">
                <number>1</number>
               </property>
+              <property name="minimum">
+               <double>-2.000000000000000</double>
+              </property>
               <property name="maximum">
                <double>10.000000000000000</double>
               </property>
@@ -268,22 +271,22 @@
               </item>
               <item>
                <property name="text">
-                <string>TB</string>
+                <string>Mw</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>mb</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Ms</string>
                </property>
               </item>
               <item>
                <property name="text">
                 <string>ML</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>MS</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>MW</string>
                </property>
               </item>
              </widget>
