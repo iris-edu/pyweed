@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function)
 import logging
 from signals import SignalingThread, SignalingObject
 from obspy.core.inventory.inventory import Inventory
+from pyweed_utils import get_service_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class StationsLoader(SignalingThread):
         try:
             if 'starttime' not in self.parameters or 'endtime' not in self.parameters:
                 raise ValueError('starttime or endtime is missing')
-            LOGGER.info('Loading stations...')
+            LOGGER.info('Loading stations: %s', get_service_url(self.client, 'station', self.parameters))
             inventory = self.client.get_stations(**self.parameters)
             self.done.emit(inventory)
         except Exception as e:

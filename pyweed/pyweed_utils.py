@@ -17,7 +17,7 @@ import re
 from geographiclib.geodesic import Geodesic
 from obspy.taup.tau import TauPyModel
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.utcdatetime import UTCDateTime
+from urllib import urlencode
 
 LOGGER = logging.getLogger(__name__)
 GEOD = Geodesic.WGS84
@@ -308,3 +308,17 @@ def get_bounding_circle(lat, lon, radius, num_points=36):
             for i in range(0, num_points + 1)
         ]
     ]
+
+
+def get_service_url(client, service, parameters):
+    """
+    Figure out the URL for the given service call. This isn't publicly available from the ObsPy client,
+    we need to use internal APIs, so those messy details are encapsulated here.
+    """
+    try:
+        return client._create_url_from_parameters(service, {}, parameters)
+    except:
+        return "%s %s %s" % (
+            client.base_url, service, urlencode(parameters)
+        )
+

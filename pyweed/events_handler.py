@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function)
 from signals import SignalingThread, SignalingObject
 import logging
 from obspy.core.event.catalog import Catalog
+from pyweed_utils import get_service_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class EventsLoader(SignalingThread):
         try:
             if 'starttime' not in self.parameters or 'endtime' not in self.parameters:
                 raise ValueError('starttime or endtime is missing')
-            LOGGER.info('Loading events...')
+            LOGGER.info('Loading events: %s', get_service_url(self.client, 'event', self.parameters))
             event_catalog = self.client.get_events(**self.parameters)
             self.done.emit(event_catalog)
         except Exception as e:
