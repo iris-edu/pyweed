@@ -16,8 +16,10 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 
 from mpl_toolkits.basemap import Basemap
-from pyweed_utils import get_bounding_circle, get_preferred_origin
+from pyweed_utils import get_bounding_circle, get_preferred_origin, get_distance
 from logging import getLogger
+from PyQt4 import QtCore
+from PyQt4.QtCore import pyqtSignal
 
 LOGGER = getLogger(__name__)
 
@@ -59,7 +61,18 @@ class StationMarkers(MapMarkers):
     marker_type = 'v'  # inverted triangle
 
 
-class Seismap(object):
+class DrawEvent(object):
+    """
+    Event emitted when drawing on the map starts/stops.
+    """
+    def __init__(self, mode, points=None):
+        #: The drawing mode being started/stopped
+        self.mode = mode
+        #: When stopping, we may pass back points representing the drawn area
+        self.points = points
+
+
+class Seismap(QtCore.QObject):
     """
     Map display using Basemap
     """
@@ -68,7 +81,16 @@ class Seismap(object):
         projection='cyl',  # We only support cylindrical projection for now
     )
 
+    # Signals emitted when starting/ending a draw operation
+    drawStart = pyqtSignal(object)
+    drawEnd = pyqtSignal(object)
+
+    # Cursors for pan and draw modes
+    pan_cursor = QtCore.Qt.PointingHandCursor
+    draw_cursor = QtCore.Qt.CrossCursor
+
     def __init__(self, canvas):
+        super(Seismap, self).__init__()
         self.canvas = canvas
         self.map_figure = canvas.fig
         self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
@@ -79,6 +101,8 @@ class Seismap(object):
 
         # Basic map features
         self.init_basemap()
+
+        self.init_drawing()
 
     def init_basemap(self):
         # NOTE:  http://matplotlib.org/basemap/api/basemap_api.html
@@ -97,7 +121,7 @@ class Seismap(object):
         self.basemap.drawmeridians(np.arange(0, 360, 30))
         self.basemap.drawparallels(np.arange(-90, 90, 30))
 
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def get_latlon(self, x, y):
         """
@@ -129,7 +153,7 @@ class Seismap(object):
                 )
             )
 
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def add_highlights(self, markers, points):
         """
@@ -153,7 +177,7 @@ class Seismap(object):
                 )
             )
 
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def add_marker_box(self, markers, n, e, s, w):
         """
@@ -186,7 +210,7 @@ class Seismap(object):
                     alpha=markers.bounds_alpha
                 ))
 
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def add_marker_toroid(self, markers, lat, lon, minradius, maxradius):
         """
@@ -210,7 +234,7 @@ class Seismap(object):
                             alpha=markers.bounds_alpha
                         ))
 
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def clear_markers(self, markers, redraw=True):
         """
@@ -224,7 +248,7 @@ class Seismap(object):
         except IndexError:
             pass
         if redraw:
-            self.canvas.draw()
+            self.canvas.draw_idle()
 
     def clear_highlights(self, markers, redraw=True):
         """
@@ -237,7 +261,7 @@ class Seismap(object):
         except IndexError:
             pass
         if redraw:
-            self.canvas.draw()
+            self.canvas.draw_idle()
 
     def clear_bounding_markers(self, markers, redraw=True):
         """
@@ -253,7 +277,7 @@ class Seismap(object):
         except IndexError:
             pass
         if redraw:
-            self.canvas.draw()
+            self.canvas.draw_idle()
 
     def add_events(self, catalog):
         """
@@ -383,3 +407,193 @@ class Seismap(object):
                     midlat = p1[0] + (-180 - p1[1]) * dlat / (dlon - 360)
                     return [[midlat, -180], [midlat, 180]]
         return None
+
+    def zoom_in(self):
+        """
+        Zoom into the map
+        """
+        # Zoom in by 2, by trimming 1/4 from each edge
+        xlim = self.map_axes.get_xlim()
+        xdelta = (xlim[1] - xlim[0]) / 4
+        ylim = self.map_axes.get_ylim()
+        ydelta = (ylim[1] - ylim[0]) / 4
+
+        self.map_axes.set_xlim(xlim[0] + xdelta, xlim[1] - xdelta)
+        self.map_axes.set_ylim(ylim[0] + ydelta, ylim[1] - ydelta)
+        self.canvas.draw_idle()
+
+    def zoom_out(self):
+        """
+        Zoom out on the map
+        """
+        # Zoom out by 2, by adding 1/2 to each edge
+        xlim = self.map_axes.get_xlim()
+        xdelta = (xlim[1] - xlim[0]) / 2
+        ylim = self.map_axes.get_ylim()
+        ydelta = (ylim[1] - ylim[0]) / 2
+
+        self.map_axes.set_xlim(xlim[0] - xdelta, xlim[1] + xdelta)
+        self.map_axes.set_ylim(ylim[0] - ydelta, ylim[1] + ydelta)
+        self.canvas.draw_idle()
+
+    def zoom_reset(self):
+        """
+        Zoom all the way out of the map
+        """
+        self.map_axes.set_xlim(-180, 180)
+        self.map_axes.set_ylim(-90, 90)
+        self.canvas.draw_idle()
+
+    def init_drawing(self):
+        # Map drawing mode
+        self.draw_mode = None
+        # Indicates that we are actually drawing (ie. mouse button is down)
+        self.drawing = False
+        # If drawing, the start and end points
+        self.draw_points = []
+        # Handler functions for mouse down/move/up, these are created when drawing is activated
+        # See http://matplotlib.org/users/event_handling.html
+        self.draw_handlers = {
+            'click': self.canvas.mpl_connect('button_press_event', self.on_mouse_down)
+        }
+        self.update_cursor()
+
+    def set_draw_mode(self, mode):
+        """
+        Initialize the given drawing mode
+        """
+        LOGGER.info("Drawing mode set to %s", mode)
+        self.drawing = False
+        self.draw_mode = mode
+        self.drawStart.emit(DrawEvent(mode))
+        self.update_cursor()
+
+    def clear_draw_mode(self):
+        """
+        Clear any active drawing mode
+        """
+        if self.draw_mode:
+            points = None
+            if self.drawing:
+                # If we finished drawing bounds, pass back the parameters indicated
+                if self.draw_points:
+                    if 'box' in self.draw_mode:
+                        points = self.draw_points_to_box()
+                    elif 'toroid' in self.draw_mode:
+                        points = self.draw_points_to_toroid()
+            self.drawEnd.emit(DrawEvent(self.draw_mode, points))
+        self.drawing = False
+        self.draw_mode = None
+        self.update_cursor()
+
+    def toggle_draw_mode(self, mode, toggle):
+        """
+        Event handler when a draw mode button is clicked
+        """
+        if toggle:
+            self.set_draw_mode(mode)
+        else:
+            self.clear_draw_mode()
+
+    def update_cursor(self):
+        """
+        Set the cursor on the canvas according to the current mode
+        """
+        if self.draw_mode:
+            self.canvas.setCursor(self.draw_cursor)
+        else:
+            self.canvas.setCursor(self.pan_cursor)
+
+    def draw_points_to_box(self):
+        """
+        Convert self.draw_points to a tuple of (n, e, s, w)
+        """
+        (lat1, lon1) = self.draw_points[0]
+        (lat2, lon2) = self.draw_points[1]
+        return (
+            max(lat1, lat2),
+            max(lon1, lon2),
+            min(lat1, lat2),
+            min(lon1, lon2)
+        )
+
+    def draw_points_to_toroid(self):
+        """
+        Convert self.draw_points to a tuple of (lat, lon, radius)
+        """
+        (lat1, lon1) = self.draw_points[0]
+        (lat2, lon2) = self.draw_points[1]
+        radius = get_distance(lat1, lon1, lat2, lon2)
+        return (lat1, lon1, radius)
+
+    def on_mouse_down(self, event):
+        """
+        Handle a mouse click on the map
+        """
+        if self.draw_mode:
+            # Start a drawing operation
+            (lat, lon) = self.get_latlon(event.xdata, event.ydata)
+            if lat is not None and lon is not None:
+                self.drawing = True
+                self.draw_points = [[lat, lon], [lat, lon]]
+        else:
+            # If there's no draw operation, pan the map
+            if event.inaxes == self.map_axes:
+                LOGGER.debug("Starting pan")
+                self.drawing = True
+                self.map_axes.start_pan(event.x, event.y, event.button)
+        # If we've started a drawing operation, connect listeners for activity
+        if self.drawing:
+            self.draw_handlers['release'] = self.canvas.mpl_connect('button_release_event', self.on_mouse_up)
+            self.draw_handlers['move'] = self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
+
+    def on_mouse_up(self, event):
+        """
+        Handle a mouse up event, this should only be called while the user is drawing on the map
+        """
+        # Disconnect the release/move handlers
+        for event in ('release', 'move',):
+            if event in self.draw_handlers:
+                self.canvas.mpl_disconnect(self.draw_handlers[event])
+                del self.draw_handlers[event]
+
+        # If there's no draw mode, we are probably panning so turn that off
+        if not self.draw_mode:
+            self.map_axes.end_pan()
+
+        # Exit drawing mode
+        self.clear_draw_mode()
+
+    def on_mouse_move(self, event):
+        """
+        Handle a mouse move event, this should only be called while the user is drawing on the map
+        """
+        if self.drawing:
+            if self.draw_mode:
+                (lat, lon) = self.get_latlon(event.xdata, event.ydata)
+                if lat is not None and lon is not None:
+                    self.draw_points[1] = [lat, lon]
+                    LOGGER.debug("Draw points: %s" % self.draw_points)
+                    self.update_draw_bounds()
+            else:
+                # If we aren't drawing anything, pan the map
+                self.map_axes.drag_pan(event.button, event.key, event.x, event.y)
+                self.canvas.draw_idle()
+
+    def update_draw_bounds(self):
+        """
+        Update the displayed bounding box/toroid as the user is drawing it
+        """
+        # Build options values based on box or toroid
+        if 'box' in self.draw_mode:
+            (n, e, s, w) = self.draw_points_to_box()
+            if 'events' in self.draw_mode:
+                self.add_events_box(n, e, s, w)
+            elif 'stations' in self.draw_mode:
+                self.add_stations_box(n, e, s, w)
+        elif 'toroid' in self.draw_mode:
+            (lat, lon, maxradius) = self.draw_points_to_toroid()
+            if 'events' in self.draw_mode:
+                self.add_events_toroid(lat, lon, 0, maxradius)
+            elif 'stations' in self.draw_mode:
+                self.add_stations_toroid(lat, lon, 0, maxradius)
