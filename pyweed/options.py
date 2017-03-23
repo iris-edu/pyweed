@@ -3,6 +3,7 @@ from distutils.util import strtobool
 from logging import getLogger
 from numbers import Number
 from datetime import timedelta
+from future.utils import with_metaclass
 
 """
 Helper class for web services.
@@ -121,12 +122,10 @@ class OptionsMeta(type):
         return type.__new__(cls, name, bases, attrs)
 
 
-class Options(object):
+class Options(with_metaclass(OptionsMeta, object)):
     """
     Base class for a web service request.
     """
-
-    __metaclass__ = OptionsMeta
 
     def set_options(self, options):
         """

@@ -103,7 +103,7 @@ def manageCache(downloadDir, cacheSize):
 
         LOGGER.debug('Removed %d files to keep %s below %.0f megabytes' % (deletionCount, downloadDir, cacheSize))
 
-    except Exception, e:
+    except Exception as e:
         LOGGER.error(str(e))
 
 
