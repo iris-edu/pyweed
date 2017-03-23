@@ -2,7 +2,6 @@ from PyQt4 import QtGui, QtCore
 from distutils.util import strtobool
 from logging import getLogger
 from PyQt4.QtCore import pyqtSlot
-from obspy.core.util.attribdict import AttribDict
 
 LOGGER = getLogger(__name__)
 
@@ -36,7 +35,7 @@ class OptionsAdapter(object):
         Put the current set of options into the mapped inputs
         """
         inputs = self.options_to_inputs(options)
-        for k, v in inputs.iteritems():
+        for k, v in inputs.items():
             input = self.inputs.get(k)
             if input:
                 if isinstance(input, QtGui.QDateTimeEdit):

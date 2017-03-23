@@ -349,7 +349,7 @@ class WaveformsHandler(SignalingObject):
         """
         if not os.path.exists(base_output_path):
             try:
-                os.makedirs(base_output_path, 0700)
+                os.makedirs(base_output_path, 0o700)
             except Exception as e:
                 raise Exception("Could not create the output path: %s" % str(e))
 

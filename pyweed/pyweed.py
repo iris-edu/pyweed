@@ -135,7 +135,7 @@ class PyWeed(object):
             manageCache(download_path, cache_size)
         elif init:
             try:
-                os.makedirs(download_path, 0700)
+                os.makedirs(download_path, 0o700)
             except Exception as e:
                 LOGGER.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 raise
