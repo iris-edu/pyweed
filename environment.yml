@@ -1,14 +1,15 @@
-name: pyweed
+name: pyweed-3
 channels:
 - obspy
 dependencies:
-- python=2.7*
+- python=3.5*
 - basemap=1.0.7
+- future=0.16.0
 - matplotlib=1.5.1
 - numpy=1.10.4
 - obspy=1.0.2
 - pandas=0.18.1
-- pil=1.1.7
+- pillow=3.4.2
 - pyqt=4.11.4
 - qtconsole=4.2.1
 - pip:

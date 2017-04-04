@@ -199,7 +199,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         def drawModeFn(mode):
             return lambda checked: self.seismap.toggle_draw_mode(mode, checked)
         # Register draw mode toggle handlers
-        for mode, button in self.drawButtons.iteritems():
+        for mode, button in self.drawButtons.items():
             button.clicked.connect(drawModeFn(mode))
 
         self.mapZoomInButton.clicked.connect(self.seismap.zoom_in)

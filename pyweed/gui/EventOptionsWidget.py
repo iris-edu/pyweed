@@ -2,7 +2,7 @@ from PyQt4 import QtGui, QtCore
 from gui.uic import EventOptionsWidget
 import logging
 from distutils.util import strtobool
-from utils import OptionsAdapter
+from gui.utils import OptionsAdapter
 from event_options import EventOptions
 
 LOGGER = logging.getLogger(__name__)

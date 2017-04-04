@@ -108,7 +108,7 @@ class OptionsMeta(type):
     """
     def __new__(cls, name, bases, attrs):
         options = {}
-        for attr, option in attrs.iteritems():
+        for attr, option in attrs.items():
             if isinstance(option, Option):
                 # Keep the definition
                 options[attr] = option

@@ -71,7 +71,7 @@ class OptionsAdapter(object):
         Set the options from the mapped inputs
         """
         inputs = {}
-        for k, input in self.inputs.iteritems():
+        for k, input in self.inputs.items():
             if isinstance(input, QtGui.QDateTimeEdit):
                 # DateTime
                 inputs[k] = input.dateTime().toString(QtCore.Qt.ISODate)
