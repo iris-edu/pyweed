@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'MainWindow.ui'
+# Form implementation generated from reading ui file 'gui/uic/MainWindow.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -242,4 +242,4 @@ class Ui_MainWindow(object):
         self.eventOptionsDockWidget.setWindowTitle(_translate("MainWindow", "Event Options", None))
         self.stationOptionsDockWidget.setWindowTitle(_translate("MainWindow", "Station Options", None))
 
-from MyQt4MplCanvas import MyQt4MplCanvas
+from gui.uic.MyQt4MplCanvas import MyQt4MplCanvas

@@ -136,7 +136,7 @@ class Preferences(object):
 
         if not os.path.exists(user_config_path()):
             try:
-                os.makedirs(user_config_path(), 0700)
+                os.makedirs(user_config_path(), 0o700)
             except Exception as e:
                 print("Creation of user configuration directory failed with" + " error: \"%s\'""" % e)
                 return
