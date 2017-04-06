@@ -3,13 +3,13 @@
 block_cipher = None
 
 
-a = Analysis(['pyweed_gui.py'],
-             pathex=['/workspace/test/pyweed/pyweed'],
+a = Analysis(['pyweed/pyweed_gui.py'],
+             pathex=['/workspace/test/pyweed'],
              binaries=[],
              datas=[],
-             hiddenimports=[],
-             hookspath=[],
-             runtime_hooks=[],
+             hiddenimports=['ipykernel.datapub'],
+             hookspath=['pyinstaller_hooks'],
+             runtime_hooks=['pyinstaller_rthooks/qtconsole.py', 'pyinstaller_rthooks/inspect.py'],
              excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
@@ -18,12 +18,17 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          exclude_binaries=True,
+          # Next 3 lines make this a one-file app
+          a.binaries,
+          a.zipfiles,
+          a.datas,
+          # exclude_binaries=True,
           name='pyweed_gui',
           debug=False,
           strip=False,
           upx=True,
-          console=True )
+          console=False )
+"""
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -31,3 +36,8 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                name='pyweed_gui')
+"""
+app = BUNDLE(exe,
+             name='pyweed_gui.app',
+             icon='logo.png',
+             bundle_identifier='edu.iris.PyWEED')
