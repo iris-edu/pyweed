@@ -6,5 +6,5 @@
 *.wpr
 *.wpu
 obspy
-pyweed/build
-pyweed/dist
+build
+dist

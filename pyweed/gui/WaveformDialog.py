@@ -476,7 +476,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         if isinstance(result.result, Exception):
             # Most common error is "no data" TODO: see https://github.com/obspy/obspy/issues/1656
-            if result.result.message.startswith("No data"):
+            if str(result.result).startswith("No data"):
                 waveform.error = "No data available"
             else:
                 waveform.error = str(result.result)
