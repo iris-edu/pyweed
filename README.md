@@ -1,25 +1,32 @@
-# pyweed
+# PyWEED
 
 PyWEED is a cross-platform downloadable app for retrieving event-based seismic data
 
 # Installation
 
-The [Anaconda](https://docs.continuum.io/anaconda/) package manager is by far the 
-easiest way to install the packages and resources need for Pyweed. Begin by downloading
-[miniconda](http://conda.pydata.org/miniconda.html) for python 2.7 for your operating
-system and then follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
+## Application Binaries
+
+_Highly Experimental!_
+
+Mac OS X: http://ds.iris.edu/files/jweed/PyWEED-1.1.dmg
+
+## Anaconda
+
+It's far more reliable to run PyWEED from an [Anaconda](https://docs.continuum.io/anaconda/) environment.
+
+If you don't have Anaconda installed, download it or [miniconda](http://conda.pydata.org/miniconda.html) and follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
 instructions.
 
-The installation process should put the `conda` command in your shell `PATH`. If you have
-multiple instances of Anaconda installed, you may need to tweak some of the following commands
-to include the specific path to the newly installed version (labeled as `$CONDA_PATH` below).
+The installation process should put the `conda` command in your shell `PATH`. 
 
 ## Get the PyWEED project
 
-You can use Git to download the project:
+Download a [release](https://github.com/iris-edu/pyweed/releases) and unpack it.
+
+Or use Git:
 
 ```
-git clone https://github.com/iris-edu-int/pyweed.git
+git clone https://github.com/iris-edu/pyweed.git
 cd pyweed
 ```
 
@@ -29,21 +36,15 @@ The packages necessary to run PyWEED are defined in the `environment.yml` file i
 
 From the root directory, run:
 
-`conda env create`  
-or  
-`$CONDA_PATH/bin/conda env create`
+`conda env create`
 
 This will create an environment named `pyweed` in your Anaconda system. You can activate this environment by running:
 
-`source activate pyweed`  
-or  
-`source $CONDA_PATH/bin/activate pyweed`
+`source activate pyweed-3`  
 
 You can return to the default Anaconda environment by running:
 
 `source deactivate`  
-or  
-`source $CONDA_PATH/bin/deactivate`
 
 # Running the PyWEED GUI
 
@@ -52,26 +53,6 @@ The code is in the `pyweed` subdirectory.
 ```
 cd pyweed
 python pyweed_gui.py
-```
-
-# Running PyWEED without a GUI
-
-**Note** this is a work in progress
-
-```pycon
->>> from pyweed import PyWeed
->>> pyweed = PyWeed()
->>> pyweed.event_options
-{'time_choice': 'timeBetween', 'mindepth': 0.0, 'longitude': 30.0, 'maxlongitude': 180.0, 'endtime': UTCDateTime(2017, 2, 13, 23, 51, 47), 'location_choice': 'locationDistanceFromPoint', 'minlatitude': -90.0, 'maxlatitude': 90.0, 'minmagnitude': 5.0, 'maxmagnitude': 10.0, 'maxdepth': 6800.0, 'starttime': UTCDateTime(2017, 1, 14, 23, 51, 47), 'latitude': 50.0, 'minlongitude': -180.0, 'maxradius': 50.0, 'minradius': 0.0}
->>> pyweed.fetch_events()
->>> print pyweed.events
-20 Event(s) in Catalog:
-2017-02-12T13:48:15.660000Z | +39.600,  +26.092 | 5.2 Mwr
-2017-02-10T15:01:49.620000Z | +74.337,  -92.487 | 5.2 mb
-...
-2017-01-18T10:25:25.480000Z | +42.584,  +13.197 | 5.6 Mww
-2017-01-18T09:25:41.600000Z | +42.659,  +13.209 | 5.3 Mww
-To see all events call 'print(CatalogObject.__str__(print_all=True))'
 ```
 
 # Configuration
