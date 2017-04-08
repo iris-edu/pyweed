@@ -15,7 +15,7 @@ It's far more reliable to run PyWEED from an [Anaconda](https://docs.continuum.i
 If you don't have Anaconda installed, download it or [miniconda](http://conda.pydata.org/miniconda.html) and follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
 instructions.
 
-The installation process should put the `conda` command in your shell `PATH`. 
+The installation process should put the `conda` command in your shell `PATH`.
 
 ## Get the PyWEED project
 
@@ -38,11 +38,11 @@ From the root directory, run:
 
 This will create an environment named `pyweed` in your Anaconda system. You can activate this environment by running:
 
-`source activate pyweed-3`  
+`source activate pyweed`
 
 You can return to the default Anaconda environment by running:
 
-`source deactivate`  
+`source deactivate`
 
 ## Running the PyWEED GUI
 

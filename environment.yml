@@ -1,4 +1,4 @@
-name: pyweed-3
+name: pyweed
 channels:
 - obspy
 dependencies:
