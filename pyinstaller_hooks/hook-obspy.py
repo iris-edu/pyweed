@@ -10,18 +10,23 @@ import os.path
 
 binaries = collect_dynamic_libs('obspy')
 datas = [
-    # Dummy path, this needs to exist because ObsPy loads a library relative to this path
+    # Dummy path, this needs to exist for obspy.core.util.libnames._load_cdll
     (os.path.join(obspy_root, "*.txt"), os.path.join('obspy', 'core', 'util')),
     # Data
     (os.path.join(obspy_root, "imaging", "data"), os.path.join('obspy', 'imaging', 'data')),
     (os.path.join(obspy_root, "taup", "data"), os.path.join('obspy', 'taup', 'data')),
     (os.path.join(obspy_root, "geodetics", "data"), os.path.join('obspy', 'geodetics', 'data')),
 ]
+
 # Plugins are defined in the metadata (.egg-info) directory, but if we grab the whole thing it causes
 # other errors, so include only entry_points.txt
 metadata = copy_metadata('obspy')
-metadata = [(os.path.join(metadata[0][0], 'entry_points.txt'), metadata[0][1])]
+egg = metadata[0]
+if '.egg' not in egg[0]:
+    raise Exception("Unexpected metadata: %s" % (metadata,))
+# Specify the source as just the entry points file
+metadata = [(os.path.join(egg[0], 'entry_points.txt'), egg[1])]
 datas += metadata
 
-# Include the actual plugin packages
+# Thse are the actual plugin packages
 hiddenimports = collect_submodules('obspy.io')
