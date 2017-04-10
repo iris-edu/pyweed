@@ -5,13 +5,13 @@ block_cipher = None
 #
 ONE_FILE = True
 
-a = Analysis(['pyweed/pyweed_gui.py'],
-             pathex=['/workspace/test/pyweed'],
+a = Analysis(['../pyweed/pyweed_gui.py'],
+             pathex=['/workspace/test/pyweed/installer'],
              binaries=[],
              datas=[],
              hiddenimports=['ipykernel.datapub'],
-             hookspath=['pyinstaller_hooks'],
-             runtime_hooks=['pyinstaller_rthooks/qtconsole.py', 'pyinstaller_rthooks/obspy.py'],
+             hookspath=['hooks'],
+             runtime_hooks=['rthooks/qtconsole.py', 'rthooks/obspy.py'],
              excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
