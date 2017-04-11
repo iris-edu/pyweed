@@ -434,6 +434,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         else:
             self.getWaveformsButton.setEnabled(False)
 
+    def closeEvent(self, event):
+        """
+        When the main window closes, quit the application
+        """
+        self.pyweed.closeApplication()
+        event.ignore()
+
     def savePreferences(self):
         prefs = self.pyweed.preferences
 
