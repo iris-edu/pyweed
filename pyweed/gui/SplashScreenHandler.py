@@ -1,5 +1,5 @@
 import logging
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 
 
 class SplashScreenHandler(logging.Handler):
@@ -7,7 +7,7 @@ class SplashScreenHandler(logging.Handler):
     def __init__(self,):
         super(SplashScreenHandler, self).__init__(level=logging.INFO)
         pixmap = QtGui.QPixmap("splash.png")
-        self.splash = QtGui.QSplashScreen(pixmap)
+        self.splash = QtGui.QSplashScreen(pixmap, QtCore.Qt.WindowStaysOnTopHint)
 
         # Attach as handler to the root logger
         logger = logging.getLogger()
