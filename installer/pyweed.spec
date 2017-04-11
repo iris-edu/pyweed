@@ -5,7 +5,7 @@ block_cipher = None
 #
 ONE_FILE = True
 
-a = Analysis(['../pyweed/pyweed_gui.py'],
+a = Analysis(['../pyweed/pyweed_launcher.py'],
              pathex=['/workspace/test/pyweed/installer'],
              binaries=[],
              datas=[],
@@ -24,10 +24,10 @@ exe_args = [pyz, a.scripts]
 exe_kwargs = dict(
     exclude_binaries=True,
     name='PyWEED',
-    debug=False,
+    debug=True,
     strip=False,
     upx=True,
-    console=False
+    console=True
 )
 # Overrides for single-file build
 if ONE_FILE:

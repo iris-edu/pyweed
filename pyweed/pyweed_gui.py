@@ -15,18 +15,6 @@ from __future__ import (absolute_import, division, print_function)
 # Basic packages
 import sys
 import logging
-
-from future.utils import PY2
-if PY2:
-    # Configure PyQt4 -- in order for the Python console to work, we need to load a particular
-    # version of some internal libraries. This must be done before the first import of the PyQt4 libraries.
-    # See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
-    import os
-    os.environ['QT_API'] = 'pyqt'
-    import sip
-    sip.setapi("QString", 2)
-    sip.setapi("QVariant", 2)
-
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
@@ -37,7 +25,6 @@ matplotlib.use('AGG')
 # import gui.qrc  # NOQA: F401
 from gui.MainWindow import MainWindow
 from gui.LoggingDialog import LoggingDialog
-from gui.SplashScreenHandler import SplashScreenHandler
 from events_handler import EventsHandler
 from stations_handler import StationsHandler
 from gui.WaveformDialog import WaveformDialog
@@ -208,9 +195,9 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
     def showAboutDialog(self):
         """Display About message box."""
         # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox
-        website = "https://github.com/iris-edu-int/pyweed"
+        website = "https://github.com/iris-edu/pyweed"
         # email = "adam@iris.washington.edu"
-        license_link = "https://github.com/iris-edu-int/pyweed/blob/master/LICENSE"
+        license_link = "https://github.com/iris-edu/pyweed/blob/master/LICENSE"
         license_name = "MIT"
         mazama_link = "http://mazamascience.com"
         mazama_name = "Mazama Science"
@@ -251,8 +238,4 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
-    splashScreenHandler = SplashScreenHandler()
-    pyweed = PyWeedGUI()
-    splashScreenHandler.finish(pyweed.mainWindow)
-    sys.exit(app.exec_())
+    print("Run pyweed_launcher.py instead!")
