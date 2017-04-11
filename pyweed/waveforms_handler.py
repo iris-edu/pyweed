@@ -185,11 +185,12 @@ class WaveformLoader(SignalingThread):
                         c.remove()
                 # Save with transparency
                 h.savefig(imageFile)
+                matplotlib.pyplot.close(h)
 
             self.done.emit(WaveformResult(waveform_id, imageFile))
 
         except Exception as e:
-            LOGGER.error("Error downloading %s: %s", waveform_id, e)
+            LOGGER.error("Error downloading %s", waveform_id, exc_info=True)
             self.done.emit(WaveformResult(waveform_id, e))
 
 
