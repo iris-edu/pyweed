@@ -223,14 +223,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.downloadStatusLabel.setText("Calculating distances...")
         self.downloadStatusLabel.repaint()
+        QtGui.QApplication.processEvents()
 
         self.waveformsHandler.create_waveforms(self.pyweed)
         waveforms = self.waveformsHandler.waveforms
 
         self.downloadStatusLabel.setText("")
         self.downloadStatusLabel.repaint()
-
-        LOGGER.debug('Finished building dataframe for %d waveforms', len(waveforms))
+        QtGui.QApplication.processEvents()
 
         # Add event-SNCL combinations to the selection table
         self.loadSelectionTable(initial=True)
