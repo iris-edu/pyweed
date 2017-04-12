@@ -45,7 +45,7 @@ class EventsLoader(SignalingThread):
         except Exception as e:
             # If no results found, the client will raise an exception, we need to trap this
             # TODO: this should be much cleaner with a fix to https://github.com/obspy/obspy/issues/1656
-            if e.message.startswith("No data"):
+            if str(e).startswith("No data"):
                 LOGGER.warning("No events found! Your query may be too narrow.")
                 self.done.emit(Catalog())
             else:
