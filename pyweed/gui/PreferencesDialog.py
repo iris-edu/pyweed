@@ -1,5 +1,5 @@
 from PyQt4 import QtGui
-from gui.uic import PreferencesDialog
+from pyweed.gui.uic import PreferencesDialog
 from logging import getLogger
 from obspy.clients.fdsn.header import URL_MAPPINGS
 from obspy.clients.fdsn.client import Client

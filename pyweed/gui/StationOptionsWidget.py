@@ -1,8 +1,8 @@
 from PyQt4 import QtGui, QtCore
-from gui.uic import StationOptionsWidget
+from pyweed.gui.uic import StationOptionsWidget
 import logging
-from gui.utils import OptionsAdapter
-from station_options import StationOptions
+from pyweed.gui.utils import OptionsAdapter
+from pyweed.station_options import StationOptions
 from distutils.util import strtobool
 
 LOGGER = logging.getLogger(__name__)

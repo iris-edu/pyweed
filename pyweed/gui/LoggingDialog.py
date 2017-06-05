@@ -1,6 +1,6 @@
 from PyQt4 import QtGui
-from gui.uic import LoggingDialog
-from gui.MyTextEditLoggingHandler import MyTextEditLoggingHandler
+from pyweed.gui.uic import LoggingDialog
+from pyweed.gui.MyTextEditLoggingHandler import MyTextEditLoggingHandler
 import logging
 
 

@@ -10,10 +10,10 @@ Container for events.
 
 from __future__ import (absolute_import, division, print_function)
 
-from signals import SignalingThread, SignalingObject
+from pyweed.signals import SignalingThread, SignalingObject
 import logging
 from obspy.core.event.catalog import Catalog
-from pyweed_utils import get_service_url
+from pyweed.pyweed_utils import get_service_url
 
 LOGGER = logging.getLogger(__name__)
 

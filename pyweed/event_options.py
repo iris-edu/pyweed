@@ -1,4 +1,4 @@
-from options import Options, DateOption, FloatOption, Option
+from pyweed.options import Options, DateOption, FloatOption, Option
 
 
 class EventOptions(Options):

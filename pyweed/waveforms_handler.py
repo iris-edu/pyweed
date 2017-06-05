@@ -12,14 +12,14 @@ from __future__ import (absolute_import, division, print_function)
 
 import os
 from obspy import UTCDateTime
-from signals import SignalingThread, SignalingObject
+from pyweed.signals import SignalingThread, SignalingObject
 import collections
 from PyQt4 import QtCore
 import obspy
 from logging import getLogger
 import matplotlib
 import weakref
-from pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow,\
+from pyweed.pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow,\
     get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.sac.sactrace import SACTrace

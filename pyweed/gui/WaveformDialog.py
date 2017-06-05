@@ -1,13 +1,13 @@
 from PyQt4 import QtGui, QtCore
-from gui.uic import WaveformDialog
-from waveforms_handler import WaveformsHandler
+from pyweed.gui.uic import WaveformDialog
+from pyweed.waveforms_handler import WaveformsHandler
 from logging import getLogger
-from gui.MyTableWidgetImageItem import MyTableWidgetImageItem
-from gui.TableItems import TableItems
-from pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHASES
-from preferences import safe_int
+from pyweed.gui.MyTableWidgetImageItem import MyTableWidgetImageItem
+from pyweed.gui.TableItems import TableItems
+from pyweed.pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHASES
+from pyweed.preferences import safe_int
 from PyQt4.QtGui import QTableWidgetItem
-from gui.utils import ComboBoxAdapter
+from pyweed.gui.utils import ComboBoxAdapter
 
 LOGGER = getLogger(__name__)
 

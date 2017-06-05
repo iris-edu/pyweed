@@ -1,9 +1,9 @@
 from PyQt4 import QtGui, QtCore
-from gui.uic import EventOptionsWidget
+from pyweed.gui.uic import EventOptionsWidget
 import logging
 from distutils.util import strtobool
-from gui.utils import OptionsAdapter
-from event_options import EventOptions
+from pyweed.gui.utils import OptionsAdapter
+from pyweed.event_options import EventOptions
 
 LOGGER = logging.getLogger(__name__)
 

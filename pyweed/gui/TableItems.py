@@ -2,7 +2,7 @@
 Common library for adding data to a QTableWidget.
 """
 
-from gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
+from pyweed.gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
 from PyQt4 import QtGui, QtCore
 from logging import getLogger
 

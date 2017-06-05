@@ -11,15 +11,15 @@ Main window
 from __future__ import (absolute_import, division, print_function)
 
 from PyQt4 import QtGui
-from gui.uic import MainWindow
-from preferences import safe_int, safe_bool, bool_to_str
+from pyweed.gui.uic import MainWindow
+from pyweed.preferences import safe_int, safe_bool, bool_to_str
 import logging
-from pyweed_utils import iter_channels, get_preferred_origin, get_preferred_magnitude
-from seismap import Seismap
-from gui.EventOptionsWidget import EventOptionsWidget
-from gui.StationOptionsWidget import StationOptionsWidget
-from gui.TableItems import TableItems
-from event_options import EventOptions
+from pyweed.pyweed_utils import iter_channels, get_preferred_origin, get_preferred_magnitude
+from pyweed.seismap import Seismap
+from pyweed.gui.EventOptionsWidget import EventOptionsWidget
+from pyweed.gui.StationOptionsWidget import StationOptionsWidget
+from pyweed.gui.TableItems import TableItems
+from pyweed.event_options import EventOptions
 from PyQt4.QtCore import pyqtSlot
 
 LOGGER = logging.getLogger(__name__)

@@ -23,14 +23,14 @@ import matplotlib
 matplotlib.use('AGG')
 
 # import gui.qrc  # NOQA: F401
-from gui.MainWindow import MainWindow
-from gui.LoggingDialog import LoggingDialog
-from events_handler import EventsHandler
-from stations_handler import StationsHandler
-from gui.WaveformDialog import WaveformDialog
-from gui.ConsoleDialog import ConsoleDialog
-from gui.PreferencesDialog import PreferencesDialog
-from pyweed import PyWeed
+from pyweed.gui.MainWindow import MainWindow
+from pyweed.gui.LoggingDialog import LoggingDialog
+from pyweed.events_handler import EventsHandler
+from pyweed.stations_handler import StationsHandler
+from pyweed.gui.WaveformDialog import WaveformDialog
+from pyweed.gui.ConsoleDialog import ConsoleDialog
+from pyweed.gui.PreferencesDialog import PreferencesDialog
+from pyweed.pyweed import PyWeed
 
 LOGGER = logging.getLogger(__name__)
 
