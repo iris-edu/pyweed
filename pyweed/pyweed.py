@@ -22,11 +22,11 @@ import logging
 # pd.set_option('mode.chained_assignment', 'raise')
 
 # Pyweed UI components
-from preferences import Preferences
-from pyweed_utils import manageCache, iter_channels, get_sncl
+from pyweed.preferences import Preferences
+from pyweed.pyweed_utils import manageCache, iter_channels, get_sncl
 from obspy.clients.fdsn import Client
-from event_options import EventOptions
-from station_options import StationOptions
+from pyweed.event_options import EventOptions
+from pyweed.station_options import StationOptions
 
 
 __app_name__ = "PyWEED"

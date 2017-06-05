@@ -11,9 +11,9 @@ Container for stations.
 from __future__ import (absolute_import, division, print_function)
 
 import logging
-from signals import SignalingThread, SignalingObject
+from pyweed.signals import SignalingThread, SignalingObject
 from obspy.core.inventory.inventory import Inventory
-from pyweed_utils import get_service_url
+from pyweed.pyweed_utils import get_service_url
 
 LOGGER = logging.getLogger(__name__)
 

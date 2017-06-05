@@ -16,7 +16,7 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 
 from mpl_toolkits.basemap import Basemap
-from pyweed_utils import get_bounding_circle, get_preferred_origin, get_distance
+from pyweed.pyweed_utils import get_bounding_circle, get_preferred_origin, get_distance
 from logging import getLogger
 from PyQt4 import QtCore
 from PyQt4.QtCore import pyqtSignal

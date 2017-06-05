@@ -414,7 +414,7 @@
   <customwidget>
    <class>MyQt4MplCanvas</class>
    <extends>QWidget</extends>
-   <header>gui.uic.MyQt4MplCanvas</header>
+   <header>pyweed.gui.uic.MyQt4MplCanvas</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

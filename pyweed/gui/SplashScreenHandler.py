@@ -6,7 +6,7 @@ class SplashScreenHandler(logging.Handler):
 
     def __init__(self,):
         super(SplashScreenHandler, self).__init__(level=logging.INFO)
-        pixmap = QtGui.QPixmap("splash.png")
+        pixmap = QtGui.QPixmap(":qrc/splash.png")
         self.splash = QtGui.QSplashScreen(pixmap, QtCore.Qt.WindowStaysOnTopHint)
 
         # Attach as handler to the root logger
@@ -14,6 +14,7 @@ class SplashScreenHandler(logging.Handler):
         logger.addHandler(self)
 
         self.splash.show()
+        print("Splash screen should be visible")
 
     def emit(self, record):
         msg = self.format(record)

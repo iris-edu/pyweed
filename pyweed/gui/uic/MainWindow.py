@@ -242,4 +242,4 @@ class Ui_MainWindow(object):
         self.eventOptionsDockWidget.setWindowTitle(_translate("MainWindow", "Event Options", None))
         self.stationOptionsDockWidget.setWindowTitle(_translate("MainWindow", "Station Options", None))
 
-from gui.uic.MyQt4MplCanvas import MyQt4MplCanvas
+from pyweed.gui.uic.MyQt4MplCanvas import MyQt4MplCanvas

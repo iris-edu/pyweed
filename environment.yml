@@ -14,5 +14,4 @@ dependencies:
 - pyqt=4.11.4
 - qtconsole=4.2.1
 - pyzmq=15.3.0  # Downgrade required for Windows, see https://github.com/pyinstaller/pyinstaller/issues/2147
-- pip:
-  - geographiclib==1.47
+- geographiclib==1.47
