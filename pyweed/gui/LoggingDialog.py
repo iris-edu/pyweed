@@ -9,7 +9,7 @@ class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
     Dialog window displaying all logs.
     """
     def __init__(self, parent=None):
-        super(self.__class__, self).__init__()
+        super(self.__class__, self).__init__(parent)
         self.setupUi(self)
         self.setWindowTitle('Logs')
 
