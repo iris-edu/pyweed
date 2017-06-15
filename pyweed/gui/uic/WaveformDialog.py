@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'WaveformDialog.ui'
+# Form implementation generated from reading ui file 'pyweed/gui/uic/WaveformDialog.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -181,7 +181,6 @@ class Ui_WaveformDialog(object):
         self.selectionTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         self.selectionTable.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         self.selectionTable.setShowGrid(False)
-        self.selectionTable.setWordWrap(False)
         self.selectionTable.setObjectName(_fromUtf8("selectionTable"))
         self.selectionTable.setColumnCount(0)
         self.selectionTable.setRowCount(0)
