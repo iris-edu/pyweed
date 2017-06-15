@@ -6,10 +6,10 @@
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+from pyweed.gui.utils import CustomTableWidgetItemMixin
 
 
-class MyTableWidgetImageItem(QtGui.QTableWidgetItem):
-
+class MyTableWidgetImageItem(CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):
     def __init__(self, imagePath=None):
         super(MyTableWidgetImageItem, self).__init__()
         pic = QtGui.QPixmap(imagePath)
