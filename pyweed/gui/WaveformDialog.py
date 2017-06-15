@@ -2,12 +2,11 @@ from PyQt4 import QtGui, QtCore
 from pyweed.gui.uic import WaveformDialog
 from pyweed.waveforms_handler import WaveformsHandler
 from logging import getLogger
-from pyweed.gui.MyTableWidgetImageItem import MyTableWidgetImageItem
-from pyweed.gui.TableItems import TableItems
+from pyweed.gui.TableItems import TableItems, Column
 from pyweed.pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHASES
 from pyweed.preferences import safe_int
 from PyQt4.QtGui import QTableWidgetItem
-from pyweed.gui.utils import ComboBoxAdapter
+from pyweed.gui.utils import ComboBoxAdapter, CustomTableWidgetItemMixin
 
 LOGGER = getLogger(__name__)
 
@@ -19,44 +18,129 @@ STATUS_DONE = "done"  # Finished
 STATUS_ERROR = "error"  # Something went wrong
 
 
+class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem):
+    """
+    Custom QTableWidgetItem that indicates whether the row is included in the request
+
+    Note that this uses Unicode characters for the checkboxes, this appears to be the easiest way to
+    control the size, and we don't need an actual toggle widget here since that is done at the row level.
+    """
+    checkedText = '☑'
+    uncheckedText = '☐'
+    fontSize = 36
+    checkedBackground = QtGui.QBrush(QtGui.QColor(0, 255, 0, 128))
+    uncheckedBackground = QtGui.QBrush(QtCore.Qt.NoBrush)
+
+    def __init__(self, value):
+        super(KeepIndicatorTableWidgetItem, self).__init__()
+        self.setKeep(value)
+        # Use a large font size for the checkboxes
+        font = QtGui.QFont()
+        font.setPointSize(36)
+        self.setFont(font)
+
+    def keep(self):
+        return self.data(QtCore.Qt.UserRole)
+
+    def setKeep(self, value):
+        self.setData(QtCore.Qt.UserRole, value)
+        # Update as needed to indicate the value to the user
+        if value:
+            self.setBackground(self.checkedBackground)
+            self.setText(self.checkedText)
+        else:
+            self.setBackground(self.uncheckedBackground)
+            self.setText(self.uncheckedText)
+
+
+class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):
+    """
+    Custom QTableWidgetItem that shows a waveform image (or a status message)
+    """
+    imagePath = None
+    errorForeground = QtGui.QBrush(QtGui.QColor(255, 0, 0))
+    defaultForeground = None
+
+    def __init__(self, waveform):
+        super(WaveformTableWidgetItem, self).__init__()
+        self.defaultForeground = self.foreground()
+        self.setWaveform(waveform)
+
+    def setWaveform(self, waveform):
+        if waveform and waveform.error:
+            self.setForeground(self.errorForeground)
+        else:
+            self.setForeground(self.defaultForeground)
+        if waveform:
+            if waveform.image_exists:
+                if waveform.image_path != self.imagePath:
+                    self.imagePath = waveform.image_path
+                    pic = QtGui.QPixmap(waveform.image_path)
+                    self.setData(QtCore.Qt.DecorationRole, pic)
+                    self.setText('')
+            else:
+                self.imagePath = None
+                self.setData(QtCore.Qt.DecorationRole, None)
+                if waveform.loading:
+                    self.setText('Loading waveform data...')
+                elif waveform.error:
+                    self.setText(waveform.error)
+                else:
+                    self.setText('')
+        else:
+            self.imagePath = None
+            self.setText('')
+
+
 class WaveformTableItems(TableItems):
 
-    columnNames = [
-        'Id',
-        'Keep',
-        'Event Name',
-        'SNCL',
-        'Distance',
-        'Waveform',
+    #: Fixed row height based on the height of the waveform image
+    rowHeight = 110
+
+    columns = [
+        Column('Id'),
+        Column('Keep'),
+        Column('Event Time', width=100),
+        Column('Location', width=100),
+        Column('Magnitude'),
+        Column('SNCL'),
+        Column('Distance'),
+        Column('Waveform', width=600),
     ]
 
-    def imageWidget(self, waveform):
-        if waveform.image_exists:
-            return MyTableWidgetImageItem(waveform.image_path)
-        elif waveform.error:
-            return self.stringWidget(waveform.error)
-        else:
-            return self.stringWidget('')
+    def keepWidget(self, keep, **props):
+        return self.applyProps(KeepIndicatorTableWidgetItem(keep), **props)
+
+    def waveformWidget(self, waveform, **props):
+        return self.applyProps(WaveformTableWidgetItem(waveform), **props)
 
     def rows(self, data):
         """
         Turn the data into rows (an iterable of lists) of QTableWidgetItems
         """
         for waveform in data:
+            # Make the time and location wrap
             yield [
                 self.stringWidget(waveform.waveform_id),
-                self.checkboxWidget(waveform.keep),
-                self.stringWidget(waveform.event_name),
-                self.stringWidget(waveform.sncl),
-                self.numericWidget(round(waveform.distances.distance, 2)),
-                self.imageWidget(waveform),
+                self.keepWidget(waveform.keep,
+                                textAlignment=QtCore.Qt.AlignCenter),
+                self.stringWidget(waveform.event_time),
+                self.stringWidget(waveform.event_description),
+                self.numericWidget(waveform.event_mag_value, waveform.event_mag,
+                                   textAlignment=QtCore.Qt.AlignCenter),
+                self.stringWidget(waveform.sncl,
+                                  textAlignment=QtCore.Qt.AlignCenter),
+                self.numericWidget(waveform.distances.distance, '%.02f°',
+                                   textAlignment=QtCore.Qt.AlignCenter),
+                self.waveformWidget(waveform),
             ]
 
 
 # Convenience values for some commonly used table column values
-WAVEFORM_ID_COLUMN = WaveformTableItems.columnNames.index('Id')
-WAVEFORM_KEEP_COLUMN = WaveformTableItems.columnNames.index('Keep')
-WAVEFORM_IMAGE_COLUMN = WaveformTableItems.columnNames.index('Waveform')
+_COLUMN_NAMES = [c.label for c in WaveformTableItems.columns]
+WAVEFORM_ID_COLUMN = _COLUMN_NAMES.index('Id')
+WAVEFORM_KEEP_COLUMN = _COLUMN_NAMES.index('Keep')
+WAVEFORM_IMAGE_COLUMN = _COLUMN_NAMES.index('Waveform')
 
 
 class TimeWindowAdapter(QtCore.QObject):
@@ -163,7 +247,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsHandler.done.connect(self.onAllDownloaded)
 
         # Connect signals associated with the main table
-        self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents)
+        # self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents)
         self.selectionTable.itemClicked.connect(self.handleTableItemClicked)
 
         # Connect the Download and Save GUI elements
@@ -205,10 +289,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         waveform = self.waveformsHandler.get_waveform(waveformID)
         waveform.keep = not waveform.keep
         keepItem = self.selectionTable.item(row, WAVEFORM_KEEP_COLUMN)
-        if waveform.keep:
-            keepItem.setCheckState(QtCore.Qt.Checked)
-        else:
-            keepItem.setCheckState(QtCore.Qt.Unchecked)
+        keepItem.setKeep(waveform.keep)
 
     @QtCore.pyqtSlot()
     def loadWaveformChoices(self, filterColumn=None, filterText=None):
@@ -226,7 +307,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         QtGui.QApplication.processEvents()
 
         self.waveformsHandler.create_waveforms(self.pyweed)
-        waveforms = self.waveformsHandler.waveforms
 
         self.downloadStatusLabel.setText("")
         self.downloadStatusLabel.repaint()
@@ -234,10 +314,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Add event-SNCL combinations to the selection table
         self.loadSelectionTable(initial=True)
-
-        # Tighten up the table
-        self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.horizontalHeader().setStretchLastSection(True)
 
         # Add events to the eventComboBox -------------------------------
 
@@ -446,13 +522,18 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsHandler.download_waveforms(
             priority_ids, other_ids, self.timeWindowAdapter.timeWindow)
 
+        # Update the table rows
+        for row in range(self.selectionTable.rowCount()):
+            waveform_id = self.selectionTable.item(row, WAVEFORM_ID_COLUMN).text()
+            waveform = self.waveformsHandler.waveforms_by_id.get(waveform_id)
+            self.selectionTable.item(row, WAVEFORM_IMAGE_COLUMN).setWaveform(waveform)
+
     def get_table_row(self, waveform_id):
         """
         Get the table row for a given waveform
         """
-        row = 0
         for row in range(self.selectionTable.rowCount()):
-            if self.selectionTable.item(row, 0).text() == waveform_id:
+            if self.selectionTable.item(row, WAVEFORM_ID_COLUMN).text() == waveform_id:
                 return row
         return None
 
@@ -474,6 +555,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             LOGGER.error("Couldn't find waveform %s", waveform_id)
             return
 
+        # Mark as no longer loading
+        waveform.loading = False
+
         if isinstance(result.result, Exception):
             # Most common error is "no data" TODO: see https://github.com/obspy/obspy/issues/1656
             if str(result.result).startswith("No data"):
@@ -483,14 +567,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         else:
             waveform.image_path = result.result
             waveform.check_files()
-        self.selectionTable.setItem(row, WAVEFORM_IMAGE_COLUMN, self.tableItems.imageWidget(waveform))
+        self.selectionTable.item(row, WAVEFORM_IMAGE_COLUMN).setWaveform(waveform)
 
         LOGGER.debug("Displayed waveform %s", waveform_id)
-
-        # Tighten up the table
-        self.selectionTable.resizeColumnsToContents()
-        self.selectionTable.resizeRowsToContents()
-        self.selectionTable.horizontalHeader().setStretchLastSection(True)
 
     @QtCore.pyqtSlot(object)
     def onAllDownloaded(self, result):

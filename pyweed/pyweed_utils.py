@@ -178,12 +178,24 @@ def get_event_id(event):
 
 
 def get_event_name(event):
+    time_str = get_event_time_str(event)
+    mag_str = get_event_mag_str(event)
+    description = get_event_description(event)
+    return "%s | %s | %s" % (time_str, mag_str, description)
+
+
+def get_event_time_str(event):
     origin = get_preferred_origin(event)
-    time_str = origin.time.isoformat(sep=' ').split('.')[0]
+    return origin.time.isoformat(sep=' ').split('.')[0]
+
+
+def get_event_mag_str(event):
     mag = get_preferred_magnitude(event)
-    mag_str = "%s%s" % (mag.mag, mag.magnitude_type)
-    region_str = str(event.event_descriptions[0].text).title()
-    return "%s | %s | %s" % (time_str, mag_str, region_str)
+    return "%s%s" % (mag.mag, mag.magnitude_type)
+
+
+def get_event_description(event):
+    return str(event.event_descriptions[0].text).title()
 
 
 def get_preferred_origin(event):

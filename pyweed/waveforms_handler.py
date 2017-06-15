@@ -20,7 +20,8 @@ from logging import getLogger
 import matplotlib
 import weakref
 from pyweed.pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow,\
-    get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS
+    get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS, get_event_time_str, get_event_mag_str,\
+    get_event_description
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.sac.sactrace import SACTrace
 from obspy.core.stream import Stream
@@ -46,9 +47,12 @@ class WaveformEntry(AttribDict):
         keep=True,
         # Tracking IDs
         waveform_id=None,
-        # Other labels
+        # Other table display values
         sncl=None,
-        event_name=None,
+        event_time=None,
+        event_description=None,
+        event_mag=None,
+        event_mag_value=None,
         # Base filename for mseed, image, etc.
         base_filename=None,
         # Full paths
@@ -56,6 +60,8 @@ class WaveformEntry(AttribDict):
         mseed_exists=False,
         image_path=None,
         image_exists=False,
+        # Loading indicator
+        loading=False,
         # Error message if unable to load
         error=None,
     )
@@ -84,7 +90,11 @@ class WaveformEntry(AttribDict):
             self.distances = calculate_distances(event, station)
 
         self.sncl = get_sncl(network, station, channel)
-        self.event_name = get_event_name(event)
+        self.event_time = get_event_time_str(event)
+        self.event_description = get_event_description(event)
+        mag = get_preferred_magnitude(event)
+        self.event_mag = "%s%s" % (mag.mag, mag.magnitude_type)
+        self.event_mag_value = mag.mag
         self.waveform_id = '%s_%s' % (self.sncl, get_event_id(event))
 
         self.update_config()
@@ -96,8 +106,6 @@ class WaveformEntry(AttribDict):
         """
         if config:
             self.config = config
-
-        self.error = None
 
         (self.start_time, self.end_time) = self.config.time_window.calculate_window(
             self.distances.event_time, self.distances.arrivals)
@@ -287,6 +295,9 @@ class WaveformsHandler(SignalingObject):
         config = WaveformEntry.create_config(self)
         for waveform in self.waveforms:
             waveform.update_config(config)
+            # Clear error flag and set loading flag
+            waveform.error = None
+            waveform.loading = True
         self.queue.extend(priority_ids)
         self.queue.extend(other_ids)
         for _ in range(self.num_threads):

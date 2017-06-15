@@ -18,7 +18,7 @@ from pyweed.pyweed_utils import iter_channels, get_preferred_origin, get_preferr
 from pyweed.seismap import Seismap
 from pyweed.gui.EventOptionsWidget import EventOptionsWidget
 from pyweed.gui.StationOptionsWidget import StationOptionsWidget
-from pyweed.gui.TableItems import TableItems
+from pyweed.gui.TableItems import TableItems, Column
 from pyweed.event_options import EventOptions
 from PyQt4.QtCore import pyqtSlot
 
@@ -41,14 +41,14 @@ class EventTableItems(TableItems):
     """
     Defines the event table contents
     """
-    columnNames = [
-        'Id',
-        'Time',
-        'Magnitude',
-        'Longitude',
-        'Latitude',
-        'Depth (km)',
-        'Location'
+    columns = [
+        Column('Id'),
+        Column('Date/Time'),
+        Column('Magnitude'),
+        Column('Longitude'),
+        Column('Latitude'),
+        Column('Depth'),
+        Column('Location'),
     ]
 
     def rows(self, data):
@@ -71,9 +71,9 @@ class EventTableItems(TableItems):
                 self.numericWidget(i),
                 self.stringWidget(time),
                 self.numericWidget(magnitude.mag, "%s %s" % (magnitude.mag, magnitude.magnitude_type)),
-                self.numericWidget(origin.longitude),
-                self.numericWidget(origin.latitude),
-                self.numericWidget(origin.depth / 1000),  # we wish to report in km
+                self.numericWidget(origin.longitude, "%.03f°"),
+                self.numericWidget(origin.latitude, "%.03f°"),
+                self.numericWidget(origin.depth / 1000, "%.02f km"),  # we wish to report in km
                 self.stringWidget(event_description.title()),
             ]
 
@@ -82,15 +82,15 @@ class StationTableItems(TableItems):
     """
     Defines the event table contents
     """
-    columnNames = [
-        'SNCL',
-        'Network',
-        'Station',
-        'Location',
-        'Channel',
-        'Longitude',
-        'Latitude',
-        'Description',
+    columns = [
+        Column('SNCL'),
+        Column('Network'),
+        Column('Station'),
+        Column('Location'),
+        Column('Channel'),
+        Column('Longitude'),
+        Column('Latitude'),
+        Column('Description'),
     ]
 
     def rows(self, data):
@@ -110,8 +110,8 @@ class StationTableItems(TableItems):
                     self.stringWidget(station.code),
                     self.stringWidget(channel.location_code),
                     self.stringWidget(channel.code),
-                    self.numericWidget(channel.longitude),
-                    self.numericWidget(channel.latitude),
+                    self.numericWidget(channel.longitude, "%.03f°"),
+                    self.numericWidget(channel.latitude, "%.03f°"),
                     self.stringWidget(station.site.name),
                 ]
 
@@ -182,6 +182,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             safe_int(prefs.MainWindow.height, 800))
         self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
         self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
+
+        self.manageGetWaveformsButton()
 
     def initializeMap(self):
         LOGGER.info('Setting up main map...')
