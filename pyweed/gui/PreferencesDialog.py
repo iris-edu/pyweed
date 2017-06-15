@@ -11,8 +11,8 @@ class PreferencesDialog(QtGui.QDialog, PreferencesDialog.Ui_PreferencesDialog):
     """
     Dialog window for editing preferences.
     """
-    def __init__(self, pyweed=None):
-        super(PreferencesDialog, self).__init__()
+    def __init__(self, pyweed=None, *args, **kwargs):
+        super(PreferencesDialog, self).__init__(*args, **kwargs)
         self.setupUi(self)
 
         self.pyweed = pyweed

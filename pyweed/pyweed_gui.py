@@ -64,10 +64,10 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
         LOGGER.info('Setting up waveforms dialog...')
-        self.waveformsDialog = WaveformDialog(self)
+        self.waveformsDialog = WaveformDialog(self, self.mainWindow)
 
         # Preferences
-        self.preferencesDialog = PreferencesDialog(self)
+        self.preferencesDialog = PreferencesDialog(self, self.mainWindow)
 
         # Python console
         self.console = ConsoleDialog(self, self.mainWindow)
@@ -159,7 +159,7 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
         # see:  https://pythonprogramming.net/menubar-pyqt-tutorial/
         # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
-        mainMenu = self.mainWindow.menuBar()
+        mainMenu = QtGui.QMenuBar()
         # mainMenu.setNativeMenuBar(False)
 
         fileMenu = mainMenu.addMenu('&File')
@@ -191,6 +191,8 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         aboutPyweedAction.triggered.connect(self.showAboutDialog)
         helpMenu.addAction(aboutPyweedAction)
         helpMenu.addSeparator()
+
+        self.mainWindow.setMenuBar(mainMenu)
 
     def showAboutDialog(self):
         """Display About message box."""
