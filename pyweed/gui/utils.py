@@ -126,3 +126,13 @@ class ComboBoxAdapter(QtCore.QObject):
     @pyqtSlot(int)
     def onChanged(self, index):
         self.changed.emit(self.getValue(index))
+
+
+# QTableWidgetItem subclass type iterator
+_next_type = QtGui.QTableWidgetItem.UserType
+
+class CustomTableWidgetItemMixin(object):
+    def __init__(self, *args, **kwargs):
+        global _next_type
+        _next_type += 1
+        return super(CustomTableWidgetItemMixin, self).__init__(*args, **kwargs, type=_next_type)

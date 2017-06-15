@@ -4,9 +4,10 @@
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+from pyweed.gui.utils import CustomTableWidgetItemMixin
 
 
-class MyNumericTableWidgetItem (QtGui.QTableWidgetItem):
+class MyNumericTableWidgetItem (CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):
     """
     Custom QTableWidgetItem that forces numerical sorting
 
