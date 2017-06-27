@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Dialog containing an IPython console.
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from qtconsole.rich_ipython_widget import RichIPythonWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 from PyQt4 import QtGui

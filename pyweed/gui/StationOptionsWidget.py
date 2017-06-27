@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Station Options
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from PyQt4 import QtGui, QtCore
 from pyweed.gui.uic import StationOptionsWidget
 import logging
@@ -66,7 +77,7 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
     Dialog window for event options used in creating a webservice query.
     """
     def __init__(self, parent=None):
-        super(self.__class__, self).__init__(parent=parent)
+        super(StationOptionsWidget, self).__init__(parent=parent)
         self.setupUi(self)
 
         self.adapter = StationOptionsAdapter()

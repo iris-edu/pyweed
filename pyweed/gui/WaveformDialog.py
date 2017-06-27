@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Dialog for selecting and downloading waveform data
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from PyQt4 import QtGui, QtCore
 from pyweed.gui.uic import WaveformDialog
 from pyweed.waveforms_handler import WaveformsHandler
@@ -211,7 +222,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
     Dialog window for selection and display of waveforms.
     """
     def __init__(self, pyweed, parent=None):
-        super(self.__class__, self).__init__(parent=parent)
+        super(WaveformDialog, self).__init__(parent=parent)
 
         LOGGER.debug('Initializing waveform dialog...')
 

@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 """
 Container for stations.
 
 :copyright:
-    Mazama Science
+    Mazama Science, IRIS
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)

@@ -28,11 +28,6 @@ from obspy.clients.fdsn import Client
 from pyweed.event_options import EventOptions
 from pyweed.station_options import StationOptions
 
-
-__app_name__ = "PyWEED"
-__app_version__ = "0.1.1"
-
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -50,9 +45,6 @@ class NoConsoleLoggingFilter(logging.Filter):
 
 
 class PyWeed(object):
-
-    app_name = __app_name__
-    app_version = __app_version__
 
     client = None
     data_center = None

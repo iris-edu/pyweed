@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Seismap is a subclass of Basemap, specialized for handling seismic data.
 
@@ -5,7 +6,7 @@ Ideas and code borrowed from:
  * https://github.com/matplotlib/basemap/blob/master/examples/allskymap.py
 
 :copyright:
-    Mazama Science
+    Mazama Science, IRIS
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)

@@ -1,17 +1,10 @@
-from obspy.core.utcdatetime import UTCDateTime
-from distutils.util import strtobool
-from logging import getLogger
-from numbers import Number
-from datetime import timedelta
-from future.utils import with_metaclass
-
+# -*- coding: utf-8 -*-
 """
 Helper class for web services.
 
 Options represents a set of key/value pairs (ie. query parameters), internally these are typed values but
 they can be read/written as strings.
 
-@example
 >>> class Test(Options):
 ...     option1 = Option()
 ...     option2 = DateOption()
@@ -24,6 +17,22 @@ they can be read/written as strings.
 UTCDateTime(2012, 1, 1, 0, 0)
 >>> t.get_options(stringify=True)
 {'option1': 'test', 'option2': '2012-01-01'}
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
+from obspy.core.utcdatetime import UTCDateTime
+from distutils.util import strtobool
+from logging import getLogger
+from numbers import Number
+from datetime import timedelta
+from future.utils import with_metaclass
+
+"""
 """
 
 LOGGER = getLogger(__name__)

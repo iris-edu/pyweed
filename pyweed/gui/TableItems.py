@@ -1,5 +1,12 @@
+# -*- coding: utf-8 -*-
 """
 Common library for adding data to a QTableWidget.
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from pyweed.gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem

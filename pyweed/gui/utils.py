@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Various Qt widget utilities
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from PyQt4 import QtGui, QtCore
 from distutils.util import strtobool
 from logging import getLogger

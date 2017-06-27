@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Manage the splash screen
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 import logging
 from PyQt4 import QtGui, QtCore
 

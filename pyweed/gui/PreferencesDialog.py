@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Preferences dialog
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from PyQt4 import QtGui
 from pyweed.gui.uic import PreferencesDialog
 from logging import getLogger
@@ -11,8 +22,8 @@ class PreferencesDialog(QtGui.QDialog, PreferencesDialog.Ui_PreferencesDialog):
     """
     Dialog window for editing preferences.
     """
-    def __init__(self, pyweed=None, *args, **kwargs):
-        super(PreferencesDialog, self).__init__(*args, **kwargs)
+    def __init__(self, pyweed, parent=None):
+        super(PreferencesDialog, self).__init__(parent=parent)
         self.setupUi(self)
 
         self.pyweed = pyweed

@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Station Options
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from pyweed.options import Options, DateOption, FloatOption, Option
 
 
