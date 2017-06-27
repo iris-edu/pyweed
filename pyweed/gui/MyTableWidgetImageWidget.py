@@ -1,8 +1,17 @@
-# Custom widget that embeds an image
-#
-# To be inserted into the QTableWidget with setCellWidget() rather than setItem().
-#
-# http://stackoverflow.com/questions/5553342/adding-images-to-a-qtablewidget-in-pyqt
+# -*- coding: utf-8 -*-
+"""
+Custom widget that embeds an image
+
+To be inserted into the QTableWidget with setCellWidget() rather than setItem().
+
+http://stackoverflow.com/questions/5553342/adding-images-to-a-qtablewidget-in-pyqt
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from PyQt4 import QtGui
 

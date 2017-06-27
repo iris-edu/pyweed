@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Event Options
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from PyQt4 import QtGui, QtCore
 from pyweed.gui.uic import EventOptionsWidget
 import logging
@@ -69,7 +80,7 @@ class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget
     Dialog window for event options used in creating a webservice query.
     """
     def __init__(self, parent=None):
-        super(self.__class__, self).__init__(parent=parent)
+        super(EventOptionsWidget, self).__init__(parent=parent)
         self.setupUi(self)
 
         self.adapter = EventOptionsAdapter()

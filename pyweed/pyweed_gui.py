@@ -23,6 +23,7 @@ import matplotlib
 matplotlib.use('AGG')
 
 # import gui.qrc  # NOQA: F401
+from pyweed import __version__, __app_name__
 from pyweed.gui.MainWindow import MainWindow
 from pyweed.gui.LoggingDialog import LoggingDialog
 from pyweed.events_handler import EventsHandler
@@ -207,13 +208,13 @@ class PyWeedGUI(PyWeed, QtCore.QObject):
         iris_name = "IRIS"
 
         msgBox = QtGui.QMessageBox()
-        msgBox.setWindowTitle("About %s" % self.app_name)
+        msgBox.setWindowTitle("About %s" % __app_name__)
         msgBox.setTextFormat(QtCore.Qt.RichText)
         # msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
         msgBox.setText("<br><br><br>" +
-                       self.app_name +
+                       __app_name__ +
                        " v" +
-                       self.app_version +
+                       __version__ +
                        "<br><br>" +
                        "Pyweed is a cross-platform GUI application for retrieving event-based seismic data." +
                        "<br><br>" +

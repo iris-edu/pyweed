@@ -1,8 +1,17 @@
-# Custom QTableWidgetItem that embeds an image
-#
-# To be inserted into the QTableWidget with setItem().
-#
-# http://stackoverflow.com/questions/14365875/qt-cannot-put-an-image-in-a-table
+# -*- coding: utf-8 -*-
+"""
+Custom QTableWidgetItem that embeds an image
+
+To be inserted into the QTableWidget with setItem().
+
+http://stackoverflow.com/questions/14365875/qt-cannot-put-an-image-in-a-table
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui

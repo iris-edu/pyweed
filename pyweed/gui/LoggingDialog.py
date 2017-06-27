@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Dialog showing logging information.
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from PyQt4 import QtGui
 from pyweed.gui.uic import LoggingDialog
 from pyweed.gui.MyTextEditLoggingHandler import MyTextEditLoggingHandler
@@ -9,7 +20,7 @@ class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
     Dialog window displaying all logs.
     """
     def __init__(self, parent=None):
-        super(self.__class__, self).__init__(parent)
+        super(LoggingDialog, self).__init__(parent=parent)
         self.setupUi(self)
         self.setWindowTitle('Logs')
 

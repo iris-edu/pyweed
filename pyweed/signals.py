@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Base classes standardizing some Qt signals.
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from PyQt4 import QtCore
 
 

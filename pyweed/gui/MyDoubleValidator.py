@@ -1,6 +1,15 @@
-# Custom QDoubleValidator that pays attention to ranges
-#
-# https://gist.github.com/jirivrany/4473639
+# -*- coding: utf-8 -*-
+"""
+Custom QDoubleValidator that pays attention to ranges
+
+https://gist.github.com/jirivrany/4473639
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from sys import float_info
 

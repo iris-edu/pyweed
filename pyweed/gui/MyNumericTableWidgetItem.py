@@ -1,6 +1,15 @@
-# Custom QTableWidgetItem that forces numerical sorting
-#
-# http://stackoverflow.com/questions/25533140/sorting-qtablewidget-items-numerically
+# -*- coding: utf-8 -*-
+"""
+Custom QTableWidgetItem that forces numerical sorting
+
+http://stackoverflow.com/questions/25533140/sorting-qtablewidget-items-numerically
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui

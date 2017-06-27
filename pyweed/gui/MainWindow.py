@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Main window
 
@@ -9,6 +10,8 @@ Main window
 """
 
 from __future__ import (absolute_import, division, print_function)
+
+from pyweed import __version__, __app_name__
 
 from PyQt4 import QtGui
 from pyweed.gui.uic import MainWindow
@@ -122,7 +125,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     stationTableItems = None
 
     def __init__(self, pyweed):
-        super(self.__class__, self).__init__()
+        super(MainWindow, self).__init__()
         self.setupUi(self)
         self.pyweed = pyweed
 
@@ -130,7 +133,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         prefs = self.pyweed.preferences
 
         # Set MainWindow properties
-        self.setWindowTitle('%s version %s' % (self.pyweed.app_name, self.pyweed.app_version))
+        self.setWindowTitle('%s version %s' % (__app_name__, __version__))
 
         # Common code for initializing event/station dock widgets
         def initializeOptionsWidget(widget, options, dockWidget, toggle):
