@@ -64,6 +64,8 @@ PHASES = [
     Phase('S', 'S wave arrival'),
     Phase(EVENT_TIME_PHASE, 'Event time')
 ]
+# Actual phase values retrieved from TauP, this should give us a good P and S value for any input (I hope!)
+TAUP_PHASES = ['P', 'PKIKP', 'Pdiff', 'S', 'SKIKS', 'SKS', 'p', 's']
 
 
 def manageCache(downloadDir, cacheSize):
@@ -290,7 +292,7 @@ def calculate_distances(event, station):
     arrivals = TAUP.get_travel_times(
         origin.depth / 1000,
         distaz['a12'],
-        ['tts+', 'ttp+']  # Get P and S arrivals
+        TAUP_PHASES
     )
 
     # From the travel time and origin, calculate the actual first arrival time for each basic phase type
