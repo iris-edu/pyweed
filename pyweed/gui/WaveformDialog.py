@@ -39,7 +39,7 @@ class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem)
     checkedText = '☑'
     uncheckedText = '☐'
     fontSize = 36
-    checkedBackground = QtGui.QBrush(QtGui.QColor(0, 255, 0, 128))
+    checkedBackground = QtGui.QBrush(QtGui.QColor(0, 0, 0, 16))
     uncheckedBackground = QtGui.QBrush(QtCore.Qt.NoBrush)
 
     def __init__(self, value):
@@ -47,7 +47,7 @@ class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem)
         self.setKeep(value)
         # Use a large font size for the checkboxes
         font = QtGui.QFont()
-        font.setPointSize(36)
+        font.setPointSize(self.fontSize)
         self.setFont(font)
 
     def keep(self):
@@ -265,6 +265,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadPushButton.clicked.connect(self.onDownloadPushButton)
         self.savePushButton.clicked.connect(self.onSavePushButton)
         self.saveDirectoryPushButton.clicked.connect(self.getWaveformDirectory)
+        self.saveDirectoryBrowseToolButton.clicked.connect(self.browseWaveformDirectory)
 
         self.saveFormatAdapter.changed.connect(self.resetSave)
 
@@ -653,7 +654,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             QtGui.QMessageBox.critical(
                 self,
                 "Error",
-                e.message
+                str(e)
             )
         finally:
             self.updateToolbars()
@@ -676,6 +677,14 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             self.waveformDirectory = newDirectory
             self.saveDirectoryPushButton.setText(self.waveformDirectory)
             self.resetSave()
+
+    @QtCore.pyqtSlot()
+    def browseWaveformDirectory(self):
+        """
+        This function is triggered whenever the user presses the "browse" button.
+        """
+        url = QtCore.QUrl.fromLocalFile(self.waveformDirectory)
+        QtGui.QDesktopServices.openUrl(url)
 
     def loadPreferences(self):
         """
