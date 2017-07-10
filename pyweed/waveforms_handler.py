@@ -79,6 +79,7 @@ class WaveformEntry(AttribDict):
 
     def __init__(self, event, network, station, channel, *args, **kwargs):
         super(WaveformEntry, self).__init__(*args, **kwargs)
+
         self.event_ref = weakref.ref(event)
         self.network_ref = weakref.ref(network)
         self.station_ref = weakref.ref(station)
@@ -87,9 +88,6 @@ class WaveformEntry(AttribDict):
         if not self.config:
             raise Exception("No config!")
 
-        if not self.distances:
-            self.distances = calculate_distances(event, station)
-
         self.sncl = get_sncl(network, station, channel)
         self.event_time = get_event_time_str(event)
         self.event_description = get_event_description(event)
@@ -97,6 +95,10 @@ class WaveformEntry(AttribDict):
         self.event_mag = "%s%s" % (mag.mag, mag.magnitude_type)
         self.event_mag_value = mag.mag
         self.waveform_id = '%s_%s' % (self.sncl, get_event_id(event))
+
+        if not self.distances:
+            LOGGER.warning("Uh oh, recalculating distances for %s", self.waveform_id)
+            self.distances = calculate_distances(event, station)
 
         self.update_config()
 
