@@ -400,10 +400,10 @@ class WaveformsHandler(SignalingObject):
         Return a SACTrace based on the given stream, containing metadata headers from the waveform
         """
         tr = SACTrace.from_obspy_trace(st[0])
-        tr.kevnm = waveform.event_name[:16]
+        tr.kevnm = waveform.event_description[:16]
         event = waveform.event_ref()
         if not event:
-            LOGGER.warn("Lost reference to event %s", waveform.event_name)
+            LOGGER.warn("Lost reference to event %s", waveform.event_description)
         else:
             origin = get_preferred_origin(waveform.event_ref())
             if origin:

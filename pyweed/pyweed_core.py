@@ -44,7 +44,7 @@ class NoConsoleLoggingFilter(logging.Filter):
         return True
 
 
-class PyWeed(object):
+class PyWeedCore(object):
 
     client = None
     data_center = None
@@ -57,7 +57,7 @@ class PyWeed(object):
     selected_station_ids = None
 
     def __init__(self):
-        super(PyWeed, self).__init__()
+        super(PyWeedCore, self).__init__()
         self.configure_logging()
         self.event_options = EventOptions()
         self.station_options = StationOptions()
@@ -220,5 +220,5 @@ class PyWeed(object):
 
 
 if __name__ == "__main__":
-    pyweed = PyWeed()
+    pyweed = PyWeedCore()
     # Do something?

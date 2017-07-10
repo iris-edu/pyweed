@@ -31,12 +31,12 @@ from pyweed.stations_handler import StationsHandler
 from pyweed.gui.WaveformDialog import WaveformDialog
 from pyweed.gui.ConsoleDialog import ConsoleDialog
 from pyweed.gui.PreferencesDialog import PreferencesDialog
-from pyweed.pyweed import PyWeed
+from pyweed.pyweed_core import PyWeedCore
 
 LOGGER = logging.getLogger(__name__)
 
 
-class PyWeedGUI(PyWeed, QtCore.QObject):
+class PyWeedGUI(PyWeedCore, QtCore.QObject):
 
     # We need to define mainWindow since we may check it before we are fully initialized
     mainWindow = None

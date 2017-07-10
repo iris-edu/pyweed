@@ -211,11 +211,11 @@
           <number>2</number>
          </property>
          <item>
-          <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,1">
+          <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0,0">
            <property name="verticalSpacing">
             <number>2</number>
            </property>
-           <item row="0" column="2">
+           <item row="0" column="3">
             <spacer name="horizontalSpacer_3">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -275,6 +275,19 @@
              </property>
              <property name="text">
               <string>Directory</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QToolButton" name="saveDirectoryBrowseToolButton">
+             <property name="text">
+              <string>Browse</string>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
              </property>
             </widget>
            </item>
