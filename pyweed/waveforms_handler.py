@@ -15,17 +15,18 @@ import os
 from obspy import UTCDateTime
 from pyweed.signals import SignalingThread, SignalingObject
 import collections
-from PyQt4 import QtCore
+from PyQt4 import QtCore, QtGui
 import obspy
 from logging import getLogger
 import matplotlib
 import weakref
-from pyweed.pyweed_utils import get_sncl, get_event_id, calculate_distances, get_event_name, TimeWindow,\
-    get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS, get_event_time_str, get_event_mag_str,\
-    get_event_description
+from pyweed.pyweed_utils import get_sncl, get_event_id, TimeWindow,\
+    get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS,\
+    get_event_description, get_arrivals, format_time_str, get_distance, get_service_url
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.sac.sactrace import SACTrace
 from obspy.core.stream import Stream
+import concurrent.futures
 
 LOGGER = getLogger(__name__)
 
@@ -40,20 +41,31 @@ class WaveformEntry(AttribDict):
         network_ref=None,
         station_ref=None,
         channel_ref=None,
-        # Lazy value of calculated_distances
-        distances=None,
-        # Value from create_config()
-        config=None,
+        # Distance from event to station
+        distance=None,
+        # Phase arrivals
+        arrivals=None,
+        # Timing information
+        event_time=None,
+        start_time=None,
+        end_time=None,
+        start_string=None,
+        end_string=None,
         # Reflects user checkbox in the table
         keep=True,
         # Tracking IDs
         waveform_id=None,
         # Other table display values
         sncl=None,
-        event_time=None,
+        event_time_str=None,
         event_description=None,
         event_mag=None,
         event_mag_value=None,
+        event_depth=None,
+        # Base directory to download files to (from WaveformsHandler)
+        download_dir=None,
+        # Time window settings (from WaveformHandler)
+        time_window=None,
         # Base filename for mseed, image, etc.
         base_filename=None,
         # Full paths
@@ -67,16 +79,6 @@ class WaveformEntry(AttribDict):
         error=None,
     )
 
-    @classmethod
-    def create_config(cls, waveform_handler):
-        """
-        Generate a WaveformEntry.config value from WaveformHandler
-        """
-        return dict(
-            download_dir=waveform_handler.downloadDir,
-            time_window=waveform_handler.time_window
-        )
-
     def __init__(self, event, network, station, channel, *args, **kwargs):
         super(WaveformEntry, self).__init__(*args, **kwargs)
 
@@ -85,46 +87,50 @@ class WaveformEntry(AttribDict):
         self.station_ref = weakref.ref(station)
         self.channel_ref = weakref.ref(channel)
 
-        if not self.config:
-            raise Exception("No config!")
-
         self.sncl = get_sncl(network, station, channel)
-        self.event_time = get_event_time_str(event)
+
         self.event_description = get_event_description(event)
+        origin = get_preferred_origin(event)
+        self.event_time = origin.time
+        self.event_time_str = format_time_str(origin.time)
+        self.event_depth = origin.depth / 1000
         mag = get_preferred_magnitude(event)
         self.event_mag = "%s%s" % (mag.mag, mag.magnitude_type)
         self.event_mag_value = mag.mag
         self.waveform_id = '%s_%s' % (self.sncl, get_event_id(event))
 
-        if not self.distances:
-            LOGGER.warning("Uh oh, recalculating distances for %s", self.waveform_id)
-            self.distances = calculate_distances(event, station)
+        self.distance = get_distance(
+            origin.latitude, origin.longitude,
+            station.latitude, station.longitude)
 
-        self.update_config()
-
-    def update_config(self, config=None):
+    def update_handler_values(self, waveform_handler):
         """
-        Called with something about the config (usually the time window offsets) changes.
-        Recalculates various dependent values (eg. mseed and image filenames)
+        Update any values that come from the WaveformHander
         """
-        if config:
-            self.config = config
+        self.download_dir = waveform_handler.downloadDir
+        self.time_window = waveform_handler.time_window
 
-        (self.start_time, self.end_time) = self.config.time_window.calculate_window(
-            self.distances.event_time, self.distances.arrivals)
+    def prepare(self):
+        """
+        Calculate (or recalculate) values in preparation for doing work
+        """
+        if not self.arrivals:
+            self.arrivals = get_arrivals(self.distance, self.event_depth)
 
+        (self.start_time, self.end_time) = self.time_window.calculate_window(
+            self.event_time, self.arrivals)
         self.start_string = UTCDateTime(self.start_time).format_iris_web_service().replace(':', '_')
         self.end_string = UTCDateTime(self.end_time).format_iris_web_service().replace(':', '_')
 
         self.base_filename = "%s_%s_%s" % (self.sncl, self.start_string, self.end_string)
-        self.mseed_path = os.path.join(self.config.download_dir, "%s.mseed" % self.base_filename)
-        self.image_path = os.path.join(self.config.download_dir, "%s.png" % self.base_filename)
+        self.mseed_path = os.path.join(self.download_dir, "%s.mseed" % self.base_filename)
+        self.image_path = os.path.join(self.download_dir, "%s.png" % self.base_filename)
 
         self.check_files()
 
     def check_files(self):
         """
-        See whether the backing files for this waveform exist
+        After calculating the paths for downloaded files, check to see if they're already there
         """
         self.mseed_exists = os.path.exists(self.mseed_path)
         self.image_exists = os.path.exists(self.image_path)
@@ -140,69 +146,236 @@ class WaveformResult(object):
         self.result = result
 
 
-class WaveformLoader(SignalingThread):
-    """
-    Thread to download waveform data and generate an image
-    """
+# class WaveformLoader(QtCore.QRunnable):
+#     """
+#     Thread to download waveform data and generate an image
+#     """
+#
+#     def __init__(self, client, waveform, preferences):
+#         """
+#         Initialization.
+#         """
+#         # Keep a reference to globally shared components
+#         self.client = client
+#         self.waveform = waveform
+#         self.downloadDir = preferences.Waveforms.downloadDir
+#         # TODO:  plot_width, plot_height should come from preferences
+#         self.plot_width = 600
+#         self.plot_height = 120  # This this must be >100!
+#         super(WaveformLoader, self).__init__()
+#
+#     def run(self):
+#         """
+#         Make a webservice request for events using the passed in options.
+#         """
+#         waveform_id = self.waveform.waveform_id
+#         try:
+#
+#             LOGGER.debug("Loading waveform: %s", waveform_id)
+#
+#             mseedFile = self.waveform.mseed_path
+#             LOGGER.debug("%s save as MiniSEED", waveform_id)
+#
+#             # Load data from disk or network as appropriate
+#             if os.path.exists(mseedFile):
+#                 LOGGER.info("Loading waveform data for %s from %s", waveform_id, mseedFile)
+#                 st = obspy.read(mseedFile)
+#             else:
+#                 LOGGER.info("Retrieving waveform data for %s", waveform_id)
+#                 (network, station, location, channel) = self.waveform.sncl.split('.')
+#                 st = self.client.get_waveforms(
+#                     network, station, location, channel, self.waveform.start_string, self.waveform.end_string)
+#                 # Write to file
+#                 st.write(mseedFile, format="MSEED")
+#
+#             # Generate image if necessary
+#             imageFile = self.waveform.image_path
+#             if not os.path.exists(imageFile):
+#                 LOGGER.info('Plotting waveform image to %s', imageFile)
+#                 # In order to really customize the plotting, we need to return the figure and modify it
+#                 h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
+#                 # Resize the subplot to a hard size, because otherwise it will do it inconsistently
+#                 h.subplots_adjust(bottom=.2, left=.1, right=.95, top=.95)
+#                 # Remove the title
+#                 for c in h.get_children():
+#                     if isinstance(c, matplotlib.text.Text):
+#                         c.remove()
+#                 # Save with transparency
+#                 h.savefig(imageFile)
+#                 matplotlib.pyplot.close(h)
+#
+#             self.done.emit(WaveformResult(waveform_id, imageFile))
+#
+#         except Exception as e:
+#             LOGGER.error("Error downloading %s", waveform_id, exc_info=True)
+#             self.done.emit(WaveformResult(waveform_id, e))
 
-    def __init__(self, client, waveform, preferences):
+
+def load_waveform(client, waveform):
+    """
+    Download the given waveform data and generate an image. This is a standalone function so we can
+    run it in a separate thread. This modifies the waveform entry and returns a dummy value, or
+    raises an exception on any error.
+    """
+    plot_width = 600
+    plot_height = 120
+
+    waveform_id = waveform.waveform_id
+    LOGGER.debug("Loading waveform: %s (%s)", waveform_id, QtCore.QThread.currentThreadId())
+
+    try:
+        waveform.prepare()
+
+        if waveform.image_exists:
+            # No download needed
+            LOGGER.info("Waveform %s already has an image" % waveform_id)
+            return True
+
+        mseedFile = waveform.mseed_path
+        LOGGER.debug("%s save as MiniSEED", waveform_id)
+
+        # Load data from disk or network as appropriate
+        if os.path.exists(mseedFile):
+            LOGGER.info("Loading waveform data for %s from %s", waveform_id, mseedFile)
+            st = obspy.read(mseedFile)
+        else:
+            (network, station, location, channel) = waveform.sncl.split('.')
+            service_url = get_service_url(client, 'dataselect', {
+                "network": network, "station": station, "location": location, "channel": channel,
+                "starttime": waveform.start_time, "endtime": waveform.end_time,
+            })
+            LOGGER.info("Retrieving waveform data for %s from %s", waveform_id, service_url)
+            st = client.get_waveforms(
+                network, station, location, channel, waveform.start_string, waveform.end_string)
+            # Write to file
+            st.write(mseedFile, format="MSEED")
+
+        # Generate image if necessary
+        imageFile = waveform.image_path
+        if not os.path.exists(imageFile):
+            LOGGER.debug('Plotting waveform image to %s', imageFile)
+            # In order to really customize the plotting, we need to return the figure and modify it
+            h = st.plot(size=(plot_width, plot_height), handle=True)
+            # Resize the subplot to a hard size, because otherwise it will do it inconsistently
+            h.subplots_adjust(bottom=.2, left=.1, right=.95, top=.95)
+            # Remove the title
+            for c in h.get_children():
+                if isinstance(c, matplotlib.text.Text):
+                    c.remove()
+            # Save with transparency
+            h.savefig(imageFile)
+            matplotlib.pyplot.close(h)
+
+        waveform.check_files()
+
+    except Exception as e:
+        # Most common error is "no data" TODO: see https://github.com/obspy/obspy/issues/1656
+        if str(e).startswith("No data"):
+            waveform.error = "No data available"
+        else:
+            waveform.error = str(e)
+        # Reraise the exception to signal an error to the caller
+        raise
+
+    finally:
+        # Mark as finished loading
+        waveform.loading = False
+
+    return True
+
+
+# class WaveformsLoader(QtCore.QRunnable):
+#     """
+#     Thread to download waveform data and generate an image
+#     """
+#     progress = QtCore.pyqtSignal(object)
+#
+#     def __init__(self, client, waveforms, preferences):
+#         """
+#         Initialization.
+#         """
+#         # Keep a reference to globally shared components
+#         self.client = client
+#         self.waveforms = waveforms
+#         self.requests = {}
+#         super(WaveformsLoader, self).__init__()
+#
+#     def run(self):
+#         """
+#         Make a webservice request for events using the passed in options.
+#         """
+#         self.cancel()
+#         with concurrent.futures.ThreadPoolExecutor(5) as executor:
+#             for waveform in self.waveforms:
+#                 self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
+#             for result in concurrent.futures.as_completed(self.futures):
+#                 waveform_id = self.futures[result]
+#                 try:
+#                     self.progress.emit(WaveformResult(waveform_id, result.result()))
+#                 except Exception as e:
+#                     self.progress.emit(WaveformResult(waveform_id, e))
+#                 self
+#         self.done.emit(None)
+#
+#     def cancel(self):
+#         """
+#         Cancel any outstanding tasks
+#         """
+#         for future in self.futures:
+#             if not future.done():
+#                 future.cancel()
+#         self.futures = {}
+
+
+class WaveformsLoadingWorker(QtCore.QObject):
+    """
+    Worker to download a set of waveform data and generate images, this should run in its own separate thread.
+    """
+    progress = QtCore.pyqtSignal(object)
+    done = QtCore.pyqtSignal(object)
+
+    def __init__(self, client, waveforms):
         """
         Initialization.
         """
         # Keep a reference to globally shared components
         self.client = client
-        self.waveform = waveform
-        self.downloadDir = preferences.Waveforms.downloadDir
-        # TODO:  plot_width, plot_height should come from preferences
-        self.plot_width = 600
-        self.plot_height = 120  # This this must be >100!
-        super(WaveformLoader, self).__init__()
+        self.waveforms = waveforms
+        self.futures = None
+        super(WaveformsLoadingWorker, self).__init__()
 
-    def run(self):
+    @QtCore.pyqtSlot()
+    def start(self):
         """
-        Make a webservice request for events using the passed in options.
+        Try to download all the waveforms using a ThreadPool
         """
-        waveform_id = self.waveform.waveform_id
-        try:
+        QtCore.QThread.currentThread().setPriority(QtCore.QThread.LowestPriority)
+        self.cancel()
+        self.futures = {}
+        with concurrent.futures.ThreadPoolExecutor(5) as executor:
+            for waveform in self.waveforms:
+                # Dictionary to look up the waveform id by Future
+                self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
+            # Iterate through Futures as they complete
+            for result in concurrent.futures.as_completed(self.futures):
+                waveform_id = self.futures[result]
+                try:
+                    self.progress.emit(WaveformResult(waveform_id, result.result()))
+                except Exception as e:
+                    self.progress.emit(WaveformResult(waveform_id, e))
+        self.done.emit(None)
 
-            LOGGER.debug("Loading waveform: %s", waveform_id)
-
-            mseedFile = self.waveform.mseed_path
-            LOGGER.debug("%s save as MiniSEED", waveform_id)
-
-            # Load data from disk or network as appropriate
-            if os.path.exists(mseedFile):
-                LOGGER.info("Loading waveform data for %s from %s", waveform_id, mseedFile)
-                st = obspy.read(mseedFile)
-            else:
-                LOGGER.info("Retrieving waveform data for %s", waveform_id)
-                (network, station, location, channel) = self.waveform.sncl.split('.')
-                st = self.client.get_waveforms(
-                    network, station, location, channel, self.waveform.start_string, self.waveform.end_string)
-                # Write to file
-                st.write(mseedFile, format="MSEED")
-
-            # Generate image if necessary
-            imageFile = self.waveform.image_path
-            if not os.path.exists(imageFile):
-                LOGGER.info('Plotting waveform image to %s', imageFile)
-                # In order to really customize the plotting, we need to return the figure and modify it
-                h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
-                # Resize the subplot to a hard size, because otherwise it will do it inconsistently
-                h.subplots_adjust(bottom=.2, left=.1, right=.95, top=.95)
-                # Remove the title
-                for c in h.get_children():
-                    if isinstance(c, matplotlib.text.Text):
-                        c.remove()
-                # Save with transparency
-                h.savefig(imageFile)
-                matplotlib.pyplot.close(h)
-
-            self.done.emit(WaveformResult(waveform_id, imageFile))
-
-        except Exception as e:
-            LOGGER.error("Error downloading %s", waveform_id, exc_info=True)
-            self.done.emit(WaveformResult(waveform_id, e))
+    @QtCore.pyqtSlot()
+    def cancel(self):
+        """
+        Cancel any outstanding tasks
+        """
+        if self.futures:
+            for future in self.futures:
+                if not future.done():
+                    LOGGER.debug("Cancelling unexecuted future")
+                    future.cancel()
+        self.futures = None
 
 
 class WaveformsHandler(SignalingObject):
@@ -237,6 +410,11 @@ class WaveformsHandler(SignalingObject):
         self.threads = {}
         # Number of threads to track
         self.num_threads = 5
+        # Loader component
+        self.waveforms_loader = None
+        # Thread to run the loader in
+        self.thread = None
+        self.requests = None
 
         # A TimeWindow object giving offsets and phase arrivals
         self.time_window = TimeWindow()
@@ -255,21 +433,11 @@ class WaveformsHandler(SignalingObject):
         # Get the events as a list
         events = list(pyweed.iter_selected_events())
 
-        # Need to calculate distances, we can do this per-station to save some time
-        distances = {}
-        # Common config for each waveform
-        config = WaveformEntry.create_config(self)
-
         # Iterate through the stations
         for (network, station, channel) in pyweed.iter_selected_stations():
             for event in events:
-                # Lazy calculate distances based on station
-                event_station_id = '.'.join((network.code, station.code, get_event_id(event)))
-                if event_station_id not in distances:
-                    distances[event_station_id] = calculate_distances(event, station)
                 waveform = WaveformEntry(
-                    event, network, station, channel,
-                    distances=distances[event_station_id], config=config
+                    event, network, station, channel
                 )
                 self.waveforms.append(waveform)
                 self.waveforms_by_id[waveform.waveform_id] = waveform
@@ -278,11 +446,17 @@ class WaveformsHandler(SignalingObject):
         """
         Clear the download queue and release any active threads
         """
-        LOGGER.info('Clearing existing downloads')
+        LOGGER.debug('Clearing existing downloads')
         # for thread in self.threads.values():
         #     thread.quit()
         # self.threads = {}
         self.queue.clear()
+        if self.waveforms_loader:
+            self.waveforms_loader.cancel()
+        if self.thread:
+            self.thread.quit()
+            self.thread.wait()
+            self.thread = None
 
     def download_waveforms(self, priority_ids, other_ids, time_window):
         """
@@ -293,62 +467,43 @@ class WaveformsHandler(SignalingObject):
         LOGGER.debug("Priority IDs: %s" % (priority_ids,))
         LOGGER.debug("Other IDs: %s" % (other_ids,))
 
-        # All the variable information should be captured in the config
+        # Prepare the waveform entries
         self.time_window = time_window
-        config = WaveformEntry.create_config(self)
         for waveform in self.waveforms:
-            waveform.update_config(config)
+            waveform.update_handler_values(self)
             # Clear error flag and set loading flag
             waveform.error = None
             waveform.loading = True
-        self.queue.extend(priority_ids)
-        self.queue.extend(other_ids)
-        for _ in range(self.num_threads):
-            self.download_next_waveform()
 
-    def download_next_waveform(self):
-        """
-        Start downloading the next waveform on the queue
-        """
-        while True:
-            try:
-                waveform_id = self.queue.popleft()
-            except IndexError:
-                LOGGER.debug("Download queue is empty")
-                if len(self.threads) == 0:
-                    self.done.emit(None)
-                return
-            try:
-                self.download_waveform(waveform_id)
-                return
-            except Exception as e:
-                LOGGER.error(e)
+        # Get the waveforms ordered by priority
+        waveform_ids = list(priority_ids) + list(other_ids)
+        waveforms = [self.get_waveform(waveform_id) for waveform_id in waveform_ids]
 
-    def download_waveform(self, waveform_id):
-        """
-        Start download of a particular waveform
-        """
-        if waveform_id in self.threads:
-            raise Exception("Already a thread downloading %s" % waveform_id)
-        waveform = self.get_waveform(waveform_id)
-        if not waveform:
-            raise Exception("No such waveform %s" % waveform_id)
-        if waveform.image_exists:
-            # No download needed, but we still want to emit the result event
-            self.progress.emit(WaveformResult(waveform_id, waveform.image_path))
-            raise Exception("Waveform %s already has an image" % waveform_id)
-        LOGGER.debug("Spawning download thread for waveform %s", waveform_id)
-        thread = WaveformLoader(self.client, waveform, self.preferences)
-        thread.done.connect(self.on_downloaded)
-        self.threads[waveform_id] = thread
-        thread.start()
+        # Create a worker to load the data in a separate thread
+        self.thread = QtCore.QThread()
+        self.waveforms_loader = WaveformsLoadingWorker(self.client, waveforms)
+        self.waveforms_loader.moveToThread(self.thread)
+        self.waveforms_loader.progress.connect(self.on_downloaded)
+        self.waveforms_loader.done.connect(self.on_all_downloaded)
+        self.thread.started.connect(self.waveforms_loader.start)
+        self.thread.start()
 
     def on_downloaded(self, result):
-        LOGGER.debug("Downloaded waveform %s", result.waveform_id)
-        if result.waveform_id in self.threads:
-            del self.threads[result.waveform_id]
+        """
+        Called for each downloaded waveform.
+
+        :param result: a `WaveformResult`
+        """
+        LOGGER.debug("Downloaded waveform %s (%s)", result.waveform_id, QtCore.QThread.currentThreadId())
         self.progress.emit(result)
-        self.download_next_waveform()
+
+    def on_all_downloaded(self, result):
+        LOGGER.debug("All waveforms downloaded  (%s)", QtCore.QThread.currentThreadId())
+        self.thread.quit()
+        self.thread.wait()
+        self.thread = None
+        LOGGER.debug("Download thread exited")
+        self.done.emit(result)
 
     def get_waveform(self, waveform_id):
         """

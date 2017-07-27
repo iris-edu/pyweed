@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>929</width>
+    <width>1212</width>
     <height>724</height>
    </rect>
   </property>
@@ -67,13 +67,6 @@
            <property name="verticalSpacing">
             <number>2</number>
            </property>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>secs before</string>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="secondsBeforeLabel">
              <property name="text">
@@ -81,17 +74,42 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="secondsAfterLabel">
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
              <property name="text">
-              <string>End:</string>
+              <string>secs before</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>secs after</string>
+           <item row="1" column="3">
+            <widget class="QComboBox" name="secondsAfterPhaseComboBox"/>
+           </item>
+           <item row="0" column="3">
+            <widget class="QComboBox" name="secondsBeforePhaseComboBox"/>
+           </item>
+           <item row="0" column="4">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="secondsAfterSpinBox">
+             <property name="maximum">
+              <number>21600</number>
+             </property>
+             <property name="singleStep">
+              <number>100</number>
+             </property>
+             <property name="value">
+              <number>600</number>
              </property>
             </widget>
            </item>
@@ -108,37 +126,19 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
-            <widget class="QSpinBox" name="secondsAfterSpinBox">
-             <property name="maximum">
-              <number>21600</number>
-             </property>
-             <property name="singleStep">
-              <number>100</number>
-             </property>
-             <property name="value">
-              <number>600</number>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>secs after</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="4">
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+           <item row="1" column="0">
+            <widget class="QLabel" name="secondsAfterLabel">
+             <property name="text">
+              <string>End:</string>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item row="0" column="3">
-            <widget class="QComboBox" name="secondsBeforePhaseComboBox"/>
-           </item>
-           <item row="1" column="3">
-            <widget class="QComboBox" name="secondsAfterPhaseComboBox"/>
+            </widget>
            </item>
           </layout>
          </item>
@@ -215,28 +215,8 @@
            <property name="verticalSpacing">
             <number>2</number>
            </property>
-           <item row="0" column="3">
-            <spacer name="horizontalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="saveDirectoryLabel">
-             <property name="text">
-              <string>To:</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="1">
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
              <item>
               <widget class="QComboBox" name="saveFormatComboBox"/>
              </item>
@@ -245,15 +225,16 @@
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
               </spacer>
              </item>
             </layout>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="saveDirectoryLabel">
+             <property name="text">
+              <string>To:</string>
+             </property>
+            </widget>
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="saveFormatLabel">
@@ -263,48 +244,55 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QPushButton" name="saveDirectoryPushButton">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
-             </property>
-             <property name="text">
-              <string>Directory</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QToolButton" name="saveDirectoryBrowseToolButton">
-             <property name="text">
-              <string>Browse</string>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>16</width>
-               <height>16</height>
-              </size>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0,1">
+             <item>
+              <widget class="QPushButton" name="saveDirectoryPushButton">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton { text-align: left; }</string>
+               </property>
+               <property name="text">
+                <string>Directory</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="saveDirectoryBrowseToolButton">
+               <property name="text">
+                <string>Open</string>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
-         </item>
-         <item>
-          <spacer name="verticalSpacer">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-          </spacer>
          </item>
          <item>
           <widget class="QWidget" name="widget_6" native="true">
@@ -356,6 +344,9 @@
    <item>
     <widget class="QFrame" name="selectionTableFrame">
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="spacing">
+       <number>2</number>
+      </property>
       <property name="leftMargin">
        <number>2</number>
       </property>
