@@ -187,9 +187,13 @@ def get_event_name(event):
     return "%s | %s | %s" % (time_str, mag_str, description)
 
 
+def format_time_str(time):
+    return time.isoformat(sep=' ').split('.')[0]
+
+
 def get_event_time_str(event):
     origin = get_preferred_origin(event)
-    return origin.time.isoformat(sep=' ').split('.')[0]
+    return format_time_str(origin.time)
 
 
 def get_event_mag_str(event):
@@ -251,20 +255,23 @@ class TimeWindow(object):
         Given an event time and a dictionary of arrival times (see Distances below)
         calculate the full time window
         """
-        start_arrival = arrivals.get(self.start_phase, event_time)
-        end_arrival = arrivals.get(self.end_phase, event_time)
         return (
-            start_arrival - self.start_offset,
-            end_arrival + self.end_offset
+            # Start time
+            event_time + arrivals.get(self.start_phase, 0) - self.start_offset,
+            # End time
+            event_time + arrivals.get(self.end_phase, 0) + self.end_offset,
         )
 
-
-class Distances(AttribDict):
-    defaults = dict(
-        distance=0,
-        azimuth=0,
-        arrivals={}
-    )
+    def __eq__(self, other):
+        """
+        Compare two TimeWindows
+        """
+        if not isinstance(other, TimeWindow):
+            return False
+        return (other.start_offset == self.start_offset and
+                other.end_offset == self.end_offset and
+                other.start_phase == self.start_phase and
+                other.end_phase == self.end_phase)
 
 
 def get_distance(lat1, lon1, lat2, lon2):
@@ -275,23 +282,16 @@ def get_distance(lat1, lon1, lat2, lon2):
     return dist['a12']
 
 
-def calculate_distances(event, station):
+def get_arrivals(distance, event_depth):
     """
-    Calculate distance, azimuth, arrival time, etc.
+    Calculate phase arrival times
 
-    :param event: an Obspy Event
-    :param station: an Obspy Station
+    :param distance: distance in degrees
+    :param event_depth: event depth in km
     """
-    origin = get_preferred_origin(event)
-    if not origin:
-        raise Exception("No origin")
-    distaz = GEOD.Inverse(
-        origin.latitude, origin.longitude,
-        station.latitude, station.longitude)
-
     arrivals = TAUP.get_travel_times(
-        origin.depth / 1000,
-        distaz['a12'],
+        event_depth,
+        distance,
         TAUP_PHASES
     )
 
@@ -302,14 +302,9 @@ def calculate_distances(event, station):
         # We assume this matches a Phase.name defined in PHASES
         phase_name = arrival.name[0].upper()
         if phase_name not in first_arrivals:
-            first_arrivals[phase_name] = origin.time + arrival.time
+            first_arrivals[phase_name] = arrival.time
 
-    return Distances(
-        distance=distaz['a12'],
-        azimuth=distaz['azi1'],
-        event_time=origin.time,
-        arrivals=first_arrivals
-    )
+    return first_arrivals
 
 
 def get_bounding_circle(lat, lon, radius, num_points=36):

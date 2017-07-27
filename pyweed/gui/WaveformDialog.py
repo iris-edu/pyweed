@@ -135,13 +135,13 @@ class WaveformTableItems(TableItems):
                 self.stringWidget(waveform.waveform_id),
                 self.keepWidget(waveform.keep,
                                 textAlignment=QtCore.Qt.AlignCenter),
-                self.stringWidget(waveform.event_time),
+                self.stringWidget(waveform.event_time_str),
                 self.stringWidget(waveform.event_description),
                 self.numericWidget(waveform.event_mag_value, waveform.event_mag,
                                    textAlignment=QtCore.Qt.AlignCenter),
                 self.stringWidget(waveform.sncl,
                                   textAlignment=QtCore.Qt.AlignCenter),
-                self.numericWidget(waveform.distances.distance, '%.02f°',
+                self.numericWidget(waveform.distance, '%.02f°',
                                    textAlignment=QtCore.Qt.AlignCenter),
                 self.waveformWidget(waveform),
             ]
@@ -254,8 +254,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Waveforms
         self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.client)
-        self.waveformsHandler.progress.connect(self.onWaveformDownloaded)
-        self.waveformsHandler.done.connect(self.onAllDownloaded)
+        self.waveformsHandler.progress.connect(self.onWaveformDownloaded, QtCore.Qt.QueuedConnection)
+        self.waveformsHandler.done.connect(self.onAllDownloaded, QtCore.Qt.QueuedConnection)
 
         # Connect signals associated with the main table
         # self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents)
@@ -282,6 +282,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Dictionary of filter values
         self.filters = {}
+
+        # Information about download progress
+        self.downloadCount = 0
+        self.downloadCompleted = 0
 
         LOGGER.debug('Finished initializing waveform dialog')
 
@@ -314,15 +318,7 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.resetDownload()
 
-        self.downloadStatusLabel.setText("Calculating distances...")
-        self.downloadStatusLabel.repaint()
-        QtGui.QApplication.processEvents()
-
         self.waveformsHandler.create_waveforms(self.pyweed)
-
-        self.downloadStatusLabel.setText("")
-        self.downloadStatusLabel.repaint()
-        QtGui.QApplication.processEvents()
 
         # Add event-SNCL combinations to the selection table
         self.loadSelectionTable(initial=True)
@@ -432,6 +428,9 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         if self.waveformsDownloadStatus == STATUS_READY:
             # Start the download
             self.downloadWaveformData()
+        elif self.waveformsDownloadStatus == STATUS_WORKING:
+            # Cancel running download
+            self.waveformsHandler.clear_downloads()
 
     def updateToolbars(self):
         """
@@ -485,9 +484,12 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             if self.waveformsDownloadStatus == STATUS_DONE:
                 # If any downloads are complete, we can trigger the save now
                 self.saveWaveformData()
-            else:
-                # Otherwise, we have to wait -- update to indicate this to the user
+            elif self.waveformsDownloadStatus == STATUS_WORKING:
+                # Currently downloading, we just have to wait -- update to indicate this to the user
                 self.updateToolbars()
+            else:
+                # We need to actually initiate the download first
+                self.downloadWaveformData()
 
     @QtCore.pyqtSlot()
     def resetDownload(self):
@@ -525,6 +527,8 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         LOGGER.info("Starting download of waveform data")
 
         self.waveformsDownloadStatus = STATUS_WORKING
+        self.downloadCount = len(self.waveformsHandler.waveforms)
+        self.downloadCompleted = 0
         self.updateToolbars()
 
         # Priority is given to waveforms shown on the screen
@@ -555,7 +559,10 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
         Called each time a waveform request has completed
         """
         waveform_id = result.waveform_id
-        LOGGER.debug("Ready to display waveform %s", waveform_id)
+        LOGGER.debug("Ready to display waveform %s (%s)", waveform_id, QtCore.QThread.currentThreadId())
+
+        self.downloadCompleted += 1
+        self.downloadStatusLabel.setText("Downloaded %d of %d" % (self.downloadCompleted, self.downloadCount))
 
         row = self.get_table_row(waveform_id)
         if row is None:
@@ -563,22 +570,6 @@ class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
             return
 
         waveform = self.waveformsHandler.waveforms_by_id.get(waveform_id)
-        if not waveform:
-            LOGGER.error("Couldn't find waveform %s", waveform_id)
-            return
-
-        # Mark as no longer loading
-        waveform.loading = False
-
-        if isinstance(result.result, Exception):
-            # Most common error is "no data" TODO: see https://github.com/obspy/obspy/issues/1656
-            if str(result.result).startswith("No data"):
-                waveform.error = "No data available"
-            else:
-                waveform.error = str(result.result)
-        else:
-            waveform.image_path = result.result
-            waveform.check_files()
         self.selectionTable.item(row, WAVEFORM_IMAGE_COLUMN).setWaveform(waveform)
 
         LOGGER.debug("Displayed waveform %s", waveform_id)
