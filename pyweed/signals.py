@@ -25,5 +25,8 @@ class SignalingThread(QtCore.QThread):
 
 
 class SignalingObject(QtCore.QObject):
+    """
+    Mixin for other objects that manage threaded work, and need to signal completion
+    """
     # Signal to indicate success
     done = QtCore.pyqtSignal(object)

@@ -22,7 +22,7 @@ import logging
 # pd.set_option('mode.chained_assignment', 'raise')
 
 # Pyweed UI components
-from pyweed.preferences import Preferences
+from pyweed.preferences import Preferences, user_config_path
 from pyweed.pyweed_utils import manageCache, iter_channels, get_sncl
 from obspy.clients.fdsn import Client
 from pyweed.event_options import EventOptions
@@ -106,7 +106,12 @@ class PyWeedCore(object):
             logger.setLevel(log_level)
         except Exception:
             logger.setLevel(logging.DEBUG)
-        handler = logging.StreamHandler()
+        # Log to the terminal if available, otherwise log to a temp file
+        if False:
+            # Log to stderr
+            handler = logging.StreamHandler()
+        else:
+            handler = logging.FileHandler(os.path.join(user_config_path(), 'pyweed.log'))
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(name)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
