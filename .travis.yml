@@ -82,8 +82,8 @@ install:
         BASEMAP="basemap"
         PYPROJ="pyproj"
       fi
-  - conda create -q -n test-environment --file environment.yml
-  - source activate test-environment
+  - conda env create
+  - source activate pyweed
   - conda list
   # done installing dependencies
   - pip install --no-deps .

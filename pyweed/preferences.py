@@ -187,13 +187,14 @@ def user_config_path():
     @rtype: str
     @return: the directory for storing user configuration files
     """
-    if platform.system() == "Darwin":
-        return os.path.join(os.path.expanduser("~"), "Library", "Preferences")
-    elif platform.system() == "Windows":
-        return os.path.join(os.path.expanduser("~"), "AppData", "Local")
-    else:
-        # Assume a Linux-like system
-        return os.path.join(os.path.expanduser("~"), ".config")
+    return os.path.join(os.path.expanduser("~"), ".pyweed")
+#     if platform.system() == "Darwin":
+#         return os.path.join(os.path.expanduser("~"), "Library", "Preferences")
+#     elif platform.system() == "Windows":
+#         return os.path.join(os.path.expanduser("~"), "AppData", "Local")
+#     else:
+#         # Assume a Linux-like system
+#         return os.path.join(os.path.expanduser("~"), ".config")
 
 
 def user_download_path():
@@ -205,13 +206,14 @@ def user_download_path():
     @rtype: str
     @return: the default directory for saving waveform files
     """
-    if platform.system() == "Darwin":
-        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "pyweed_data")
-    elif platform.system() == "Windows":
-        return os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed_data")
-    else:
-        # Assume a Linux-like system
-        return os.path.join(os.path.expanduser("~"), ".config", "pyweed_data")
+    return os.path.join(os.path.expanduser("~"), ".pyweed", "data")
+#     if platform.system() == "Darwin":
+#         return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "pyweed_data")
+#     elif platform.system() == "Windows":
+#         return os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed_data")
+#     else:
+#         # Assume a Linux-like system
+#         return os.path.join(os.path.expanduser("~"), ".config", "pyweed_data")
 
 
 def user_save_path():
@@ -223,13 +225,14 @@ def user_save_path():
     @rtype: str
     @return: the default directory for saving waveform files
     """
-    if platform.system() == "Darwin":
-        return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
-    elif platform.system() == "Windows":
-        return os.path.join(os.path.expanduser("~"), "Documents", "pyweed")
-    else:
-        # Assume a Linux-like system
-        return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
+    return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
+#     if platform.system() == "Darwin":
+#         return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
+#     elif platform.system() == "Windows":
+#         return os.path.join(os.path.expanduser("~"), "Documents", "pyweed")
+#     else:
+#         # Assume a Linux-like system
+#         return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
 
 
 # ------------------------------------------------------------------------------

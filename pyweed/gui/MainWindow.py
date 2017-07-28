@@ -213,6 +213,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.seismap.drawEnd.connect(self.onMapDrawFinished)
 
+    def showMessage(self, message):
+        """ Display the given message in the status bar """
+        self.statusBar.showMessage(message, 4000)
+
     @pyqtSlot(object)
     def onMapDrawFinished(self, event):
         """
@@ -277,7 +281,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.eventSelectionLabel.setText('Error! See log for details')
             msg = "Error loading events: %s" % events
             LOGGER.error(msg)
-            self.statusBar.showMessage(msg)
+            self.showMessage(msg)
             return
 
         if not self.eventTableItems:
@@ -309,7 +313,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.onEventSelectionChanged()
         status = 'Finished loading events'
         LOGGER.info(status)
-        self.statusBar.showMessage(status)
+        self.showMessage(status)
 
     def getStations(self):
         """
@@ -333,7 +337,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             self.stationSelectionLabel.setText('Error! See log for details')
             msg = "Error loading stations: %s" % stations
             LOGGER.error(msg)
-            self.statusBar.showMessage(msg)
+            self.showMessage(msg)
             return
 
         if not self.stationTableItems:
@@ -365,7 +369,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.onStationSelectionChanged()
         status = 'Finished loading stations'
         LOGGER.info(status)
-        self.statusBar.showMessage(status)
+        self.showMessage(status)
 
     def getWaveforms(self):
         self.pyweed.open_waveforms_dialog()
