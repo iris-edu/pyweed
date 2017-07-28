@@ -177,17 +177,16 @@ class Preferences(object):
 # Helper functions
 # ------------------------------------------------------------------------------
 
-
-def user_config_path():
+def user_config_path(safe=True):
     """
-    Option to support different paths for different operating systems.
-
-    Based on the paths listed at http://doc.qt.io/qt-5/qstandardpaths.html
-
+    @param safe: If set, auto-create the path if it doesn't exist
     @rtype: str
     @return: the directory for storing user configuration files
     """
-    return os.path.join(os.path.expanduser("~"), ".pyweed")
+    p = os.path.join(os.path.expanduser("~"), ".pyweed")
+    if safe:
+        os.makedirs(p, exist_ok=True)
+    return p
 #     if platform.system() == "Darwin":
 #         return os.path.join(os.path.expanduser("~"), "Library", "Preferences")
 #     elif platform.system() == "Windows":
@@ -197,16 +196,16 @@ def user_config_path():
 #         return os.path.join(os.path.expanduser("~"), ".config")
 
 
-def user_download_path():
+def user_download_path(safe=True):
     """
-    Option to support different paths for different operating systems.
-
-    Based on the paths listed at http://doc.qt.io/qt-5/qstandardpaths.html
-
+    @param safe: If set, auto-create the path if it doesn't exist
     @rtype: str
-    @return: the default directory for saving waveform files
+    @return: the default directory for saving downloaded (previewed) waveform data
     """
-    return os.path.join(os.path.expanduser("~"), ".pyweed", "data")
+    p = os.path.join(os.path.expanduser("~"), ".pyweed", "data")
+    if safe:
+        os.makedirs(p, exist_ok=True)
+    return p
 #     if platform.system() == "Darwin":
 #         return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "pyweed_data")
 #     elif platform.system() == "Windows":
@@ -216,16 +215,16 @@ def user_download_path():
 #         return os.path.join(os.path.expanduser("~"), ".config", "pyweed_data")
 
 
-def user_save_path():
+def user_save_path(safe=False):
     """
-    Option to support different paths for different operating systems.
-
-    Based on the paths listed at http://doc.qt.io/qt-5/qstandardpaths.html
-
+    @param safe: If set, auto-create the path if it doesn't exist
     @rtype: str
     @return: the default directory for saving waveform files
     """
-    return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
+    p = os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
+    if safe:
+        os.makedirs(p, exist_ok=True)
+    return p
 #     if platform.system() == "Darwin":
 #         return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
 #     elif platform.system() == "Windows":
