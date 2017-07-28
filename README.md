@@ -2,15 +2,11 @@
 
 PyWEED is a cross-platform downloadable app for retrieving event-based seismic data
 
-# Application Binaries
-
-_Highly Experimental!_
-
-Mac OS X: http://ds.iris.edu/files/jweed/PyWEED-1.1.dmg
+__This software is still under development and has not been publicly released__
 
 # Anaconda
 
-It's far more reliable to run PyWEED from an [Anaconda](https://docs.continuum.io/anaconda/) environment.
+The best way to run PyWEED is with [Anaconda](https://docs.continuum.io/anaconda/).
 
 If you don't have Anaconda installed, download it or [miniconda](http://conda.pydata.org/miniconda.html) and follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
 instructions.
@@ -46,11 +42,10 @@ You can return to the default Anaconda environment by running:
 
 ## Running the PyWEED GUI
 
-The code is in the `pyweed` subdirectory.
+From the base directory, run:
 
 ```
-cd pyweed
-python pyweed_gui.py
+python pyweed_launcher.py
 ```
 
 # Configuration
@@ -71,4 +66,11 @@ Please see the (TODO documentation) for a list of all configurable options.
 # Developer resources:
 
  * http://zetcode.com/gui/pyqt4/introduction/
+
+# Application Binaries
+
+_Highly Experimental!_
+
+Mac OS X: http://ds.iris.edu/files/jweed/PyWEED-1.1.dmg
+
 
