@@ -4,6 +4,16 @@ PyWEED is a cross-platform downloadable app for retrieving event-based seismic d
 
 __This software is still under development and has not been publicly released__
 
+# Quick Install (Mac/Linux)
+
+The easiest way to install is:
+
+```
+curl -SS https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/install.sh | bash
+```
+
+This runs a script that essentially does the steps outlined below.
+
 # Anaconda
 
 The best way to run PyWEED is with [Anaconda](https://docs.continuum.io/anaconda/).
