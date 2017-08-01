@@ -9,13 +9,13 @@ Dialog showing logging information.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui
+from pyweed.gui.BaseDialog import BaseDialog
 from pyweed.gui.uic import LoggingDialog
 from pyweed.gui.MyTextEditLoggingHandler import MyTextEditLoggingHandler
 import logging
 
 
-class LoggingDialog(QtGui.QDialog, LoggingDialog.Ui_LoggingDialog):
+class LoggingDialog(BaseDialog, LoggingDialog.Ui_LoggingDialog):
     """
     Dialog window displaying all logs.
     """

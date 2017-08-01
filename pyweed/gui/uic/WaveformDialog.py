@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'pyweed/gui/uic/WaveformDialog.ui'
 #
-# Created: Tue Jul 18 16:05:57 2017
-#      by: PyQt4 UI code generator 4.10.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -41,8 +40,8 @@ class Ui_WaveformDialog(object):
         self.downloadGroupBox.setEnabled(True)
         self.downloadGroupBox.setObjectName(_fromUtf8("downloadGroupBox"))
         self.verticalLayout_6 = QtGui.QVBoxLayout(self.downloadGroupBox)
-        self.verticalLayout_6.setSpacing(2)
         self.verticalLayout_6.setMargin(2)
+        self.verticalLayout_6.setSpacing(2)
         self.verticalLayout_6.setObjectName(_fromUtf8("verticalLayout_6"))
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setVerticalSpacing(2)
@@ -92,15 +91,15 @@ class Ui_WaveformDialog(object):
         self.horizontalLayout_7.addWidget(self.downloadPushButton)
         self.downloadStatusLabel = QtGui.QLabel(self.widget_5)
         self.downloadStatusLabel.setObjectName(_fromUtf8("downloadStatusLabel"))
-        self.horizontalLayout_7.addWidget(self.downloadStatusLabel)
+        self.horizontalLayout_7.addWidget(self.downloadStatusLabel, QtCore.Qt.AlignLeft)
         self.verticalLayout_6.addWidget(self.widget_5)
         self.horizontalLayout.addWidget(self.downloadGroupBox)
         self.saveGroupBox = QtGui.QGroupBox(self.topFrame)
         self.saveGroupBox.setEnabled(True)
         self.saveGroupBox.setObjectName(_fromUtf8("saveGroupBox"))
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.saveGroupBox)
-        self.verticalLayout_5.setSpacing(2)
         self.verticalLayout_5.setMargin(2)
+        self.verticalLayout_5.setSpacing(2)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.gridLayout_2 = QtGui.QGridLayout()
         self.gridLayout_2.setVerticalSpacing(2)
@@ -153,15 +152,15 @@ class Ui_WaveformDialog(object):
         self.horizontalLayout_8.addWidget(self.savePushButton)
         self.saveStatusLabel = QtGui.QLabel(self.widget_6)
         self.saveStatusLabel.setObjectName(_fromUtf8("saveStatusLabel"))
-        self.horizontalLayout_8.addWidget(self.saveStatusLabel)
+        self.horizontalLayout_8.addWidget(self.saveStatusLabel, QtCore.Qt.AlignLeft)
         self.verticalLayout_5.addWidget(self.widget_6)
         self.horizontalLayout.addWidget(self.saveGroupBox)
         self.verticalLayout.addWidget(self.topFrame)
         self.selectionTableFrame = QtGui.QFrame(WaveformDialog)
         self.selectionTableFrame.setObjectName(_fromUtf8("selectionTableFrame"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.selectionTableFrame)
-        self.verticalLayout_2.setSpacing(2)
         self.verticalLayout_2.setMargin(2)
+        self.verticalLayout_2.setSpacing(2)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.filterGroupBox = QtGui.QGroupBox(self.selectionTableFrame)
         self.filterGroupBox.setEnabled(True)

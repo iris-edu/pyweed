@@ -28,27 +28,23 @@ if PY2:
     sip.setapi("QString", 2)
     sip.setapi("QVariant", 2)
 
-from PyQt4 import QtGui
-
-# This will usually be used to launch pyweed from the source code, so if pyweed
-# isn't in the path then add the source.
-try:
-    from pyweed import __version__
-except Exception as e:
-    sys.path.append(os.path.dirname(__file__))
-    from pyweed import __version__
-print("PyWEED v.%s" % __version__)
-
-from pyweed.gui.SplashScreenHandler import SplashScreenHandler
-import pyweed.gui.qrc
-
 
 def get_pyweed():
+    """
+    Load the PyWEED GUI code, this is where most of the expensive stuff happens
+    """
     from pyweed.pyweed_gui import PyWeedGUI
     return PyWeedGUI()
 
 
-def main():
+def launch():
+    """
+    Basic startup process.
+    """
+    from PyQt4 import QtGui
+    from pyweed.gui.SplashScreenHandler import SplashScreenHandler
+    import pyweed.gui.qrc  # NOQA
+
     app = QtGui.QApplication(sys.argv)
     splashScreenHandler = SplashScreenHandler()
     app.processEvents()
@@ -58,4 +54,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    launch()

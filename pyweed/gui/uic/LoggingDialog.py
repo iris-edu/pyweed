@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'LoggingDialog.ui'
+# Form implementation generated from reading ui file 'pyweed/gui/uic/LoggingDialog.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_LoggingDialog(object):
     def setupUi(self, LoggingDialog):
         LoggingDialog.setObjectName(_fromUtf8("LoggingDialog"))
-        LoggingDialog.resize(1051, 1171)
+        LoggingDialog.resize(697, 474)
         self.verticalLayout = QtGui.QVBoxLayout(LoggingDialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.loggingPlainTextEdit = QtGui.QPlainTextEdit(LoggingDialog)

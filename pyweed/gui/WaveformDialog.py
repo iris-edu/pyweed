@@ -18,6 +18,7 @@ from pyweed.pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHAS
 from pyweed.preferences import safe_int
 from PyQt4.QtGui import QTableWidgetItem
 from pyweed.gui.utils import ComboBoxAdapter, CustomTableWidgetItemMixin
+from pyweed.gui.BaseDialog import BaseDialog
 
 LOGGER = getLogger(__name__)
 
@@ -37,7 +38,9 @@ class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem)
     control the size, and we don't need an actual toggle widget here since that is done at the row level.
     """
     checkedText = '☑'
+    checkedIcon = QtGui.QPixmap(':qrc/check-on.png')
     uncheckedText = '☐'
+    uncheckedIcon = QtGui.QPixmap(':qrc/check-off.png')
     fontSize = 36
     checkedBackground = QtGui.QBrush(QtGui.QColor(0, 0, 0, 16))
     uncheckedBackground = QtGui.QBrush(QtCore.Qt.NoBrush)
@@ -58,10 +61,10 @@ class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem)
         # Update as needed to indicate the value to the user
         if value:
             self.setBackground(self.checkedBackground)
-            self.setText(self.checkedText)
+            self.setData(QtCore.Qt.DecorationRole, self.checkedIcon)
         else:
             self.setBackground(self.uncheckedBackground)
-            self.setText(self.uncheckedText)
+            self.setData(QtCore.Qt.DecorationRole, self.uncheckedIcon)
 
 
 class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):
@@ -214,7 +217,7 @@ class TimeWindowAdapter(QtCore.QObject):
         self.secondsAfterPhaseAdapter.setValue(self.timeWindow.end_phase)
 
 
-class WaveformDialog(QtGui.QDialog, WaveformDialog.Ui_WaveformDialog):
+class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
     tableItems = None
 
