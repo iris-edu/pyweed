@@ -12,6 +12,7 @@ Dialog containing an IPython console.
 from qtconsole.rich_ipython_widget import RichIPythonWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 from PyQt4 import QtGui
+from pyweed.gui.BaseDialog import BaseDialog
 
 
 class EmbedIPython(RichIPythonWidget):
@@ -27,9 +28,9 @@ class EmbedIPython(RichIPythonWidget):
         self.kernel_client.start_channels()
 
 
-class ConsoleDialog(QtGui.QDialog):
-    def __init__(self, pyweed, *args, **kwargs):
-        super(ConsoleDialog, self).__init__(*args, **kwargs)
+class ConsoleDialog(BaseDialog):
+    def __init__(self, pyweed, parent=None):
+        super(ConsoleDialog, self).__init__(parent=parent)
         self.widget = EmbedIPython(pyweed=pyweed)
         layout = QtGui.QVBoxLayout(self)
         layout.addWidget(self.widget)

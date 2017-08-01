@@ -48,15 +48,10 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         LOGGER.info('Setting up main window...')
         self.mainWindow = MainWindow(self)
 
-        # Setting the parent on a dialog does different things on different systems
-        # We want the MainWindow to be the parent of all dialogs on Mac since that is how they share a menu
-        # But on Windows a child dialog will always be above the parent, which we don't want
-        widget_parent = self.mainWindow if (platform.system() == 'Darwin') else None
-
         # Logging
         # see:  http://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
         # see:  http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
-        self.loggingDialog = LoggingDialog(widget_parent)
+        self.loggingDialog = LoggingDialog(self.mainWindow)
 
         # Events
         LOGGER.info('Setting up event options dialog...')
@@ -71,13 +66,13 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
         LOGGER.info('Setting up waveforms dialog...')
-        self.waveformsDialog = WaveformDialog(self, widget_parent)
+        self.waveformsDialog = WaveformDialog(self, self.mainWindow)
 
         # Preferences
-        self.preferencesDialog = PreferencesDialog(self, widget_parent)
+        self.preferencesDialog = PreferencesDialog(self, self.mainWindow)
 
         # Python console
-        self.console = ConsoleDialog(self, widget_parent)
+        self.console = ConsoleDialog(self, self.mainWindow)
 
         self.configure_menu()
 
@@ -200,6 +195,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         helpMenu.addSeparator()
 
         self.mainWindow.setMenuBar(mainMenu)
+        # self.waveformsDialog.setMenuBar(mainMenu)
 
     def showAboutDialog(self):
         """Display About message box."""
