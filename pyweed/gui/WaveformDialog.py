@@ -42,7 +42,7 @@ class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem)
     uncheckedText = '☐'
     uncheckedIcon = QtGui.QPixmap(':qrc/check-off.png')
     fontSize = 36
-    checkedBackground = QtGui.QBrush(QtGui.QColor(0, 0, 0, 16))
+    checkedBackground = QtGui.QBrush(QtGui.QColor(220, 239, 223))
     uncheckedBackground = QtGui.QBrush(QtCore.Qt.NoBrush)
 
     def __init__(self, value):
