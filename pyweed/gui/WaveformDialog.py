@@ -256,7 +256,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Waveforms
-        self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.client)
+        self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.station_client)
         self.waveformsHandler.progress.connect(self.onWaveformDownloaded, QtCore.Qt.QueuedConnection)
         self.waveformsHandler.done.connect(self.onAllDownloaded, QtCore.Qt.QueuedConnection)
 

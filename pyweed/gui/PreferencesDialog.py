@@ -28,14 +28,14 @@ class PreferencesDialog(QtGui.QDialog, PreferencesDialog.Ui_PreferencesDialog):
 
         self.pyweed = pyweed
 
-        # Create radio buttons for the data center options
+        # Ordered list of all available data centers
         self.data_centers = sorted(URL_MAPPINGS.keys())
-        self.radioButtons = QtGui.QButtonGroup(self)
-        layout = self.dataCentersGroupBox.layout()
-        for idx, data_center in enumerate(self.data_centers):
-            button = QtGui.QRadioButton(data_center)
-            layout.addWidget(button)
-            self.radioButtons.addButton(button, idx)
+
+        # Put these in the comboboxes
+        for data_center in self.data_centers:
+            label = "%s: %s" % (data_center, URL_MAPPINGS[data_center])
+            self.eventDataCenterComboBox.addItem(label, data_center)
+            self.stationDataCenterComboBox.addItem(label, data_center)
 
         self.okButton.pressed.connect(self.accept)
         self.cancelButton.pressed.connect(self.reject)
@@ -45,38 +45,30 @@ class PreferencesDialog(QtGui.QDialog, PreferencesDialog.Ui_PreferencesDialog):
         Perform any necessary initialization each time the dialog is opened
         """
         super(PreferencesDialog, self).showEvent(*args, **kwargs)
-        # Indicate the currently selected data center
-        try:
-            idx = self.data_centers.index(self.pyweed.data_center)
-            button = self.radioButtons.button(idx)
-            if button:
-                button.setChecked(True)
-        except ValueError:
-            pass
+        # Indicate the currently selected data centers
+        self.eventDataCenterComboBox.setCurrentIndex(self.data_centers.index(self.pyweed.event_data_center))
+        self.stationDataCenterComboBox.setCurrentIndex(self.data_centers.index(self.pyweed.station_data_center))
+        self.cacheSizeSpinBox.setValue(int(self.pyweed.preferences.Waveforms.cacheSize))
 
     def accept(self):
         """
         Validate and update the client
         """
-        data_center = self.data_centers[self.radioButtons.checkedId()]
-        if data_center != self.pyweed.data_center:
-            client = Client(data_center)
-            # If the data center doesn't provide all the necessary services, show an error
-            missing_services = [
-                service for service in ('event', 'station', 'dataselect')
-                if service not in client.services
-            ]
-            if missing_services:
-                missing_services_str = ", ".join(missing_services)
-                QtGui.QMessageBox.critical(
-                    self,
-                    "Missing services",
-                    "This data center doesn't provide one or more services:\n%s" % missing_services_str
-                )
-                # Don't call super() which would close the preferences dialog
-                return
-            else:
-                self.pyweed.data_center = data_center
-                self.pyweed.client = client
+        try:
+            self.pyweed.set_event_data_center(
+                self.data_centers[self.eventDataCenterComboBox.currentIndex()])
+            self.pyweed.set_station_data_center(
+                self.data_centers[self.stationDataCenterComboBox.currentIndex()])
+        except Exception as e:
+            # Error usually means that the user selected a data center that doesn't provide the given service
+            QtGui.QMessageBox.critical(
+                self,
+                "Unable to update data center",
+                str(e)
+            )
+            # Don't call super() which would close the preferences dialog
+            return
+
+        self.pyweed.preferences.Waveforms.cacheSize = self.cacheSizeSpinBox.value()
 
         return super(PreferencesDialog, self).accept()

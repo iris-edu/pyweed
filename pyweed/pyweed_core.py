@@ -46,8 +46,10 @@ class NoConsoleLoggingFilter(logging.Filter):
 
 class PyWeedCore(object):
 
-    client = None
-    data_center = None
+    event_client = None
+    event_data_center = None
+    station_client = None
+    station_data_center = None
     preferences = None
     event_options = None
     events = None
@@ -64,11 +66,36 @@ class PyWeedCore(object):
         self.load_preferences()
         self.manage_cache()
 
-    def set_data_center(self, data_center):
-        # Instantiate a client
-        self.data_center = data_center
-        LOGGER.info("Creating ObsPy client for %s", self.data_center)
-        self.client = Client(self.data_center)
+    def set_event_data_center(self, data_center):
+        if data_center != self.event_data_center or not self.event_client:
+            # Use the station client if they're the same, otherwise create a client
+            if data_center == self.station_data_center and self.station_client:
+                client = self.station_client
+            else:
+                LOGGER.info("Creating ObsPy client for %s", data_center)
+                client = Client(data_center)
+            # Verify that this client supports events
+            if 'event' not in client.services:
+                raise Exception("The %s data center does not provide an event service" % data_center)
+            # Update settings
+            self.event_data_center = data_center
+            self.event_client = client
+
+    def set_station_data_center(self, data_center):
+        if data_center != self.station_data_center or not self.station_client:
+            # Use the station client if they're the same, otherwise create a client
+            if data_center == self.event_data_center and self.event_client:
+                client = self.event_client
+            else:
+                LOGGER.info("Creating ObsPy client for %s", data_center)
+                client = Client(data_center)
+            # Verify that this client supports station and dataselect
+            for service in ('station', 'dataselect',):
+                if service not in client.services:
+                    raise Exception("The %s data center does not provide a %s service" % (data_center, service))
+            # Update settings
+            self.station_data_center = data_center
+            self.station_client = client
 
     def load_preferences(self):
         """
@@ -81,8 +108,9 @@ class PyWeedCore(object):
         except Exception as e:
             LOGGER.error("Unable to load configuration preferences -- using defaults.\n%s", e)
         self.set_event_options(self.preferences.EventOptions)
+        self.set_event_data_center(self.preferences.Data.eventDataCenter)
         self.set_station_options(self.preferences.StationOptions)
-        self.set_data_center(self.preferences.Data.dataCenter)
+        self.set_station_data_center(self.preferences.Data.stationDataCenter)
 
     def save_preferences(self):
         """
@@ -126,7 +154,7 @@ class PyWeedCore(object):
         Make sure the waveform download directory exists and isn't full
         """
         download_path = self.preferences.Waveforms.downloadDir
-        cache_size = float(self.preferences.Waveforms.cacheSize)
+        cache_size = int(self.preferences.Waveforms.cacheSize)
         LOGGER.info('Checking on download directory...')
         if os.path.exists(download_path):
             manageCache(download_path, cache_size)
@@ -156,7 +184,7 @@ class PyWeedCore(object):
         """
         if not options:
             options = self.get_event_obspy_options()
-        self.set_events(self.client.get_events(**options))
+        self.set_events(self.event_client.get_events(**options))
 
     def set_events(self, events):
         """
@@ -195,7 +223,7 @@ class PyWeedCore(object):
         """
         if not options:
             options = self.get_station_obspy_options()
-        self.set_stations(self.client.get_stations(**options))
+        self.set_stations(self.station_client.get_stations(**options))
 
     def set_stations(self, stations):
         """

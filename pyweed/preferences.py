@@ -90,7 +90,8 @@ class Preferences(object):
 #             setattr(self, section, Section.create(section, **prefs))
 
         self.Data = Section.create("Data")
-        self.Data.dataCenter = "IRIS"
+        self.Data.eventDataCenter = "IRIS"
+        self.Data.stationDataCenter = "IRIS"
 
         self.Waveforms = Section.create("Waveforms")
         self.Waveforms.downloadDir = user_download_path()
