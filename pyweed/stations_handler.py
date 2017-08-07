@@ -72,7 +72,7 @@ class StationsHandler(SignalingObject):
     def load_inventory(self, parameters=None):
         if not parameters:
             parameters = self.pyweed.get_station_obspy_options()
-        self.inventory_loader = StationsLoader(self.pyweed.client, parameters)
+        self.inventory_loader = StationsLoader(self.pyweed.station_client, parameters)
         self.inventory_loader.done.connect(self.on_inventory_loaded)
         self.inventory_loader.start()
 
