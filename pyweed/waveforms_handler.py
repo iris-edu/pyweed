@@ -222,6 +222,8 @@ def load_waveform(client, waveform):
 
     waveform_id = waveform.waveform_id
     LOGGER.debug("Loading waveform: %s (%s)", waveform_id, QtCore.QThread.currentThreadId())
+#     LOGGER.debug("Adding slowness")
+#     QtCore.QThread.currentThread().sleep(2)
 
     try:
         waveform.prepare()
@@ -341,7 +343,7 @@ class WaveformsLoadingWorker(QtCore.QObject):
         # Keep a reference to globally shared components
         self.client = client
         self.waveforms = waveforms
-        self.futures = None
+        self.futures = {}
         super(WaveformsLoadingWorker, self).__init__()
 
     @QtCore.pyqtSlot()
@@ -358,11 +360,12 @@ class WaveformsLoadingWorker(QtCore.QObject):
                 self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
             # Iterate through Futures as they complete
             for result in concurrent.futures.as_completed(self.futures):
-                waveform_id = self.futures[result]
-                try:
-                    self.progress.emit(WaveformResult(waveform_id, result.result()))
-                except Exception as e:
-                    self.progress.emit(WaveformResult(waveform_id, e))
+                waveform_id = self.futures.get(result)
+                if waveform_id:
+                    try:
+                        self.progress.emit(WaveformResult(waveform_id, result.result()))
+                    except Exception as e:
+                        self.progress.emit(WaveformResult(waveform_id, e))
         self.done.emit(None)
 
     @QtCore.pyqtSlot()
@@ -375,7 +378,8 @@ class WaveformsLoadingWorker(QtCore.QObject):
                 if not future.done():
                     LOGGER.debug("Cancelling unexecuted future")
                     future.cancel()
-        self.futures = None
+        self.futures = {}
+        self.done.emit(None)
 
 
 class WaveformsHandler(SignalingObject):
@@ -404,16 +408,11 @@ class WaveformsHandler(SignalingObject):
         # Important preferences
         self.downloadDir = self.preferences.Waveforms.downloadDir
 
-        # Queue of pending waveforms
-        self.queue = collections.deque()
-        # Active threads indexed by waveformID
-        self.threads = {}
-        # Number of threads to track
-        self.num_threads = 5
         # Loader component
         self.waveforms_loader = None
         # Thread to run the loader in
         self.thread = None
+        # Asynchronous requests, each is working to download a single waveform
         self.requests = None
 
         # A TimeWindow object giving offsets and phase arrivals
@@ -444,19 +443,11 @@ class WaveformsHandler(SignalingObject):
 
     def clear_downloads(self):
         """
-        Clear the download queue and release any active threads
+        Cancel the loader if it's running
         """
         LOGGER.debug('Clearing existing downloads')
-        # for thread in self.threads.values():
-        #     thread.quit()
-        # self.threads = {}
-        self.queue.clear()
         if self.waveforms_loader:
             self.waveforms_loader.cancel()
-        if self.thread:
-            self.thread.quit()
-            self.thread.wait()
-            self.thread = None
 
     def download_waveforms(self, priority_ids, other_ids, time_window):
         """
