@@ -19,6 +19,7 @@ from pyweed.preferences import safe_int
 from PyQt4.QtGui import QTableWidgetItem
 from pyweed.gui.utils import ComboBoxAdapter, CustomTableWidgetItemMixin
 from pyweed.gui.BaseDialog import BaseDialog
+from pyweed.gui.SpinnerWidget import SpinnerWidget
 
 LOGGER = getLogger(__name__)
 
@@ -255,8 +256,13 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveDirectoryPushButton.setText(self.waveformDirectory)
         self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
+        # Spinner overlays for downloading and saving
+        self.downloadSpinner = SpinnerWidget("Downloading...", self.downloadGroupBox)
+        self.saveSpinner = SpinnerWidget("Saving...", self.saveGroupBox)
+
         # Waveforms
         self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.station_client)
+        # The callbacks here are expensive, so use QueuedConnection to run them asynchronously
         self.waveformsHandler.progress.connect(self.onWaveformDownloaded, QtCore.Qt.QueuedConnection)
         self.waveformsHandler.done.connect(self.onAllDownloaded, QtCore.Qt.QueuedConnection)
 
@@ -431,7 +437,10 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         if self.waveformsDownloadStatus == STATUS_READY:
             # Start the download
             self.downloadWaveformData()
-        elif self.waveformsDownloadStatus == STATUS_WORKING:
+
+    @QtCore.pyqtSlot()
+    def onDownloadCancel(self):
+        if self.waveformsDownloadStatus == STATUS_WORKING:
             # Cancel running download
             self.waveformsHandler.clear_downloads()
 
@@ -439,43 +448,44 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         """
         Update the UI elements to reflect the current status
         """
+        return
         # Download controls
-        if self.waveformsDownloadStatus == STATUS_WORKING:
-            # Currently downloading, disable most of the UI
-            self.downloadGroupBox.setEnabled(False)
-            self.downloadPushButton.setChecked(True)
-            self.downloadPushButton.setText('Downloading...')
-        else:
-            self.downloadGroupBox.setEnabled(True)
-            self.downloadPushButton.setChecked(False)
-            if self.waveformsDownloadStatus == STATUS_DONE:
-                # Disabled if download has finished (and nothing has changed)
-                self.downloadPushButton.setEnabled(False)
-                self.downloadPushButton.setText('Download Complete')
-            else:
-                self.downloadPushButton.setEnabled(True)
-                self.downloadPushButton.setText('Download')
-
-        # Save controls
-        if self.waveformsSaveStatus == STATUS_WORKING:
-            # Currently saving
-            self.saveGroupBox.setEnabled(False)
-            self.savePushButton.setText('Saving...')
-            self.savePushButton.setChecked(True)
-            # May be waiting for download to finish
-            if self.waveformsDownloadStatus != STATUS_DONE:
-                self.saveStatusLabel.setText('Waiting for downloads')
-            else:
-                self.saveStatusLabel.setText('Saving...')
-        else:
-            # Available
-            self.saveGroupBox.setEnabled(True)
-            self.savePushButton.setText('Save')
-            self.savePushButton.setChecked(False)
-            # When the save is complete the status will be put in the label, don't change it
-            # unless the process is reset (ie. we return to READY status)
-            if self.waveformsSaveStatus == STATUS_READY:
-                self.saveStatusLabel.setText('')
+#         if self.waveformsDownloadStatus == STATUS_WORKING:
+#             # Currently downloading, disable most of the UI
+#             self.downloadGroupBox.setEnabled(False)
+#             self.downloadPushButton.setChecked(True)
+#             self.downloadPushButton.setText('Downloading...')
+#         else:
+#             self.downloadGroupBox.setEnabled(True)
+#             self.downloadPushButton.setChecked(False)
+#             if self.waveformsDownloadStatus == STATUS_DONE:
+#                 # Disabled if download has finished (and nothing has changed)
+#                 self.downloadPushButton.setEnabled(False)
+#                 self.downloadPushButton.setText('Download Complete')
+#             else:
+#                 self.downloadPushButton.setEnabled(True)
+#                 self.downloadPushButton.setText('Download')
+#
+#         # Save controls
+#         if self.waveformsSaveStatus == STATUS_WORKING:
+#             # Currently saving
+#             self.saveGroupBox.setEnabled(False)
+#             self.savePushButton.setText('Saving...')
+#             self.savePushButton.setChecked(True)
+#             # May be waiting for download to finish
+#             if self.waveformsDownloadStatus != STATUS_DONE:
+#                 self.saveStatusLabel.setText('Waiting for downloads')
+#             else:
+#                 self.saveStatusLabel.setText('Saving...')
+#         else:
+#             # Available
+#             self.saveGroupBox.setEnabled(True)
+#             self.savePushButton.setText('Save')
+#             self.savePushButton.setChecked(False)
+#             # When the save is complete the status will be put in the label, don't change it
+#             # unless the process is reset (ie. we return to READY status)
+#             if self.waveformsSaveStatus == STATUS_READY:
+#                 self.saveStatusLabel.setText('')
 
     @QtCore.pyqtSlot()
     def onSavePushButton(self):
@@ -484,6 +494,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         """
         if self.waveformsSaveStatus != STATUS_WORKING:
             self.waveformsSaveStatus = STATUS_WORKING
+            self.saveSpinner.show()
             if self.waveformsDownloadStatus == STATUS_DONE:
                 # If any downloads are complete, we can trigger the save now
                 self.saveWaveformData()
@@ -532,6 +543,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.waveformsDownloadStatus = STATUS_WORKING
         self.downloadCount = len(self.waveformsHandler.waveforms)
         self.downloadCompleted = 0
+        self.downloadSpinner.show()
         self.updateToolbars()
 
         # Priority is given to waveforms shown on the screen
@@ -585,6 +597,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         LOGGER.debug('COMPLETED all downloads')
 
         if self.waveformsDownloadStatus == STATUS_WORKING:
+            self.downloadSpinner.hide()
             self.waveformsDownloadStatus = STATUS_DONE
             self.updateToolbars()
 
@@ -626,11 +639,6 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                 self.saveStatusLabel.repaint()
                 QtGui.QApplication.processEvents()  # update GUI
 
-                # Return early if the user has toggled off the savePushButton (TODO: nonworking!)
-                # time.sleep(1)  # Need a delay to test this
-                if not self.savePushButton.isChecked():
-                    raise Exception("Cancelled")
-
             LOGGER.info("Save complete: %d saved, %d already existed, %d errors", savedCount, skippedCount, len(errors))
 
             if errors:
@@ -653,6 +661,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         finally:
             self.updateToolbars()
 
+        self.saveSpinner.hide()
         LOGGER.debug('COMPLETED saving all waveforms')
 
     @QtCore.pyqtSlot()

@@ -9,7 +9,7 @@ __This software is still under development and has not been publicly released__
 The easiest way to install is:
 
 ```
-curl -SS https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/install.sh | bash
+curl -Ss https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/install.sh | bash
 ```
 
 This runs a script that essentially does the steps outlined below.

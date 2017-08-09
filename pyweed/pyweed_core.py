@@ -45,6 +45,10 @@ class NoConsoleLoggingFilter(logging.Filter):
 
 
 class PyWeedCore(object):
+    """
+    This is intended to be the core PyWEED functionality, without any reference to the GUI layer.
+    The original intent was to allow this to run independently, eg. from a script or interactive shell.
+    """
 
     event_client = None
     event_data_center = None

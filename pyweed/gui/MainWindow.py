@@ -24,6 +24,7 @@ from pyweed.gui.StationOptionsWidget import StationOptionsWidget
 from pyweed.gui.TableItems import TableItems, Column
 from pyweed.event_options import EventOptions
 from PyQt4.QtCore import pyqtSlot
+from pyweed.gui.SpinnerWidget import SpinnerWidget
 
 LOGGER = logging.getLogger(__name__)
 
@@ -123,13 +124,22 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     eventTableItems = None
     stationTableItems = None
+    eventsSpinner = None
+    stationsSpinner = None
 
     def __init__(self, pyweed):
         super(MainWindow, self).__init__()
         self.setupUi(self)
+        # Note that at this point, pyweed is only minimally initialized!
         self.pyweed = pyweed
 
     def initialize(self):
+        """
+        Most of the initialization should happen here. PyWEED has to create the MainWindow first, before
+        it's fully configured everything (mainly because it needs to attach various other widgets and things
+        to MainWindow). So __init__() above needs to be very minimal. Once everything is ready, the application
+        will call initialize() and we can safely do all the "real" initialization.
+        """
         prefs = self.pyweed.preferences
 
         # Set MainWindow properties
@@ -185,6 +195,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             safe_int(prefs.MainWindow.height, 800))
         self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
         self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
+
+        # Add spinner overlays to the event/station widgets
+        self.eventsSpinner = SpinnerWidget("Loading events...", self.eventsWidget)
+        self.stationsSpinner = SpinnerWidget("Loading stations...", self.stationsWidget)
 
         self.manageGetWaveformsButton()
 
@@ -264,10 +278,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Trigger the event retrieval from web services
         """
-        self.getEventsButton.setEnabled(False)
         LOGGER.info('Loading events...')
-        self.eventSelectionLabel.setText('Loading events...')
-
+        self.eventsSpinner.show()
         self.updateOptions()
         self.pyweed.fetch_events()
 
@@ -275,7 +287,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Handler triggered when the EventsHandler finishes loading events
         """
-        self.getEventsButton.setEnabled(True)
+        self.eventsSpinner.hide()
 
         if isinstance(events, Exception):
             self.eventSelectionLabel.setText('Error! See log for details')
@@ -319,10 +331,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Trigger the channel metadata retrieval from web services
         """
-        self.getStationsButton.setEnabled(False)
         LOGGER.info('Loading stations...')
-        self.stationSelectionLabel.setText('Loading stations...')
-
+        self.stationsSpinner.show()
         self.updateOptions()
         self.pyweed.fetch_stations()
 
@@ -330,8 +340,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Handler triggered when the StationsHandler finishes loading stations
         """
-
-        self.getStationsButton.setEnabled(True)
+        self.stationsSpinner.hide()
 
         if isinstance(stations, Exception):
             self.stationSelectionLabel.setText('Error! See log for details')

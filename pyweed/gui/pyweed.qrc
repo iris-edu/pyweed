@@ -3,5 +3,6 @@
     <file>qrc/splash.png</file>
     <file>qrc/check-off.png</file>
     <file>qrc/check-on.png</file>
+    <file>qrc/rotator-32.gif</file>
 </qresource>
 </RCC>
