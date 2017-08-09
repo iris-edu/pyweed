@@ -3,11 +3,15 @@ if [[ `uname -s` == "Darwin" ]]; then
 else
   export OS="Linux"
 fi
+echo "Identified OS as $OS"
+
+# Run in /tmp/
+cd /tmp/
 
 export ARCH=`uname -m`
 
 echo "Looking for Anaconda installation"
-conda info > /dev/null
+conda info > /dev/null 2>&1
 if (( $? )); then
   echo "
 Anaconda Python not found, do you want to install it? [yes|no]
@@ -20,7 +24,7 @@ Anaconda Python not found, do you want to install it? [yes|no]
   fi
 
   echo "Downloading Miniconda";
-  wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-${ARCH}.sh -O miniconda.sh;
+  curl -Ss -o miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-${ARCH}.sh
 
   bash miniconda.sh -b -p $HOME/miniconda
   export PATH="$HOME/miniconda/bin:$PATH"
@@ -34,15 +38,15 @@ fi
 
 conda env list | grep '^pyweed\s' > /dev/null
 if (( $? )); then
-  echo "Found a pyweed environment"
+  echo "No pyweed environment found"
   ENV_ACTION="create"
 else
-  echo "No pyweed environment found"
+  echo "Found a pyweed environment"
   ENV_ACTION="update"
 fi
 
 echo "Working to $ENV_ACTION PyWEED environment"
-wget https://raw.githubusercontent.com/iris-edu/pyweed/master/environment.yml -O environment.yml
+curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/master/environment.yml
 conda env $ENV_ACTION
 source activate pyweed
 
@@ -53,5 +57,17 @@ if [[ $OS == 'MacOSX' ]]; then
   echo "Creating Mac app bundle"
   hash -r
   pyweed_install_osx
-  echo "Copy $PWD/PyWEED.app to /Applications"
+  echo "
+Okay to install PyWEED.app to /Applications folder? [yes|no]
+[no] >>> "
+  read ans
+  ANS=`echo "$ans" | tr '[:upper:]' '[:lower:]'`
+  if [[ ($ANS != 'yes') && ($ANS != 'y') ]]; then
+    echo "Application is available at $PWD/PyWEED.app"
+  else
+    mv $PWD/PyWEED.app /Applications/
+    echo "Installed!"
+  fi
 fi
+
+echo "Done!"
