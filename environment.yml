@@ -14,4 +14,6 @@ dependencies:
 - pyqt=4.11.4
 - qtconsole=4.2.1
 - pyzmq=15.3.0  # Downgrade required for Windows, see https://github.com/pyinstaller/pyinstaller/issues/2147
-- geographiclib==1.47
+- geographiclib=1.47
+- pip:
+  - pyweed==0.4.dev0

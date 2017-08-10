@@ -41,18 +41,7 @@ def custom_command(subclass):
         orig_run(self)
         self.announce(
 '''###########################################
-PyWEED has been installed.  To get started follow these steps:
-
-1) Generate a sample server configuration file with:
-
-$ portable-fdsnws-dataselect -s > server.ini
-
-2) Edit the server.ini file to specify the database file and other settings.
-
-3) Run the server with:
-
-$ portable-fdsnws-dataselect server.ini
-
+PyWEED has been installed!
 ###########################################''', level=log.INFO)
 
     subclass.run = custom_run
@@ -138,7 +127,7 @@ setup(
             'pyweed_install_osx=%s.build_osx:main' % module_name,
         ],
         'gui_scripts': [
-            'pyweed=%s.pyweed_launcher:main' % module_name,
+            'pyweed=%s.pyweed_launcher:launch' % module_name,
         ],
     },
 
