@@ -138,12 +138,13 @@ class PyWeedCore(object):
             logger.setLevel(log_level)
         except Exception:
             logger.setLevel(logging.DEBUG)
-        # Log to the terminal if available, otherwise log to a temp file
+        # Log to the terminal if available, otherwise log to a file
         if False:
             # Log to stderr
             handler = logging.StreamHandler()
         else:
-            handler = logging.FileHandler(os.path.join(user_config_path(), 'pyweed.log'))
+            log_file = os.path.join(user_config_path(), 'pyweed.log')
+            handler = logging.FileHandler(log_file, mode='w')
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(name)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
