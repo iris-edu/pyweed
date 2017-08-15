@@ -2,18 +2,19 @@ name: pyweed
 channels:
 - defaults
 - conda-forge
+- obspy
 dependencies:
 - python=3.5*
-- basemap=1.0.8  # Windows requires this version for Python 3 compatibility
-- future=0.16.0
-- matplotlib=1.5.1
-- numpy=1.10.4
-- obspy=1.0.2
-- pandas=0.18.1
-- pillow=3.4.2
+- basemap
+- future
+- matplotlib
+- numpy
+- obspy=1.0.3
+- pandas
+- pillow
 - pyqt=4.11.4
-- qtconsole=4.2.1
-- pyzmq=15.3.0  # Downgrade required for Windows, see https://github.com/pyinstaller/pyinstaller/issues/2147
-- geographiclib=1.47
+- qtconsole
+- pyzmq
 - pip:
   - pyweed==0.4.dev0
+  - geographiclib
