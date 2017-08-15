@@ -4,58 +4,83 @@ PyWEED is a cross-platform downloadable app for retrieving event-based seismic d
 
 __This software is still under development and has not been publicly released__
 
-# Quick Install (Mac/Linux)
+# Installation
 
-The easiest way to install is:
+(This is a work in progress, please report problems to adam@iris.washington.edu.)
+
+## Quick Install (Mac/Linux only)
+
+On Mac and Linux, this command should perform a complete installation:
 
 ```
 bash <(curl -Ss https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/install.sh)
 ```
 
-This runs a script that essentially does the steps outlined below.
+This runs a script that essentially does the steps outlined in the Manual Install below.
 
-# Anaconda
+## Manual Install
+
+On Windows (or if the Quick Install shown above fails), you will need to install some components manually.
+
+### Install Anaconda
 
 The best way to run PyWEED is with [Anaconda](https://docs.continuum.io/anaconda/).
 
-If you don't have Anaconda installed, download it or [miniconda](http://conda.pydata.org/miniconda.html) and follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
+If you don't have Anaconda installed, we recommend using [miniconda](http://conda.pydata.org/miniconda.html)
+(a stripped-down version of Anaconda). Follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
 instructions.
 
 The installation process should put the `conda` command in your shell `PATH`.
 
-## Get the PyWEED project
+### Install the PyWEED environment
 
-Download a [release](https://github.com/iris-edu/pyweed/releases) and unpack it.
+[Anaconda environments](https://conda.io/docs/using/envs.html) allow different projects to each have their own
+version of Python and various dependencies.
 
-Or use Git:
+Download the PyWEED environment definition from https://raw.githubusercontent.com/iris-edu/pyweed/master/environment.yml
 
-```
-git clone https://github.com/iris-edu/pyweed.git
-cd pyweed
-```
+Then run:
 
-## Create an environment
+`conda env create -f environment.yml`
 
-The packages necessary to run PyWEED are defined in the `environment.yml` file in the root of the project.
+This will create an environment named `pyweed` in your Anaconda system, and install PyWEED and all of its dependencies
+into that environment.
 
-From the root directory, run:
+### Create a clickable app (Mac only)
 
-`conda env create`
-
-This will create an environment named `pyweed` in your Anaconda system. You can activate this environment by running:
-
-`source activate pyweed`
-
-You can return to the default Anaconda environment by running:
-
-`source deactivate`
-
-## Running the PyWEED GUI
-
-From the base directory, run:
+On Mac, you can create a clickable app bundle, which you can then copy into `Applications`.
 
 ```
-python pyweed_launcher.py
+source activate pyweed
+pyweed_build_osx
+mv PyWEED.app /Applications/
+```
+
+You can then launch this instead of using the command line (described below) to run PyWEED.
+
+# Running PyWEED
+
+You can run PyWEED from the command line by activating the `pyweed` environment, then running the `pyweed` command:
+
+```
+source activate pyweed
+pyweed
+```
+
+__In Windows__ the activation command is slightly different:
+
+```
+activate pyweed
+pyweed
+```
+
+## Running from Python
+
+You can launch PyWEED from a Python shell as well. Be sure you are running the shell within the `pyweed` environment.
+
+```
+from pyweed import pyweed_launcher
+pyweed_launcher.launch()
 ```
 
 # Configuration
@@ -70,17 +95,3 @@ change the map projection with the following modification to config.ini:
 [Map]
 projection = cyl
 ```
-
-Please see the (TODO documentation) for a list of all configurable options.
-
-# Developer resources:
-
- * http://zetcode.com/gui/pyqt4/introduction/
-
-# Application Binaries
-
-_Highly Experimental!_
-
-Mac OS X: http://ds.iris.edu/files/jweed/PyWEED-1.1.dmg
-
-
