@@ -490,10 +490,11 @@ class WaveformsHandler(SignalingObject):
 
     def on_all_downloaded(self, result):
         LOGGER.debug("All waveforms downloaded  (%s)", QtCore.QThread.currentThreadId())
-        self.thread.quit()
-        self.thread.wait()
-        self.thread = None
-        LOGGER.debug("Download thread exited")
+        if self.thread:
+            self.thread.quit()
+            self.thread.wait()
+            self.thread = None
+            LOGGER.debug("Download thread exited")
         self.done.emit(result)
 
     def get_waveform(self, waveform_id):

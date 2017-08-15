@@ -41,9 +41,12 @@ def launch():
     """
     Basic startup process.
     """
-    from PyQt4 import QtGui
+    from PyQt4 import QtGui, QtCore
     from pyweed.gui.SplashScreenHandler import SplashScreenHandler
     import pyweed.gui.qrc  # NOQA
+
+    # See https://stackoverflow.com/questions/31952711/
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_X11InitThreads)
 
     app = QtGui.QApplication(sys.argv)
     splashScreenHandler = SplashScreenHandler()
