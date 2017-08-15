@@ -56,9 +56,9 @@ pip install git+https://github.com/iris-edu/pyweed.git
 if [[ $OS == 'MacOSX' ]]; then
   echo "Creating Mac app bundle"
   hash -r
-  pyweed_install_osx
+  pyweed_build_osx
   echo "
-Okay to install PyWEED.app to /Applications folder? [yes|no]
+Install PyWEED to /Applications folder? [yes|no]
 [no] >>> "
   read ans
   ANS=`echo "$ans" | tr '[:upper:]' '[:lower:]'`

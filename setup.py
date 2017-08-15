@@ -124,7 +124,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'pyweed_install_osx=%s.build_osx:main' % module_name,
+            'pyweed_build_osx=%s.build_osx:main' % module_name,
         ],
         'gui_scripts': [
             'pyweed=%s.pyweed_launcher:launch' % module_name,
