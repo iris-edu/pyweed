@@ -87,13 +87,7 @@ class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtGui.QTableWidgetItem
         else:
             self.setForeground(self.defaultForeground)
         if waveform:
-            if waveform.image_exists:
-                if waveform.image_path != self.imagePath:
-                    self.imagePath = waveform.image_path
-                    pic = QtGui.QPixmap(waveform.image_path)
-                    self.setData(QtCore.Qt.DecorationRole, pic)
-                    self.setText('')
-            else:
+            if waveform.loading or waveform.error or not waveform.image_exists:
                 self.imagePath = None
                 self.setData(QtCore.Qt.DecorationRole, None)
                 if waveform.loading:
@@ -101,6 +95,12 @@ class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtGui.QTableWidgetItem
                 elif waveform.error:
                     self.setText(waveform.error)
                 else:
+                    self.setText('')
+            else:
+                if waveform.image_path != self.imagePath:
+                    self.imagePath = waveform.image_path
+                    pic = QtGui.QPixmap(waveform.image_path)
+                    self.setData(QtCore.Qt.DecorationRole, pic)
                     self.setText('')
         else:
             self.imagePath = None

@@ -146,71 +146,6 @@ class WaveformResult(object):
         self.result = result
 
 
-# class WaveformLoader(QtCore.QRunnable):
-#     """
-#     Thread to download waveform data and generate an image
-#     """
-#
-#     def __init__(self, client, waveform, preferences):
-#         """
-#         Initialization.
-#         """
-#         # Keep a reference to globally shared components
-#         self.client = client
-#         self.waveform = waveform
-#         self.downloadDir = preferences.Waveforms.downloadDir
-#         # TODO:  plot_width, plot_height should come from preferences
-#         self.plot_width = 600
-#         self.plot_height = 120  # This this must be >100!
-#         super(WaveformLoader, self).__init__()
-#
-#     def run(self):
-#         """
-#         Make a webservice request for events using the passed in options.
-#         """
-#         waveform_id = self.waveform.waveform_id
-#         try:
-#
-#             LOGGER.debug("Loading waveform: %s", waveform_id)
-#
-#             mseedFile = self.waveform.mseed_path
-#             LOGGER.debug("%s save as MiniSEED", waveform_id)
-#
-#             # Load data from disk or network as appropriate
-#             if os.path.exists(mseedFile):
-#                 LOGGER.info("Loading waveform data for %s from %s", waveform_id, mseedFile)
-#                 st = obspy.read(mseedFile)
-#             else:
-#                 LOGGER.info("Retrieving waveform data for %s", waveform_id)
-#                 (network, station, location, channel) = self.waveform.sncl.split('.')
-#                 st = self.client.get_waveforms(
-#                     network, station, location, channel, self.waveform.start_string, self.waveform.end_string)
-#                 # Write to file
-#                 st.write(mseedFile, format="MSEED")
-#
-#             # Generate image if necessary
-#             imageFile = self.waveform.image_path
-#             if not os.path.exists(imageFile):
-#                 LOGGER.info('Plotting waveform image to %s', imageFile)
-#                 # In order to really customize the plotting, we need to return the figure and modify it
-#                 h = st.plot(size=(self.plot_width, self.plot_height), handle=True)
-#                 # Resize the subplot to a hard size, because otherwise it will do it inconsistently
-#                 h.subplots_adjust(bottom=.2, left=.1, right=.95, top=.95)
-#                 # Remove the title
-#                 for c in h.get_children():
-#                     if isinstance(c, matplotlib.text.Text):
-#                         c.remove()
-#                 # Save with transparency
-#                 h.savefig(imageFile)
-#                 matplotlib.pyplot.close(h)
-#
-#             self.done.emit(WaveformResult(waveform_id, imageFile))
-#
-#         except Exception as e:
-#             LOGGER.error("Error downloading %s", waveform_id, exc_info=True)
-#             self.done.emit(WaveformResult(waveform_id, e))
-
-
 def load_waveform(client, waveform):
     """
     Download the given waveform data and generate an image. This is a standalone function so we can
@@ -286,47 +221,53 @@ def load_waveform(client, waveform):
     return True
 
 
-# class WaveformsLoader(QtCore.QRunnable):
-#     """
-#     Thread to download waveform data and generate an image
-#     """
-#     progress = QtCore.pyqtSignal(object)
-#
-#     def __init__(self, client, waveforms, preferences):
-#         """
-#         Initialization.
-#         """
-#         # Keep a reference to globally shared components
-#         self.client = client
-#         self.waveforms = waveforms
-#         self.requests = {}
-#         super(WaveformsLoader, self).__init__()
-#
-#     def run(self):
-#         """
-#         Make a webservice request for events using the passed in options.
-#         """
-#         self.cancel()
-#         with concurrent.futures.ThreadPoolExecutor(5) as executor:
-#             for waveform in self.waveforms:
-#                 self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
-#             for result in concurrent.futures.as_completed(self.futures):
-#                 waveform_id = self.futures[result]
-#                 try:
-#                     self.progress.emit(WaveformResult(waveform_id, result.result()))
-#                 except Exception as e:
-#                     self.progress.emit(WaveformResult(waveform_id, e))
-#                 self
-#         self.done.emit(None)
-#
-#     def cancel(self):
-#         """
-#         Cancel any outstanding tasks
-#         """
-#         for future in self.futures:
-#             if not future.done():
-#                 future.cancel()
-#         self.futures = {}
+class WaveformsLoader(SignalingThread):
+    """
+    Thread to download waveform data and generate an image
+    """
+    progress = QtCore.pyqtSignal(object)
+
+    def __init__(self, client, waveforms):
+        """
+        Initialization.
+        """
+        # Keep a reference to globally shared components
+        self.client = client
+        self.waveforms = waveforms
+        self.futures = {}
+        super(WaveformsLoader, self).__init__()
+
+    def run(self):
+        """
+        Make a webservice request for events using the passed in options.
+        """
+        self.setPriority(QtCore.QThread.LowestPriority)
+        self.cancel()
+        self.futures = {}
+        with concurrent.futures.ThreadPoolExecutor(5) as executor:
+            for waveform in self.waveforms:
+                # Dictionary to look up the waveform id by Future
+                self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
+            # Iterate through Futures as they complete
+            for result in concurrent.futures.as_completed(self.futures):
+                waveform_id = self.futures.get(result)
+                if waveform_id:
+                    try:
+                        self.progress.emit(WaveformResult(waveform_id, result.result()))
+                    except Exception as e:
+                        self.progress.emit(WaveformResult(waveform_id, e))
+        self.futures = {}
+        self.done.emit(None)
+
+    def cancel(self):
+        """
+        Cancel any outstanding tasks
+        """
+        if self.futures:
+            for future in self.futures:
+                if not future.done():
+                    LOGGER.debug("Cancelling unexecuted future")
+                    future.cancel()
 
 
 class WaveformsLoadingWorker(QtCore.QObject):
@@ -471,13 +412,10 @@ class WaveformsHandler(SignalingObject):
         waveforms = [self.get_waveform(waveform_id) for waveform_id in waveform_ids]
 
         # Create a worker to load the data in a separate thread
-        self.thread = QtCore.QThread()
-        self.waveforms_loader = WaveformsLoadingWorker(self.client, waveforms)
-        self.waveforms_loader.moveToThread(self.thread)
+        self.waveforms_loader = WaveformsLoader(self.client, waveforms)
         self.waveforms_loader.progress.connect(self.on_downloaded)
         self.waveforms_loader.done.connect(self.on_all_downloaded)
-        self.thread.started.connect(self.waveforms_loader.start)
-        self.thread.start()
+        self.waveforms_loader.start()
 
     def on_downloaded(self, result):
         """
@@ -490,10 +428,10 @@ class WaveformsHandler(SignalingObject):
 
     def on_all_downloaded(self, result):
         LOGGER.debug("All waveforms downloaded  (%s)", QtCore.QThread.currentThreadId())
-        if self.thread:
-            self.thread.quit()
-            self.thread.wait()
-            self.thread = None
+        if self.waveforms_loader:
+            self.waveforms_loader.quit()
+            self.waveforms_loader.wait()
+            self.waveforms_loader = None
             LOGGER.debug("Download thread exited")
         self.done.emit(result)
 
