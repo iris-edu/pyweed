@@ -50,9 +50,6 @@ curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/ma
 conda env $ENV_ACTION
 source activate pyweed
 
-echo "Installing PyWEED"
-pip install git+https://github.com/iris-edu/pyweed.git
-
 if [[ $OS == 'MacOSX' ]]; then
   echo "Creating Mac app bundle"
   hash -r
