@@ -63,7 +63,7 @@ Install PyWEED to /Applications folder? [yes|no]
     echo "Application is available at $PWD/PyWEED.app"
   else
     mv $PWD/PyWEED.app /Applications/
-    echo "Installed!"
+    echo "Installed to /Applications/PyWEED.app"
   fi
 fi
 
