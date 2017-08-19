@@ -12,23 +12,44 @@ Various Qt widget utilities
 from PyQt4 import QtGui, QtCore
 from distutils.util import strtobool
 from logging import getLogger
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, pyqtSignal
 
 LOGGER = getLogger(__name__)
 
+# We want to watch for changes in the widget inputs, but every type of input has a different one so
+# we need to try a bunch of options
+INPUT_CHANGE_SIGNALS = ('valueChanged', 'textChanged', 'dateTimeChanged', 'clicked',)
 
-class OptionsAdapter(object):
+
+class OptionsAdapter(QtCore.QObject):
     """
     An adapter object that pairs an Options object with a set of Qt Widget fields
     """
-    def __init__(self):
+
+    # Signal indicating that the user changed something
+    changed = QtCore.pyqtSignal(QtGui.QWidget)
+
+    def __init__(self, widget):
+        super(OptionsAdapter, self).__init__()
         # Map of option names to Qt inputs
         self.inputs = {}
+        self.connect_to_widget(widget)
+        self.connect_signals()
+
+    def connect_signals(self):
+        """ Configure so that a change to any input produces a changed signal """
+        for key, one_input in self.inputs.items():
+            # Different widgets emit different signals  :P
+            for signal_name in INPUT_CHANGE_SIGNALS:
+                if hasattr(one_input, signal_name):
+                    LOGGER.debug("Listening to %s.%s" % (one_input, signal_name))
+                    getattr(one_input, signal_name).connect(lambda: self.changed.emit(key))
+                    continue
 
     def connect_to_widget(self, widget):
         """
         This should be called on initialization, passing in the widget to work on.
-        Subclasses should implement this to set up self.inputs
+        Subclasses should implement this to set up self.inputs then call the base class.
         """
         raise NotImplementedError()
 
@@ -96,6 +117,23 @@ class OptionsAdapter(object):
             else:
                 LOGGER.warning("Don't know how to write input %s (%s)", k, input)
         return self.inputs_to_options(inputs)
+
+
+class CoordinateOptionsAdapterMixin(object):
+    """ Mixin that exposes a separate event when a location input changes """
+
+    # Signal indicating that the user changed a location parameter
+    coords_changed = QtCore.pyqtSignal(QtGui.QWidget)
+
+    def connect_signals(self):
+        super(CoordinateOptionsAdapterMixin, self).connect_signals()
+        self.changed.connect(self.on_input_change)
+
+    def on_input_change(self, key):
+        for marker in ('latitude', 'longitude', 'radius', '_location'):
+            if marker in key:
+                self.coords_changed.emit(key)
+                return
 
 
 class ComboBoxAdapter(QtCore.QObject):

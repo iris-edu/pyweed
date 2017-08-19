@@ -36,39 +36,27 @@ class StationOptionsAdapter(OptionsAdapter):
             'maxradius': widget.distanceFromPointMaxRadiusDoubleSpinBox,
             'longitude': widget.distanceFromPointEastDoubleSpinBox,
             'latitude': widget.distanceFromPointNorthDoubleSpinBox,
-            '_timeBetween': widget.timeBetweenRadioButton,
-            '_timeFromEvents': widget.timeFromEventsRadioButton,
             '_locationGlobal': widget.locationGlobalRadioButton,
             '_locationRange': widget.locationRangeRadioButton,
             '_locationDistanceFromPoint': widget.locationDistanceFromPointRadioButton,
-            '_locationFromEvents': widget.locationFromEventsRadioButton,
         }
 
     def options_to_inputs(self, options):
         inputs = super(StationOptionsAdapter, self).options_to_inputs(options)
         # Set the radio buttons based on the EventOptions settings
-        inputs['_timeBetween'] = str(options.time_choice == StationOptions.TIME_RANGE)
-        inputs['_timeFromEvents'] = str(options.time_choice == StationOptions.TIME_EVENTS)
         inputs['_locationGlobal'] = str(options.location_choice == StationOptions.LOCATION_GLOBAL)
         inputs['_locationRange'] = str(options.location_choice == StationOptions.LOCATION_BOX)
         inputs['_locationDistanceFromPoint'] = str(options.location_choice == StationOptions.LOCATION_POINT)
-        inputs['_locationFromEvents'] = str(options.location_choice == StationOptions.LOCATION_EVENTS)
         return inputs
 
     def inputs_to_options(self, inputs):
         options = super(StationOptionsAdapter, self).inputs_to_options(inputs)
-        if strtobool(options.get('_timeBetween')):
-            options['time_choice'] = StationOptions.TIME_RANGE
-        elif strtobool(options.get('_timeFromEvents')):
-            options['time_choice'] = StationOptions.TIME_EVENTS
         if strtobool(options.get('_locationGlobal')):
             options['location_choice'] = StationOptions.LOCATION_GLOBAL
         elif strtobool(options.get('_locationRange')):
             options['location_choice'] = StationOptions.LOCATION_BOX
         elif strtobool(options.get('_locationDistanceFromPoint')):
             options['location_choice'] = StationOptions.LOCATION_POINT
-        elif strtobool(options.get('_locationFromEvents')):
-            options['location_choice'] = StationOptions.LOCATION_EVENTS
         return options
 
 
@@ -76,12 +64,15 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
     """
     Dialog window for event options used in creating a webservice query.
     """
+    # Signal to indicate that the options have changed
+    changed = QtCore.pyqtSignal()
+
     def __init__(self, parent=None):
         super(StationOptionsWidget, self).__init__(parent=parent)
         self.setupUi(self)
 
-        self.adapter = StationOptionsAdapter()
-        self.adapter.connect_to_widget(self)
+        self.adapter = StationOptionsAdapter(self)
+        self.adapter.changed.connect(self.changed.emit)
 
         # Hook up the shortcut buttons
         self.time30DaysPushButton.clicked.connect(self.setTime30Days)

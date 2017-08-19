@@ -43,7 +43,7 @@ def make_exclusive(widget1, widget2):
 
 class EventTableItems(TableItems):
     """
-    Defines the event table contents
+    Defines the table for displaying events
     """
     columns = [
         Column('Id'),
@@ -84,7 +84,7 @@ class EventTableItems(TableItems):
 
 class StationTableItems(TableItems):
     """
-    Defines the event table contents
+    Defines the table for displaying stations
     """
     columns = [
         Column('SNCL'),
@@ -145,35 +145,45 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Set MainWindow properties
         self.setWindowTitle('%s version %s' % (__app_name__, __version__))
 
-        # Common code for initializing event/station dock widgets
-        def initializeOptionsWidget(widget, options, dockWidget, toggle):
+        self.eventOptionsWidget = EventOptionsWidget(parent=self)
+        self.stationOptionsWidget = StationOptionsWidget(parent=self)
+
+        # Common initialization
+        # widget: the QWidget that goes in the dock
+        # options: the Options object that this widget works with
+        # dockWidget: the QDockWidget containing the widget
+        # toggle: a button that controls (and reflects) the dock visibility
+        # button: the button that retrieves data, which should reflect when the options change
+        for (widget, options, dockWidget, toggle, button,) in ((
+                self.eventOptionsWidget,
+                self.pyweed.event_options,
+                self.eventOptionsDockWidget,
+                self.toggleEventOptions,
+                self.getEventsButton
+        ), (
+                self.stationOptionsWidget,
+                self.pyweed.station_options,
+                self.stationOptionsDockWidget,
+                self.toggleStationOptions,
+                self.getStationsButton
+        )):
+            # Connect the widget to the data
             widget.setOptions(options)
+            # Add to dock
             dockWidget.setWidget(widget)
+            # Connect the toggle switch for hiding the dock
             toggle.toggled.connect(dockWidget.setVisible)
             dockWidget.visibilityChanged.connect(toggle.setChecked)
-
-        self.eventOptionsWidget = EventOptionsWidget(parent=self)
-        initializeOptionsWidget(
-            self.eventOptionsWidget,
-            self.pyweed.event_options,
-            self.eventOptionsDockWidget,
-            self.toggleEventOptions
-        )
-        self.stationOptionsWidget = StationOptionsWidget(parent=self)
-        initializeOptionsWidget(
-            self.stationOptionsWidget,
-            self.pyweed.station_options,
-            self.stationOptionsDockWidget,
-            self.toggleStationOptions
-        )
+            # We disable the button when downloading, and re-enable it when the user inputs have changed
+            widget.changed.connect(lambda: button.setEnabled(True))
 
         # Connect the mutually exclusive event/station options
-        make_exclusive(
-            self.eventOptionsWidget.timeFromStationsRadioButton,
-            self.stationOptionsWidget.timeFromEventsRadioButton)
-        make_exclusive(
-            self.eventOptionsWidget.locationFromStationsRadioButton,
-            self.stationOptionsWidget.locationFromEventsRadioButton)
+#         make_exclusive(
+#             self.eventOptionsWidget.timeFromStationsRadioButton,
+#             self.stationOptionsWidget.timeFromEventsRadioButton)
+#         make_exclusive(
+#             self.eventOptionsWidget.locationFromStationsRadioButton,
+#             self.stationOptionsWidget.locationFromEventsRadioButton)
 
         # Table selection
         self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
@@ -280,8 +290,34 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         LOGGER.info('Loading events...')
         self.eventsSpinner.show()
+        self.getEventsButton.setEnabled(False)
         self.updateOptions()
         self.pyweed.fetch_events()
+
+    def updateSeismap(self, options):
+        """ Update seismap when [event|station]_options changes  """
+        if options == self.event_options:
+            add_box = self.seismap.add_events_box
+            add_toroid = self.seismap.add_events_toroid
+        else:
+            add_box = self.seismap.add_stations_box
+            add_toroid = self.seismap.add_stations_toroid
+        if options.location_choice == options.LOCATION_BOX:
+            add_box(
+                options.maxlatitude,
+                options.maxlongitude,
+                options.minlatitude,
+                options.minlongitude
+            )
+        elif options.location_choice == options.LOCATION_POINT:
+            add_toroid(
+                options.latitude,
+                options.longitude,
+                options.minradius,
+                options.maxradius
+            )
+        else:
+            self.seismap.clear_events_bounds()
 
     def onEventsLoaded(self, events):
         """
@@ -333,6 +369,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         """
         LOGGER.info('Loading stations...')
         self.stationsSpinner.show()
+        self.getStationsButton.setEnabled(False)
         self.updateOptions()
         self.pyweed.fetch_stations()
 

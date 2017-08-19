@@ -203,6 +203,9 @@
                 <property name="text">
                  <string>Get Events</string>
                 </property>
+                <property name="default">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
              </layout>
@@ -281,6 +284,9 @@
                <widget class="QPushButton" name="getStationsButton">
                 <property name="text">
                  <string>Get Stations</string>
+                </property>
+                <property name="default">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -361,6 +367,9 @@
            <widget class="QPushButton" name="getWaveformsButton">
             <property name="text">
              <string>Get Waveforms</string>
+            </property>
+            <property name="default">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
