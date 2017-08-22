@@ -48,7 +48,7 @@ else
 fi
 
 echo "Working to $ENV_ACTION PyWEED environment"
-curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/master/environment.yml
+curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/dev/environment.yml
 conda env $ENV_ACTION
 source activate pyweed
 
