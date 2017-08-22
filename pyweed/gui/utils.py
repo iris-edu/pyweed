@@ -26,8 +26,8 @@ class OptionsAdapter(QtCore.QObject):
     An adapter object that pairs an Options object with a set of Qt Widget fields
     """
 
-    # Signal indicating that the user changed something
-    changed = QtCore.pyqtSignal(QtGui.QWidget)
+    # Signal indicating that the user changed something. Passes the key for the widget in self.inputs.
+    changed = QtCore.pyqtSignal(object)
 
     def __init__(self, widget):
         super(OptionsAdapter, self).__init__()
@@ -123,17 +123,25 @@ class CoordinateOptionsAdapterMixin(object):
     """ Mixin that exposes a separate event when a location input changes """
 
     # Signal indicating that the user changed a location parameter
-    coords_changed = QtCore.pyqtSignal(QtGui.QWidget)
+    coords_changed = QtCore.pyqtSignal(object)
 
     def connect_signals(self):
         super(CoordinateOptionsAdapterMixin, self).connect_signals()
         self.changed.connect(self.on_input_change)
 
-    def on_input_change(self, key):
-        for marker in ('latitude', 'longitude', 'radius', '_location'):
+    def is_coordinate_input(self, key):
+        """
+        Return true if the given key represents a coordinate input.
+        Subclasses may override/extend this.
+        """
+        for marker in ('latitude', 'longitude', 'radius', '_location',):
             if marker in key:
-                self.coords_changed.emit(key)
-                return
+                return True
+        return False
+
+    def on_input_change(self, key):
+        if self.is_coordinate_input(key):
+            self.coords_changed.emit(key)
 
 
 class ComboBoxAdapter(QtCore.QObject):

@@ -65,7 +65,8 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
     Dialog window for event options used in creating a webservice query.
     """
     # Signal to indicate that the options have changed
-    changed = QtCore.pyqtSignal()
+    changed = QtCore.pyqtSignal(object)
+    coords_changed = QtCore.pyqtSignal(object)
 
     def __init__(self, parent=None):
         super(StationOptionsWidget, self).__init__(parent=parent)
@@ -73,6 +74,7 @@ class StationOptionsWidget(QtGui.QDialog, StationOptionsWidget.Ui_StationOptions
 
         self.adapter = StationOptionsAdapter(self)
         self.adapter.changed.connect(self.changed.emit)
+        # self.adapter.coords_changed.connect(self.coords_changed.emit)
 
         # Hook up the shortcut buttons
         self.time30DaysPushButton.clicked.connect(self.setTime30Days)

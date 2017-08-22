@@ -34,6 +34,8 @@ Anaconda Python not found, do you want to install it? [yes|no]
 
   # Useful for debugging any issues with conda
   conda info -a
+else
+  echo "Found Anaconda at" `conda info --root`
 fi
 
 conda env list | grep '^pyweed\s' > /dev/null

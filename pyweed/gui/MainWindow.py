@@ -176,6 +176,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             dockWidget.visibilityChanged.connect(toggle.setChecked)
             # We disable the button when downloading, and re-enable it when the user inputs have changed
             widget.changed.connect(lambda: button.setEnabled(True))
+            widget.changed.connect(self.updateOptions)
+            # When the coordinates change, we want to update the map
+            widget.coords_changed.connect(lambda: self.updateSeismap())
+
 
         # Connect the mutually exclusive event/station options
 #         make_exclusive(
@@ -214,6 +218,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     def initializeMap(self):
         LOGGER.info('Setting up main map...')
+
         self.seismap = Seismap(self.mapCanvas)
 
         # Map of buttons to the relevant draw modes
@@ -277,12 +282,16 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             elif 'stations' in event.mode:
                 self.pyweed.set_station_options(options)
 
-    def updateOptions(self):
+    def updateOptions(self, event=True):
         """
         Update the event and station options from the GUI
         """
-        self.pyweed.set_event_options(self.eventOptionsWidget.getOptions())
-        self.pyweed.set_station_options(self.stationOptionsWidget.getOptions())
+        if event:
+            self.pyweed.set_event_options(self.eventOptionsWidget.getOptions())
+            self.updateSeismap(self.pyweed.event_options)
+        else:
+            self.pyweed.set_station_options(self.stationOptionsWidget.getOptions())
+            self.updateSeismap(self.pyweed.station_options)
 
     def getEvents(self):
         """
@@ -296,28 +305,30 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
     def updateSeismap(self, options):
         """ Update seismap when [event|station]_options changes  """
-        if options == self.event_options:
-            add_box = self.seismap.add_events_box
-            add_toroid = self.seismap.add_events_toroid
+        if options == self.pyweed.event_options:
+            add_box_fn = self.seismap.add_events_box
+            add_toroid_fn = self.seismap.add_events_toroid
+            clear_fn = self.seismap.clear_events_bounds
         else:
-            add_box = self.seismap.add_stations_box
-            add_toroid = self.seismap.add_stations_toroid
+            add_box_fn = self.seismap.add_stations_box
+            add_toroid_fn = self.seismap.add_stations_toroid
+            clear_fn = self.seismap.clear_stations_bounds
         if options.location_choice == options.LOCATION_BOX:
-            add_box(
+            add_box_fn(
                 options.maxlatitude,
                 options.maxlongitude,
                 options.minlatitude,
                 options.minlongitude
             )
         elif options.location_choice == options.LOCATION_POINT:
-            add_toroid(
+            add_toroid_fn(
                 options.latitude,
                 options.longitude,
                 options.minradius,
                 options.maxradius
             )
         else:
-            self.seismap.clear_events_bounds()
+            clear_fn()
 
     def onEventsLoaded(self, events):
         """
@@ -339,24 +350,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Add items to the map -------------------------------------------------
 
         self.seismap.add_events(events)
-
-        event_options = self.pyweed.event_options
-        if event_options.location_choice == event_options.LOCATION_BOX:
-            self.seismap.add_events_box(
-                event_options.maxlatitude,
-                event_options.maxlongitude,
-                event_options.minlatitude,
-                event_options.minlongitude
-            )
-        elif event_options.location_choice == event_options.LOCATION_POINT:
-            self.seismap.add_events_toroid(
-                event_options.latitude,
-                event_options.longitude,
-                event_options.minradius,
-                event_options.maxradius
-            )
-        else:
-            self.seismap.clear_events_bounds()
 
         self.onEventSelectionChanged()
         status = 'Finished loading events'
@@ -393,24 +386,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Add items to the map -------------------------------------------------
 
         self.seismap.add_stations(stations)
-
-        station_options = self.pyweed.station_options
-        if station_options.location_choice == station_options.LOCATION_BOX:
-            self.seismap.add_stations_box(
-                station_options.maxlatitude,
-                station_options.maxlongitude,
-                station_options.minlatitude,
-                station_options.minlongitude
-            )
-        elif station_options.location_choice == station_options.LOCATION_POINT:
-            self.seismap.add_stations_toroid(
-                station_options.latitude,
-                station_options.longitude,
-                station_options.minradius,
-                station_options.maxradius
-            )
-        else:
-            self.seismap.clear_stations_bounds()
 
         self.onStationSelectionChanged()
         status = 'Finished loading stations'

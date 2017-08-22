@@ -80,7 +80,8 @@ class PyWeedCore(object):
                 client = Client(data_center)
             # Verify that this client supports events
             if 'event' not in client.services:
-                raise Exception("The %s data center does not provide an event service" % data_center)
+                LOGGER.error("The %s data center does not provide an event service" % data_center)
+                return
             # Update settings
             self.event_data_center = data_center
             self.event_client = client
@@ -96,7 +97,8 @@ class PyWeedCore(object):
             # Verify that this client supports station and dataselect
             for service in ('station', 'dataselect',):
                 if service not in client.services:
-                    raise Exception("The %s data center does not provide a %s service" % (data_center, service))
+                    LOGGER.error("The %s data center does not provide a %s service" % (data_center, service))
+                    return
             # Update settings
             self.station_data_center = data_center
             self.station_client = client

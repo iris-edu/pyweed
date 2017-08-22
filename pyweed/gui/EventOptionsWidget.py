@@ -13,13 +13,13 @@ from PyQt4 import QtGui, QtCore
 from pyweed.gui.uic import EventOptionsWidget
 import logging
 from distutils.util import strtobool
-from pyweed.gui.utils import OptionsAdapter
+from pyweed.gui.utils import OptionsAdapter, CoordinateOptionsAdapterMixin
 from pyweed.event_options import EventOptions
 
 LOGGER = logging.getLogger(__name__)
 
 
-class EventOptionsAdapter(OptionsAdapter):
+class EventOptionsAdapter(CoordinateOptionsAdapterMixin, OptionsAdapter):
     def connect_to_widget(self, widget):
         # Map widget inputs to options
         self.inputs = {
