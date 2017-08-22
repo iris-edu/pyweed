@@ -1,8 +1,7 @@
 name: pyweed
 channels:
 - defaults
-- conda-forge
-- obspy
+- http://conda.anaconda.org/conda-forge
 dependencies:
 - python=3.5*
 - basemap
