@@ -13,102 +13,53 @@ from PyQt4 import QtGui, QtCore
 from pyweed.gui.uic import EventOptionsWidget
 import logging
 from distutils.util import strtobool
-from pyweed.gui.utils import OptionsAdapter, CoordinateOptionsAdapterMixin
 from pyweed.event_options import EventOptions
+from pyweed.gui.OptionsWidget import BaseOptionsWidget
 
 LOGGER = logging.getLogger(__name__)
 
 
-class EventOptionsAdapter(CoordinateOptionsAdapterMixin, OptionsAdapter):
-    def connect_to_widget(self, widget):
-        # Map widget inputs to options
-        self.inputs = {
-            'starttime': widget.starttimeDateTimeEdit,
-            'endtime': widget.endtimeDateTimeEdit,
-            'minmagnitude': widget.minMagDoubleSpinBox,
-            'maxmagnitude': widget.maxMagDoubleSpinBox,
-            'mindepth': widget.minDepthDoubleSpinBox,
-            'maxdepth': widget.maxDepthDoubleSpinBox,
-            'magnitudetype': widget.magTypeComboBox,
-            'minlongitude': widget.locationRangeWestDoubleSpinBox,
-            'maxlongitude': widget.locationRangeEastDoubleSpinBox,
-            'minlatitude': widget.locationRangeSouthDoubleSpinBox,
-            'maxlatitude': widget.locationRangeNorthDoubleSpinBox,
-            'minradius': widget.distanceFromPointMinRadiusDoubleSpinBox,
-            'maxradius': widget.distanceFromPointMaxRadiusDoubleSpinBox,
-            'longitude': widget.distanceFromPointEastDoubleSpinBox,
-            'latitude': widget.distanceFromPointNorthDoubleSpinBox,
-            '_locationGlobal': widget.locationGlobalRadioButton,
-            '_locationRange': widget.locationRangeRadioButton,
-            '_locationDistanceFromPoint': widget.locationDistanceFromPointRadioButton
-        }
-
-    def options_to_inputs(self, options):
-        inputs = super(EventOptionsAdapter, self).options_to_inputs(options)
-        # Set the radio buttons based on the EventOptions settings
-        inputs['_locationGlobal'] = str(options.location_choice == EventOptions.LOCATION_GLOBAL)
-        inputs['_locationRange'] = str(options.location_choice == EventOptions.LOCATION_BOX)
-        inputs['_locationDistanceFromPoint'] = str(options.location_choice == EventOptions.LOCATION_POINT)
-        return inputs
-
-    def inputs_to_options(self, inputs):
-        options = super(EventOptionsAdapter, self).inputs_to_options(inputs)
-        # Set various options based on radio button selections
-        if strtobool(options.get('_locationGlobal')):
-            options['location_choice'] = EventOptions.LOCATION_GLOBAL
-        elif strtobool(options.get('_locationRange')):
-            options['location_choice'] = EventOptions.LOCATION_BOX
-        elif strtobool(options.get('_locationDistanceFromPoint')):
-            options['location_choice'] = EventOptions.LOCATION_POINT
-        return options
-
-
-class EventOptionsWidget(QtGui.QDialog, EventOptionsWidget.Ui_EventOptionsWidget):
+class EventOptionsWidget(BaseOptionsWidget, EventOptionsWidget.Ui_EventOptionsWidget):
     """
     Dialog window for event options used in creating a webservice query.
     """
-    # Signal to indicate that the options have changed
-    changed = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
-        super(EventOptionsWidget, self).__init__(parent=parent)
-        self.setupUi(self)
+    def mapInputs(self):
+        return {
+            'starttime': self.starttimeDateTimeEdit,
+            'endtime': self.endtimeDateTimeEdit,
+            'minmagnitude': self.minMagDoubleSpinBox,
+            'maxmagnitude': self.maxMagDoubleSpinBox,
+            'mindepth': self.minDepthDoubleSpinBox,
+            'maxdepth': self.maxDepthDoubleSpinBox,
+            'magnitudetype': self.magTypeComboBox,
+            'minlongitude': self.locationRangeWestDoubleSpinBox,
+            'maxlongitude': self.locationRangeEastDoubleSpinBox,
+            'minlatitude': self.locationRangeSouthDoubleSpinBox,
+            'maxlatitude': self.locationRangeNorthDoubleSpinBox,
+            'minradius': self.distanceFromPointMinRadiusDoubleSpinBox,
+            'maxradius': self.distanceFromPointMaxRadiusDoubleSpinBox,
+            'longitude': self.distanceFromPointEastDoubleSpinBox,
+            'latitude': self.distanceFromPointNorthDoubleSpinBox,
+            '_locationGlobal': self.locationGlobalRadioButton,
+            '_locationRange': self.locationRangeRadioButton,
+            '_locationDistanceFromPoint': self.locationDistanceFromPointRadioButton
+        }
 
-        self.adapter = EventOptionsAdapter(self)
-        self.adapter.changed.connect(self.changed.emit)
+    def optionsToInputs(self, values):
+        # Turn the option choice value into a set of radio values
+        location_choice = values.get('location_choice')
+        values['_locationGlobal'] = (location_choice == EventOptions.LOCATION_GLOBAL)
+        values['_locationRange'] = (location_choice == EventOptions.LOCATION_BOX)
+        values['_locationDistanceFromPoint'] = (location_choice == EventOptions.LOCATION_POINT)
+        return values
 
-        # Hook up the shortcut buttons
-        self.time30DaysPushButton.clicked.connect(self.setTime30Days)
-        self.time1YearPushButton.clicked.connect(self.setTime1Year)
-
-    def setOptions(self, options):
-        self.adapter.write_to_widget(options)
-
-    @QtCore.pyqtSlot()
-    def getOptions(self):
-        """
-        Return a dictionary containing everything specified in the EventQueryDialog.
-        All dictionary values are properly formatted for use in querying event services.
-
-        Names of event options must match argument names defined here:
-          https://docs.obspy.org/packages/autogen/obspy.clients.fdsn.client.Client.get_events.html
-        """
-        return self.adapter.read_from_widget()
-
-    def setTime30Days(self):
-        """
-        Set the start/end times to cover the last 30 days
-        """
-        end = QtCore.QDateTime.currentDateTimeUtc()
-        start = end.addDays(-30)
-        self.starttimeDateTimeEdit.setDateTime(start)
-        self.endtimeDateTimeEdit.setDateTime(end)
-
-    def setTime1Year(self):
-        """
-        Set the start/end times to cover the last 30 days
-        """
-        end = QtCore.QDateTime.currentDateTimeUtc()
-        start = end.addYears(-1)
-        self.starttimeDateTimeEdit.setDateTime(start)
-        self.endtimeDateTimeEdit.setDateTime(end)
+    def inputsToOptions(self, values):
+        # Turn the radio values into an option choice value
+        if strtobool(values.get('_locationGlobal', 'F')):
+            values['location_choice'] = EventOptions.LOCATION_GLOBAL
+        elif strtobool(values.get('_locationRange', 'F')):
+            values['location_choice'] = EventOptions.LOCATION_BOX
+        elif strtobool(values.get('_locationDistanceFromPoint', 'F')):
+            values['location_choice'] = EventOptions.LOCATION_POINT
+        return values

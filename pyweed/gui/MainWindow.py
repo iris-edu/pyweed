@@ -145,49 +145,26 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Set MainWindow properties
         self.setWindowTitle('%s version %s' % (__app_name__, __version__))
 
-        self.eventOptionsWidget = EventOptionsWidget(parent=self)
-        self.stationOptionsWidget = StationOptionsWidget(parent=self)
+        # Options widgets
+        self.eventOptionsWidget = EventOptionsWidget(
+            self, self.pyweed.event_options, self.eventOptionsDockWidget, self.toggleEventOptions)
+        self.stationOptionsWidget = StationOptionsWidget(
+            self, self.pyweed.station_options, self.stationOptionsDockWidget, self.toggleStationOptions)
 
-        # Common initialization
-        # widget: the QWidget that goes in the dock
-        # options: the Options object that this widget works with
-        # dockWidget: the QDockWidget containing the widget
-        # toggle: a button that controls (and reflects) the dock visibility
-        # button: the button that retrieves data, which should reflect when the options change
-        for (widget, options, dockWidget, toggle, button,) in ((
-                self.eventOptionsWidget,
-                self.pyweed.event_options,
-                self.eventOptionsDockWidget,
-                self.toggleEventOptions,
-                self.getEventsButton
-        ), (
-                self.stationOptionsWidget,
-                self.pyweed.station_options,
-                self.stationOptionsDockWidget,
-                self.toggleStationOptions,
-                self.getStationsButton
-        )):
-            # Connect the widget to the data
-            widget.setOptions(options)
-            # Add to dock
-            dockWidget.setWidget(widget)
-            # Connect the toggle switch for hiding the dock
-            toggle.toggled.connect(dockWidget.setVisible)
-            dockWidget.visibilityChanged.connect(toggle.setChecked)
-            # We disable the button when downloading, and re-enable it when the user inputs have changed
-            widget.changed.connect(lambda: button.setEnabled(True))
-            widget.changed.connect(self.updateOptions)
-            # When the coordinates change, we want to update the map
-            widget.coords_changed.connect(lambda: self.updateSeismap())
+        # When any options change, enable the relevant download button
+        self.eventOptionsWidget.changed.connect(lambda: self.getEventsButton.setEnabled(True))
+        self.stationOptionsWidget.changed.connect(lambda: self.getStationsButton.setEnabled(True))
 
+        # Map
+        self.initializeMap()
 
-        # Connect the mutually exclusive event/station options
-#         make_exclusive(
-#             self.eventOptionsWidget.timeFromStationsRadioButton,
-#             self.stationOptionsWidget.timeFromEventsRadioButton)
-#         make_exclusive(
-#             self.eventOptionsWidget.locationFromStationsRadioButton,
-#             self.stationOptionsWidget.locationFromEventsRadioButton)
+        # When the options coordinates change, we want to update the map
+        self.eventOptionsWidget.changedCoords.connect(
+            lambda: self.updateSeismap(events=True)
+        )
+        self.stationOptionsWidget.changedCoords.connect(
+            lambda: self.updateSeismap(stations=True)
+        )
 
         # Table selection
         self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
@@ -200,9 +177,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.getStationsButton.clicked.connect(self.getStations)
         self.getWaveformsButton.clicked.connect(self.getWaveforms)
 
-        # Map
-        self.initializeMap()
-
         # Size and placement according to preferences
         self.resize(
             safe_int(prefs.MainWindow.width, 1000),
@@ -213,6 +187,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Add spinner overlays to the event/station widgets
         self.eventsSpinner = SpinnerWidget("Loading events...", self.eventsWidget)
         self.stationsSpinner = SpinnerWidget("Loading stations...", self.stationsWidget)
+
+        # Do an initial update
+        self.updateSeismap(events=True)
+        self.updateSeismap(stations=True)
 
         self.manageGetWaveformsButton()
 
@@ -279,19 +257,10 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             # Set event or station options
             if 'events' in event.mode:
                 self.pyweed.set_event_options(options)
+                self.eventOptionsWidget.setOptions()
             elif 'stations' in event.mode:
                 self.pyweed.set_station_options(options)
-
-    def updateOptions(self, event=True):
-        """
-        Update the event and station options from the GUI
-        """
-        if event:
-            self.pyweed.set_event_options(self.eventOptionsWidget.getOptions())
-            self.updateSeismap(self.pyweed.event_options)
-        else:
-            self.pyweed.set_station_options(self.stationOptionsWidget.getOptions())
-            self.updateSeismap(self.pyweed.station_options)
+                self.stationOptionsWidget.setOptions()
 
     def getEvents(self):
         """
@@ -300,35 +269,42 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Loading events...')
         self.eventsSpinner.show()
         self.getEventsButton.setEnabled(False)
-        self.updateOptions()
         self.pyweed.fetch_events()
 
-    def updateSeismap(self, options):
-        """ Update seismap when [event|station]_options changes  """
-        if options == self.pyweed.event_options:
-            add_box_fn = self.seismap.add_events_box
-            add_toroid_fn = self.seismap.add_events_toroid
-            clear_fn = self.seismap.clear_events_bounds
+    def updateSeismap(self, events=False, stations=False):
+        """
+        Update seismap when [event|station]OptionsWidget coordinates change
+        """
+        LOGGER.debug("Updating map from widget: %s" % ((events and "events") or "stations"))
+
+        if events:
+            options = self.eventOptionsWidget.getOptions()
+            markers = self.seismap.event_markers
         else:
-            add_box_fn = self.seismap.add_stations_box
-            add_toroid_fn = self.seismap.add_stations_toroid
-            clear_fn = self.seismap.clear_stations_bounds
-        if options.location_choice == options.LOCATION_BOX:
-            add_box_fn(
-                options.maxlatitude,
-                options.maxlongitude,
-                options.minlatitude,
-                options.minlongitude
-            )
-        elif options.location_choice == options.LOCATION_POINT:
-            add_toroid_fn(
-                options.latitude,
-                options.longitude,
-                options.minradius,
-                options.maxradius
-            )
-        else:
-            clear_fn()
+            options = self.stationOptionsWidget.getOptions()
+            markers = self.seismap.station_markers
+
+        try:
+            if options["location_choice"] == EventOptions.LOCATION_BOX:
+                self.seismap.add_marker_box(
+                    markers,
+                    float(options["maxlatitude"]),
+                    float(options["maxlongitude"]),
+                    float(options["minlatitude"]),
+                    float(options["minlongitude"])
+                )
+            elif options["location_choice"] == EventOptions.LOCATION_POINT:
+                self.seismap.add_marker_toroid(
+                    markers,
+                    float(options["latitude"]),
+                    float(options["longitude"]),
+                    float(options["minradius"]),
+                    float(options["maxradius"])
+                )
+            else:
+                self.seismap.clear_bounding_markers(markers)
+        except Exception as e:
+            LOGGER.error("Failed to update seismap! %s", e, exc_info=True)
 
     def onEventsLoaded(self, events):
         """
@@ -363,7 +339,6 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         LOGGER.info('Loading stations...')
         self.stationsSpinner.show()
         self.getStationsButton.setEnabled(False)
-        self.updateOptions()
         self.pyweed.fetch_stations()
 
     def onStationsLoaded(self, stations):

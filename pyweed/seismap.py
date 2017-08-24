@@ -90,6 +90,10 @@ class Seismap(QtCore.QObject):
     pan_cursor = QtCore.Qt.PointingHandCursor
     draw_cursor = QtCore.Qt.CrossCursor
 
+    # Markers
+    event_markers = None
+    station_markers = None
+
     def __init__(self, canvas):
         super(Seismap, self).__init__()
         self.canvas = canvas
