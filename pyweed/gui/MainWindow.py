@@ -257,10 +257,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             # Set event or station options
             if 'events' in event.mode:
                 self.pyweed.set_event_options(options)
-                self.eventOptionsWidget.setOptions()
             elif 'stations' in event.mode:
                 self.pyweed.set_station_options(options)
-                self.stationOptionsWidget.setOptions()
 
     def getEvents(self):
         """

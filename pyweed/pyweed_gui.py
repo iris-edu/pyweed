@@ -101,7 +101,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     def set_event_options(self, options):
         super(PyWeedGUI, self).set_event_options(options)
         if self.mainWindow:
-            self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
+            self.mainWindow.eventOptionsWidget.setOptions()
 
     def on_events_loaded(self, events):
         """
@@ -130,7 +130,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     def set_station_options(self, options):
         super(PyWeedGUI, self).set_station_options(options)
         if self.mainWindow:
-            self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
+            self.mainWindow.stationOptionsWidget.setOptions()
 
     def on_stations_loaded(self, stations):
         """
