@@ -10,6 +10,9 @@ cd /tmp/
 
 export ARCH=`uname -m`
 
+###
+# Install Anaconda if not found
+
 echo "Looking for Anaconda installation"
 conda info > /dev/null 2>&1
 if (( $? )); then
@@ -38,6 +41,9 @@ else
   echo "Found Anaconda at" `conda info --root`
 fi
 
+###
+# Create/update the conda environment
+
 conda env list | grep '^pyweed\s' > /dev/null
 if (( $? )); then
   echo "No pyweed environment found"
@@ -48,9 +54,12 @@ else
 fi
 
 echo "Working to $ENV_ACTION PyWEED environment"
-curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/dev/environment.yml
+curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/dev/installer/environment.yml
 conda env $ENV_ACTION
 source activate pyweed
+
+###
+# Mac .app bundle
 
 if [[ $OS == 'MacOSX' ]]; then
   echo "Creating Mac app bundle"
