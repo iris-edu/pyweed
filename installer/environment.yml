@@ -1,7 +1,7 @@
 name: pyweed
 channels:
 - defaults
-- conda-forge
+- http://conda.anaconda.org/conda-forge
 dependencies:
 - python=3.5*
 - basemap
@@ -15,4 +15,5 @@ dependencies:
 - qtconsole
 - pyzmq
 - pip:
+  - pyweed==0.4.dev3
   - geographiclib
