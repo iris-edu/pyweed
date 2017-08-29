@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function)
 import logging
 from pyweed.signals import SignalingThread, SignalingObject
 from obspy.core.inventory.inventory import Inventory
-from pyweed.pyweed_utils import get_service_url
+from pyweed.pyweed_utils import get_service_url, CancelledException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +78,11 @@ class StationsHandler(SignalingObject):
 
     def on_inventory_loaded(self, inventory):
         self.done.emit(inventory)
+
+    def cancel(self):
+        if self.inventory_loader:
+            self.inventory_loader.done.disconnect()
+        self.done.emit(CancelledException())
 
 
 # ------------------------------------------------------------------------------

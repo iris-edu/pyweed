@@ -22,7 +22,7 @@ import matplotlib
 import weakref
 from pyweed.pyweed_utils import get_sncl, get_event_id, TimeWindow,\
     get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS,\
-    get_event_description, get_arrivals, format_time_str, get_distance, get_service_url
+    get_event_description, get_arrivals, format_time_str, get_distance, get_service_url, CancelledException
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.sac.sactrace import SACTrace
 from obspy.core.stream import Stream
@@ -242,7 +242,7 @@ class WaveformsLoader(SignalingThread):
         Make a webservice request for events using the passed in options.
         """
         self.setPriority(QtCore.QThread.LowestPriority)
-        self.cancel()
+        self.clearFutures()
         self.futures = {}
         with concurrent.futures.ThreadPoolExecutor(5) as executor:
             for waveform in self.waveforms:
@@ -252,6 +252,7 @@ class WaveformsLoader(SignalingThread):
             for result in concurrent.futures.as_completed(self.futures):
                 waveform_id = self.futures.get(result)
                 if waveform_id:
+                    LOGGER.debug("Loader finished: %s", waveform_id)
                     try:
                         self.progress.emit(WaveformResult(waveform_id, result.result()))
                     except Exception as e:
@@ -259,7 +260,7 @@ class WaveformsLoader(SignalingThread):
         self.futures = {}
         self.done.emit(None)
 
-    def cancel(self):
+    def clearFutures(self):
         """
         Cancel any outstanding tasks
         """
@@ -269,58 +270,13 @@ class WaveformsLoader(SignalingThread):
                     LOGGER.debug("Cancelling unexecuted future")
                     future.cancel()
 
-
-class WaveformsLoadingWorker(QtCore.QObject):
-    """
-    Worker to download a set of waveform data and generate images, this should run in its own separate thread.
-    """
-    progress = QtCore.pyqtSignal(object)
-    done = QtCore.pyqtSignal(object)
-
-    def __init__(self, client, waveforms):
-        """
-        Initialization.
-        """
-        # Keep a reference to globally shared components
-        self.client = client
-        self.waveforms = waveforms
-        self.futures = {}
-        super(WaveformsLoadingWorker, self).__init__()
-
-    @QtCore.pyqtSlot()
-    def start(self):
-        """
-        Try to download all the waveforms using a ThreadPool
-        """
-        QtCore.QThread.currentThread().setPriority(QtCore.QThread.LowestPriority)
-        self.cancel()
-        self.futures = {}
-        with concurrent.futures.ThreadPoolExecutor(5) as executor:
-            for waveform in self.waveforms:
-                # Dictionary to look up the waveform id by Future
-                self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
-            # Iterate through Futures as they complete
-            for result in concurrent.futures.as_completed(self.futures):
-                waveform_id = self.futures.get(result)
-                if waveform_id:
-                    try:
-                        self.progress.emit(WaveformResult(waveform_id, result.result()))
-                    except Exception as e:
-                        self.progress.emit(WaveformResult(waveform_id, e))
-        self.done.emit(None)
-
-    @QtCore.pyqtSlot()
     def cancel(self):
         """
-        Cancel any outstanding tasks
+        User-requested cancel
         """
-        if self.futures:
-            for future in self.futures:
-                if not future.done():
-                    LOGGER.debug("Cancelling unexecuted future")
-                    future.cancel()
-        self.futures = {}
-        self.done.emit(None)
+        self.done.disconnect()
+        self.progress.disconnect()
+        self.clearFutures()
 
 
 class WaveformsHandler(SignalingObject):
@@ -382,19 +338,26 @@ class WaveformsHandler(SignalingObject):
                 self.waveforms.append(waveform)
                 self.waveforms_by_id[waveform.waveform_id] = waveform
 
-    def clear_downloads(self):
+    def cancel_download(self):
         """
         Cancel the loader if it's running
         """
-        LOGGER.debug('Clearing existing downloads')
+        LOGGER.debug('Cancelling existing downloads')
         if self.waveforms_loader:
             self.waveforms_loader.cancel()
+        # Mark all the waveforms that are still marked as loading
+        for waveform in self.waveforms:
+            if waveform.loading:
+                waveform.loading = False
+                waveform.error = "Cancelled download"
+                LOGGER.debug("Manually marking %s as cancelled", waveform.waveform_id)
+                self.progress.emit(WaveformResult(waveform.waveform_id, None))
+        self.done.emit(CancelledException())
 
     def download_waveforms(self, priority_ids, other_ids, time_window):
         """
         Initiate a download of all the given waveforms
         """
-        self.clear_downloads()
         LOGGER.info('Downloading waveforms')
         LOGGER.debug("Priority IDs: %s" % (priority_ids,))
         LOGGER.debug("Other IDs: %s" % (other_ids,))
@@ -423,7 +386,7 @@ class WaveformsHandler(SignalingObject):
 
         :param result: a `WaveformResult`
         """
-        LOGGER.debug("Downloaded waveform %s (%s)", result.waveform_id, QtCore.QThread.currentThreadId())
+        # LOGGER.debug("Downloaded waveform %s (%s)", result.waveform_id, QtCore.QThread.currentThreadId())
         self.progress.emit(result)
 
     def on_all_downloaded(self, result):
@@ -431,7 +394,6 @@ class WaveformsHandler(SignalingObject):
         if self.waveforms_loader:
             self.waveforms_loader.quit()
             self.waveforms_loader.wait()
-            self.waveforms_loader = None
             LOGGER.debug("Download thread exited")
         self.done.emit(result)
 

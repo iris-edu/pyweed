@@ -9,7 +9,7 @@ Spinner overlay to indicate that an operation is in progress.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 from logging import getLogger
 from pyweed.gui.uic import SpinnerWidget
 
@@ -21,12 +21,19 @@ class SpinnerWidget(QtGui.QFrame, SpinnerWidget.Ui_SpinnerWidget):
     Spinner overlay widget. When shown, this covers the parent window and
     plays an animated spinner graphic along with a text message.
     """
-    def __init__(self, labelText, parent=None):
+
+    cancelled = QtCore.pyqtSignal()
+
+    def __init__(self, labelText, cancellable=True, parent=None):
         super(SpinnerWidget, self).__init__(parent=parent)
         self.setupUi(self)
         self.movie = QtGui.QMovie(":qrc/rotator-32.gif")
         self.icon.setMovie(self.movie)
         self.label.setText(labelText)
+        if cancellable:
+            self.cancelButton.clicked.connect(self.cancelled.emit)
+        else:
+            self.cancelButton.hide()
         self.hide()
 
     def showEvent(self, *args, **kwargs):

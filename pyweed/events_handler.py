@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function)
 from pyweed.signals import SignalingThread, SignalingObject
 import logging
 from obspy.core.event.catalog import Catalog
-from pyweed.pyweed_utils import get_service_url
+from pyweed.pyweed_utils import get_service_url, CancelledException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +76,11 @@ class EventsHandler(SignalingObject):
 
     def on_catalog_loaded(self, event_catalog):
         self.done.emit(event_catalog)
+
+    def cancel(self):
+        if self.catalog_loader:
+            self.catalog_loader.done.disconnect()
+        self.done.emit(CancelledException())
 
 
 # ------------------------------------------------------------------------------

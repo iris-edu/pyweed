@@ -256,15 +256,16 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveDirectoryPushButton.setText(self.waveformDirectory)
         self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
-        # Spinner overlays for downloading and saving
-        self.downloadSpinner = SpinnerWidget("Downloading...", self.downloadGroupBox)
-        self.saveSpinner = SpinnerWidget("Saving...", self.saveGroupBox)
-
         # Waveforms
         self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.station_client)
         # The callbacks here are expensive, so use QueuedConnection to run them asynchronously
         self.waveformsHandler.progress.connect(self.onWaveformDownloaded, QtCore.Qt.QueuedConnection)
         self.waveformsHandler.done.connect(self.onAllDownloaded, QtCore.Qt.QueuedConnection)
+
+        # Spinner overlays for downloading and saving
+        self.downloadSpinner = SpinnerWidget("Downloading...", parent=self.downloadGroupBox)
+        self.downloadSpinner.cancelled.connect(self.onDownloadCancel)
+        self.saveSpinner = SpinnerWidget("Saving...", cancellable=False, parent=self.saveGroupBox)
 
         # Connect signals associated with the main table
         # self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents)
@@ -442,7 +443,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
     def onDownloadCancel(self):
         if self.waveformsDownloadStatus == STATUS_WORKING:
             # Cancel running download
-            self.waveformsHandler.clear_downloads()
+            self.waveformsHandler.cancel_download()
 
     def updateToolbars(self):
         """

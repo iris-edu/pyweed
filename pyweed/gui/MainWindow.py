@@ -188,7 +188,9 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Add spinner overlays to the event/station widgets
         self.eventsSpinner = SpinnerWidget("Loading events...", parent=self.eventsWidget)
+        self.eventsSpinner.cancelled.connect(self.pyweed.events_handler.cancel)
         self.stationsSpinner = SpinnerWidget("Loading stations...", parent=self.stationsWidget)
+        self.stationsSpinner.cancelled.connect(self.pyweed.stations_handler.cancel)
 
         # Do an initial update
         self.updateSeismap(events=True)

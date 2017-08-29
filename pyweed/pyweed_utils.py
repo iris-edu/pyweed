@@ -332,3 +332,15 @@ def get_service_url(client, service, parameters):
             client.base_url, service, urlencode(parameters)
         )
 
+
+class CancelledException(Exception):
+    """
+    An exception to return in an event notification indicating that an operation was cancelled.
+    See `StationsHandler` for an example.
+    """
+    def __str__(self, *args, **kwargs):
+        s = super(CancelledException, self).__str__(*args, **kwargs)
+        if s == '':
+            return 'Cancelled'
+        else:
+            return s
