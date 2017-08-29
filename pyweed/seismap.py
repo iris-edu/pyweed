@@ -449,6 +449,21 @@ class Seismap(QtCore.QObject):
         self.map_axes.set_ylim(-90, 90)
         self.canvas.draw_idle()
 
+    def fit_canvas(self, *args):
+        canvas_w = self.canvas.width()
+        canvas_h = self.canvas.height()
+        map_xlim = self.map_axes.get_xlim()
+        map_ylim = self.map_axes.get_ylim()
+
+        map_w = map_xlim[1] - map_xlim[0]
+        map_h = map_ylim[1] - map_ylim[0]
+        prop_map_h = ((map_w * canvas_h) / canvas_w)
+
+        adjustment = ((prop_map_h - map_h) / 2)
+
+        self.map_axes.set_ylim(map_ylim[0] - adjustment, map_ylim[1] + adjustment)
+        self.canvas.draw_idle()
+
     def init_drawing(self):
         # Map drawing mode
         self.draw_mode = None
@@ -459,7 +474,9 @@ class Seismap(QtCore.QObject):
         # Handler functions for mouse down/move/up, these are created when drawing is activated
         # See http://matplotlib.org/users/event_handling.html
         self.draw_handlers = {
-            'click': self.canvas.mpl_connect('button_press_event', self.on_mouse_down)
+            'click': self.canvas.mpl_connect('button_press_event', self.on_mouse_down),
+            'scroll_wheel': self.canvas.mpl_connect('scroll_event', self.on_scroll_wheel),
+            'resize': self.canvas.mpl_connect('resize_event', self.fit_canvas),
         }
         self.update_cursor()
 
@@ -602,3 +619,13 @@ class Seismap(QtCore.QObject):
                 self.add_events_toroid(lat, lon, 0, maxradius)
             elif 'stations' in self.draw_mode:
                 self.add_stations_toroid(lat, lon, 0, maxradius)
+
+    def on_scroll_wheel(self, event):
+        """
+        Zoom on scroll wheel
+        """
+        if event.step:
+            if event.step > 0:
+                self.zoom_in()
+            else:
+                self.zoom_out()
