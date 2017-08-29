@@ -99,6 +99,7 @@ class RedmineClient(object):
                     'key': self.redmine_key,
                     'offset': offset,
                     'limit': limit,
+                    'sort': 'id',
                 }
             )
             r.raise_for_status()
