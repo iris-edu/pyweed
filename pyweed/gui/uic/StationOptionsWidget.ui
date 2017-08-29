@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>309</width>
-    <height>703</height>
+    <width>302</width>
+    <height>621</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,10 +18,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>0</number>
-   </property>
-   <property name="sizeConstraint">
-    <enum>QLayout::SetDefaultConstraint</enum>
+    <number>4</number>
    </property>
    <item>
     <widget class="QGroupBox" name="SNCLGroupBox">
@@ -113,138 +110,108 @@
       <string>Time</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="bottomMargin">
+       <number>4</number>
+      </property>
       <item>
-       <widget class="QRadioButton" name="timeBetweenRadioButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>Between start and end times</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
+       <layout class="QVBoxLayout" name="verticalLayout_6">
         <property name="spacing">
          <number>0</number>
         </property>
-        <property name="leftMargin">
-         <number>24</number>
-        </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
-          <property name="spacing">
-           <number>0</number>
+         <layout class="QFormLayout" name="formLayout_2">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::FieldsStayAtSizeHint</enum>
           </property>
-          <item>
-           <layout class="QFormLayout" name="formLayout_2">
-            <property name="fieldGrowthPolicy">
-             <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+          <property name="formAlignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+          </property>
+          <property name="horizontalSpacing">
+           <number>4</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>1</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="starttimeLabel">
+            <property name="text">
+             <string>Start</string>
             </property>
-            <property name="formAlignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-            </property>
-            <property name="horizontalSpacing">
-             <number>4</number>
-            </property>
-            <property name="verticalSpacing">
-             <number>1</number>
-            </property>
-            <item row="0" column="0">
-             <widget class="QLabel" name="starttimeLabel">
-              <property name="text">
-               <string>Start</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QDateTimeEdit" name="starttimeDateTimeEdit">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-              </property>
-              <property name="displayFormat">
-               <string>yyyy-MM-dd hh:mm:ss</string>
-              </property>
-              <property name="calendarPopup">
-               <bool>true</bool>
-              </property>
-              <property name="timeSpec">
-               <enum>Qt::UTC</enum>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="endtimeLabel">
-              <property name="text">
-               <string>End</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QDateTimeEdit" name="endtimeDateTimeEdit">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="showGroupSeparator" stdset="0">
-               <bool>false</bool>
-              </property>
-              <property name="displayFormat">
-               <string>yyyy-MM-dd hh:mm:ss</string>
-              </property>
-              <property name="calendarPopup">
-               <bool>true</bool>
-              </property>
-              <property name="timeSpec">
-               <enum>Qt::UTC</enum>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           </widget>
           </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <item>
-             <widget class="QPushButton" name="time30DaysPushButton">
-              <property name="text">
-               <string>Last 30 days</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="time1YearPushButton">
-              <property name="text">
-               <string>Last year</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+          <item row="0" column="1">
+           <widget class="QDateTimeEdit" name="starttimeDateTimeEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+            <property name="displayFormat">
+             <string>yyyy-MM-dd hh:mm:ss</string>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+            <property name="timeSpec">
+             <enum>Qt::UTC</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="endtimeLabel">
+            <property name="text">
+             <string>End</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDateTimeEdit" name="endtimeDateTimeEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="showGroupSeparator" stdset="0">
+             <bool>false</bool>
+            </property>
+            <property name="displayFormat">
+             <string>yyyy-MM-dd hh:mm:ss</string>
+            </property>
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+            <property name="timeSpec">
+             <enum>Qt::UTC</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
         <item>
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QPushButton" name="time30DaysPushButton">
+            <property name="text">
+             <string>Last 30 days</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="time1YearPushButton">
+            <property name="text">
+             <string>Last year</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -256,9 +223,15 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="timeFromEventsRadioButton">
+       <widget class="QToolButton" name="timeFromEventsToolButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Use the event time selection</string>
+         <string>&gt;&gt; Copy Time Range from Event Options</string>
         </property>
        </widget>
       </item>
@@ -271,15 +244,28 @@
       <string>Location</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="bottomMargin">
+       <number>4</number>
+      </property>
       <item>
-       <widget class="QRadioButton" name="locationGlobalRadioButton">
-        <property name="text">
-         <string>Global</string>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <property name="spacing">
+         <number>0</number>
         </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
+        <item>
+         <widget class="QRadioButton" name="locationGlobalRadioButton">
+          <property name="text">
+           <string>Global</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="Line" name="line_4">
@@ -289,185 +275,198 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <layout class="QVBoxLayout" name="verticalLayout_8">
         <property name="spacing">
          <number>0</number>
         </property>
         <item>
-         <widget class="QRadioButton" name="locationRangeRadioButton">
-          <property name="text">
-           <string>Within lat/lon box</string>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Expanding</enum>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QToolButton" name="drawLocationRangeToolButton">
-          <property name="text">
-           <string>Draw on map</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>24</number>
-        </property>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_7">
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
           <property name="spacing">
            <number>0</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <property name="spacing">
-             <number>0</number>
+           <widget class="QRadioButton" name="locationRangeRadioButton">
+            <property name="text">
+             <string>Within lat/lon box</string>
             </property>
-            <item>
-             <spacer name="horizontalSpacer_12">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>1</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="locationRangeNorthDoubleSpinBox">
-              <property name="minimum">
-               <double>-90.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>90.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Expanding</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>1</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <property name="spacing">
-             <number>2</number>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-            <item>
-             <widget class="QDoubleSpinBox" name="locationRangeWestDoubleSpinBox">
-              <property name="minimum">
-               <double>-180.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="locationRangeEastDoubleSpinBox">
-              <property name="minimum">
-               <double>-180.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            <property name="sizeType">
+             <enum>QSizePolicy::Expanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <property name="spacing">
-             <number>0</number>
+           <widget class="QToolButton" name="drawLocationRangeToolButton">
+            <property name="text">
+             <string>Draw on map</string>
             </property>
-            <item>
-             <spacer name="horizontalSpacer_7">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>1</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="locationRangeSouthDoubleSpinBox">
-              <property name="minimum">
-               <double>-90.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>90.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_8">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>1</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
         <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+          <property name="spacing">
+           <number>0</number>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
+          <property name="leftMargin">
+           <number>24</number>
           </property>
-         </spacer>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <spacer name="horizontalSpacer_12">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>1</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="locationRangeNorthDoubleSpinBox">
+                <property name="minimum">
+                 <double>-90.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>90.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Expanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>1</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <property name="spacing">
+               <number>2</number>
+              </property>
+              <item>
+               <widget class="QDoubleSpinBox" name="locationRangeWestDoubleSpinBox">
+                <property name="minimum">
+                 <double>-180.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>180.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="locationRangeEastDoubleSpinBox">
+                <property name="minimum">
+                 <double>-180.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>180.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <spacer name="horizontalSpacer_7">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>1</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="locationRangeSouthDoubleSpinBox">
+                <property name="minimum">
+                 <double>-90.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>90.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_8">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>1</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -479,182 +478,189 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
         <property name="spacing">
          <number>0</number>
         </property>
         <item>
-         <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>Distance from point</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Expanding</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QToolButton" name="drawDistanceFromPointToolButton">
-          <property name="text">
-           <string>Draw on map</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,1">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="leftMargin">
-         <number>24</number>
-        </property>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
           <property name="spacing">
-           <number>1</number>
-          </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
+           <number>0</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
+           <widget class="QRadioButton" name="locationDistanceFromPointRadioButton">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Distance from point</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Expanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="drawDistanceFromPointToolButton">
+            <property name="text">
+             <string>Draw on map</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,1">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>24</number>
+          </property>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
             <property name="spacing">
-             <number>4</number>
+             <number>1</number>
             </property>
             <property name="sizeConstraint">
              <enum>QLayout::SetDefaultConstraint</enum>
             </property>
             <item>
-             <widget class="QDoubleSpinBox" name="distanceFromPointMinRadiusDoubleSpinBox">
-              <property name="minimum">
-               <double>0.000000000000000</double>
+             <layout class="QHBoxLayout" name="horizontalLayout_14">
+              <property name="spacing">
+               <number>4</number>
               </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
+              <property name="sizeConstraint">
+               <enum>QLayout::SetDefaultConstraint</enum>
               </property>
-             </widget>
+              <item>
+               <widget class="QDoubleSpinBox" name="distanceFromPointMinRadiusDoubleSpinBox">
+                <property name="minimum">
+                 <double>0.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>180.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>-</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="distanceFromPointMaxRadiusDoubleSpinBox">
+                <property name="minimum">
+                 <double>0.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>180.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>degrees</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>-</string>
+             <layout class="QHBoxLayout" name="horizontalLayout_15">
+              <property name="spacing">
+               <number>4</number>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="distanceFromPointMaxRadiusDoubleSpinBox">
-              <property name="minimum">
-               <double>0.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_8">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>degrees</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
+              <item>
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>from</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="distanceFromPointEastDoubleSpinBox">
+                <property name="minimum">
+                 <double>-180.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>180.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_14">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>E</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="distanceFromPointNorthDoubleSpinBox">
+                <property name="minimum">
+                 <double>-90.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>90.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>N</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_15">
-            <property name="spacing">
-             <number>4</number>
+           <spacer name="horizontalSpacer_11">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-            <item>
-             <widget class="QLabel" name="label_6">
-              <property name="text">
-               <string>from</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="distanceFromPointEastDoubleSpinBox">
-              <property name="minimum">
-               <double>-180.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_14">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>E</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="distanceFromPointNorthDoubleSpinBox">
-              <property name="minimum">
-               <double>-90.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>90.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>N</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            <property name="sizeType">
+             <enum>QSizePolicy::Expanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_11">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Expanding</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </item>
@@ -666,12 +672,18 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="locationFromEventsRadioButton">
+       <widget class="QToolButton" name="locationFromEventsToolButton">
         <property name="enabled">
          <bool>true</bool>
         </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Use the event location bounds</string>
+         <string>&gt;&gt; Copy Location from Event Options</string>
         </property>
        </widget>
       </item>
@@ -693,17 +705,15 @@
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="0" margin="0"/>
  <tabstops>
   <tabstop>networkLineEdit</tabstop>
   <tabstop>stationLineEdit</tabstop>
   <tabstop>locationLineEdit</tabstop>
   <tabstop>channelLineEdit</tabstop>
-  <tabstop>timeBetweenRadioButton</tabstop>
   <tabstop>starttimeDateTimeEdit</tabstop>
   <tabstop>endtimeDateTimeEdit</tabstop>
-  <tabstop>timeFromEventsRadioButton</tabstop>
-  <tabstop>locationFromEventsRadioButton</tabstop>
+  <tabstop>timeFromEventsToolButton</tabstop>
+  <tabstop>locationFromEventsToolButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -101,16 +101,13 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     def set_event_options(self, options):
         super(PyWeedGUI, self).set_event_options(options)
         if self.mainWindow:
-            self.mainWindow.eventOptionsWidget.setOptions(self.event_options)
+            self.mainWindow.eventOptionsWidget.setOptions()
 
     def on_events_loaded(self, events):
         """
         Handler triggered when the EventsHandler finishes loading events
         """
-        if isinstance(events, Exception):
-            msg = "Error loading events: %s" % events
-            LOGGER.error(msg)
-        else:
+        if not isinstance(events, Exception):
             self.set_events(events)
         self.mainWindow.onEventsLoaded(events)
 
@@ -130,16 +127,13 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     def set_station_options(self, options):
         super(PyWeedGUI, self).set_station_options(options)
         if self.mainWindow:
-            self.mainWindow.stationOptionsWidget.setOptions(self.station_options)
+            self.mainWindow.stationOptionsWidget.setOptions()
 
     def on_stations_loaded(self, stations):
         """
         Handler triggered when the StationsHandler finishes loading stations
         """
-        if isinstance(stations, Exception):
-            msg = "Error loading stations: %s" % stations
-            LOGGER.error(msg)
-        else:
+        if not isinstance(stations, Exception):
             self.set_stations(stations)
         self.mainWindow.onStationsLoaded(stations)
 

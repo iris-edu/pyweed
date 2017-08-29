@@ -45,10 +45,24 @@ class Ui_SpinnerWidget(object):
         self.label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.label.setObjectName(_fromUtf8("label"))
         self.verticalLayout.addWidget(self.label)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.cancelButton = QtGui.QPushButton(SpinnerWidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
+        self.cancelButton.setSizePolicy(sizePolicy)
+        self.cancelButton.setObjectName(_fromUtf8("cancelButton"))
+        self.horizontalLayout.addWidget(self.cancelButton)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout.setStretch(0, 1)
+        self.verticalLayout.setStretch(1, 1)
 
         self.retranslateUi(SpinnerWidget)
         QtCore.QMetaObject.connectSlotsByName(SpinnerWidget)
 
     def retranslateUi(self, SpinnerWidget):
         SpinnerWidget.setWindowTitle(_translate("SpinnerWidget", "Form", None))
+        self.cancelButton.setText(_translate("SpinnerWidget", "Cancel", None))
 

@@ -80,7 +80,8 @@ class PyWeedCore(object):
                 client = Client(data_center)
             # Verify that this client supports events
             if 'event' not in client.services:
-                raise Exception("The %s data center does not provide an event service" % data_center)
+                LOGGER.error("The %s data center does not provide an event service" % data_center)
+                return
             # Update settings
             self.event_data_center = data_center
             self.event_client = client
@@ -96,7 +97,8 @@ class PyWeedCore(object):
             # Verify that this client supports station and dataselect
             for service in ('station', 'dataselect',):
                 if service not in client.services:
-                    raise Exception("The %s data center does not provide a %s service" % (data_center, service))
+                    LOGGER.error("The %s data center does not provide a %s service" % (data_center, service))
+                    return
             # Update settings
             self.station_data_center = data_center
             self.station_client = client
@@ -181,7 +183,7 @@ class PyWeedCore(object):
         """
         Get the options for making an event request from Obspy
         """
-        return self.event_options.get_obspy_options(self.station_options)
+        return self.event_options.get_obspy_options()
 
     def fetch_events(self, options=None):
         """
@@ -220,7 +222,7 @@ class PyWeedCore(object):
         """
         Get the options for making an event request from Obspy
         """
-        return self.station_options.get_obspy_options(self.event_options)
+        return self.station_options.get_obspy_options()
 
     def fetch_stations(self, options=None):
         """

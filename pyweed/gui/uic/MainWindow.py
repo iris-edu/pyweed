@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'gui/uic/MainWindow.ui'
+# Form implementation generated from reading ui file 'pyweed/gui/uic/MainWindow.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -109,6 +109,7 @@ class Ui_MainWindow(object):
         self.toggleEventOptions.setObjectName(_fromUtf8("toggleEventOptions"))
         self.eventsButtonLayout.addWidget(self.toggleEventOptions)
         self.getEventsButton = QtGui.QPushButton(self.eventsWidget)
+        self.getEventsButton.setDefault(True)
         self.getEventsButton.setObjectName(_fromUtf8("getEventsButton"))
         self.eventsButtonLayout.addWidget(self.getEventsButton)
         self.eventsLayout.addLayout(self.eventsButtonLayout)
@@ -144,6 +145,7 @@ class Ui_MainWindow(object):
         self.stationsButtonLayout.setSpacing(12)
         self.stationsButtonLayout.setObjectName(_fromUtf8("stationsButtonLayout"))
         self.getStationsButton = QtGui.QPushButton(self.stationsWidget)
+        self.getStationsButton.setDefault(True)
         self.getStationsButton.setObjectName(_fromUtf8("getStationsButton"))
         self.stationsButtonLayout.addWidget(self.getStationsButton)
         self.toggleStationOptions = QtGui.QToolButton(self.stationsWidget)
@@ -183,6 +185,7 @@ class Ui_MainWindow(object):
         self.waveformButtonLayout = QtGui.QHBoxLayout()
         self.waveformButtonLayout.setObjectName(_fromUtf8("waveformButtonLayout"))
         self.getWaveformsButton = QtGui.QPushButton(self.eventAndStationWidget)
+        self.getWaveformsButton.setDefault(True)
         self.getWaveformsButton.setObjectName(_fromUtf8("getWaveformsButton"))
         self.waveformButtonLayout.addWidget(self.getWaveformsButton)
         self.verticalLayout_3.addLayout(self.waveformButtonLayout)
