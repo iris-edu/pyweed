@@ -372,6 +372,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
     def getWaveforms(self):
         self.pyweed.open_waveforms_dialog()
 
+    def selectAllEvents(self):
+        """
+        Select all events in the table. This is mainly for loading data from a summary file, where
+        we want all the data to be pre-selected.
+        """
+        self.eventsTable.selectAll()
+
     def onEventSelectionChanged(self):
         """
         Handle a click anywhere in the table.
@@ -403,6 +410,13 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.add_events_highlighting(points)
 
         self.manageGetWaveformsButton()
+
+    def selectAllStations(self):
+        """
+        Select all stations in the table. This is mainly for loading data from a summary file, where
+        we want all the data to be pre-selected.
+        """
+        self.stationsTable.selectAll()
 
     def onStationSelectionChanged(self):
         # Get selected sncls

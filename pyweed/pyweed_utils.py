@@ -17,7 +17,6 @@ import logging
 import re
 from geographiclib.geodesic import Geodesic
 from obspy.taup.tau import TauPyModel
-from obspy.core.util.attribdict import AttribDict
 from future.moves.urllib.parse import urlencode
 
 LOGGER = logging.getLogger(__name__)

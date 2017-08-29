@@ -15,12 +15,15 @@ from __future__ import (absolute_import, division, print_function)
 # Basic packages
 import sys
 import logging
+import os.path
+import platform
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
 # Configure matplotlib backend
 import matplotlib
-import platform
+from obspy.core.event.catalog import read_events
+from obspy.core.inventory.inventory import read_inventory
 matplotlib.use('AGG')
 
 # import gui.qrc  # NOQA: F401
@@ -33,6 +36,7 @@ from pyweed.gui.WaveformDialog import WaveformDialog
 from pyweed.gui.ConsoleDialog import ConsoleDialog
 from pyweed.gui.PreferencesDialog import PreferencesDialog
 from pyweed.pyweed_core import PyWeedCore
+from pyweed.summary import get_filtered_catalog, get_filtered_inventory
 
 LOGGER = logging.getLogger(__name__)
 
@@ -146,6 +150,49 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         self.waveformsDialog.loadWaveformChoices()
 
     ###############
+    # Summary
+    ###############
+
+    def saveSummary(self):
+        """
+        Save the selected events/stations
+        """
+        # If the user quits or cancels this dialog, '' is returned
+        savePath = str(QtGui.QFileDialog.getExistingDirectory(
+            parent=self.mainWindow,
+            caption="Save Summary to"))
+        if savePath != '':
+            try:
+                catalog = get_filtered_catalog(self.events, self.iter_selected_events())
+                catalog.write(os.path.join(savePath, 'events.xml'), format="QUAKEML")
+            except Exception as e:
+                LOGGER.error("Unable to save event selection! %s", e)
+            try:
+                inventory = get_filtered_inventory(self.stations, self.iter_selected_stations())
+                inventory.write(os.path.join(savePath, 'stations.xml'), format="STATIONXML")
+            except Exception as e:
+                LOGGER.error("Unable to save station selection! %s", e)
+
+    def loadSummary(self):
+        # If the user quits or cancels this dialog, '' is returned
+        loadPath = str(QtGui.QFileDialog.getExistingDirectory(
+            parent=self.mainWindow,
+            caption="Load Summary from"))
+        if loadPath != '':
+            try:
+                catalog = read_events(os.path.join(loadPath, 'events.xml'))
+                self.on_events_loaded(catalog)
+                self.mainWindow.selectAllEvents()
+            except Exception as e:
+                LOGGER.error("Unable to load events! %s", e)
+            try:
+                inventory = read_inventory(os.path.join(loadPath, 'stations.xml'))
+                self.on_stations_loaded(inventory)
+                self.mainWindow.selectAllStations()
+            except Exception as e:
+                LOGGER.error("Unable to load stations! %s", e)
+
+    ###############
     # Other UI elements
     ###############
 
@@ -159,6 +206,14 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         # mainMenu.setNativeMenuBar(False)
 
         fileMenu = mainMenu.addMenu('&File')
+
+        saveSummaryAction = QtGui.QAction("Save Summary", self.mainWindow)
+        saveSummaryAction.triggered.connect(self.saveSummary)
+        fileMenu.addAction(saveSummaryAction)
+
+        loadSummaryAction = QtGui.QAction("Load Summary", self.mainWindow)
+        loadSummaryAction.triggered.connect(self.loadSummary)
+        fileMenu.addAction(loadSummaryAction)
 
         quitAction = QtGui.QAction("&Quit", self.mainWindow)
         quitAction.setShortcut("Ctrl+Q")
