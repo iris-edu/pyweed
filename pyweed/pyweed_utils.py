@@ -67,7 +67,7 @@ PHASES = [
 TAUP_PHASES = ['P', 'PKIKP', 'Pdiff', 'S', 'SKIKS', 'SKS', 'p', 's']
 
 
-def manageCache(downloadDir, cacheSize):
+def manage_cache(download_dir, cache_size):
     """
     Maintain a cache directory at a certain size (MB) by removing the oldest files.
     """
@@ -75,35 +75,35 @@ def manageCache(downloadDir, cacheSize):
     try:
         # Compile statistics on all files in the output directory and subdirectories
         stats = []
-        totalSize = 0
-        for root, dirs, files in os.walk(downloadDir):
+        total_size = 0
+        for root, dirs, files in os.walk(download_dir):
             for file in files:
                 path = os.path.join(root, file)
-                statList = os.stat(path)
+                stat_list = os.stat(path)
                 # path, size, atime
-                newStatList = [path, statList.st_size, statList.st_atime]
-                totalSize = totalSize + statList.st_size
+                new_stat_list = [path, stat_list.st_size, stat_list.st_atime]
+                total_size = total_size + stat_list.st_size
                 # don't want hidden files like .htaccess so don't add stuff that starts with .
                 if not file.startswith('.'):
-                    stats.append(newStatList)
+                    stats.append(new_stat_list)
 
         # Sort file stats by last access time
         stats = sorted(stats, key=lambda file: file[2])
 
-        # Delete old files until we get under cacheSize (configured in megabytes)
-        deletionCount = 0
-        while totalSize > cacheSize * 1000000:
+        # Delete old files until we get under cache_size (configured in megabytes)
+        deletion_count = 0
+        while total_size > cache_size * 1000000:
             # front of stats list is the file with the smallest (=oldest) access time
-            lastAccessedFile = stats[0]
+            last_accessed_file = stats[0]
             # index 1 is where size is
-            totalSize = totalSize - lastAccessedFile[1]
+            total_size = total_size - last_accessed_file[1]
             # index 0 is where path is
-            os.remove(lastAccessedFile[0])
+            os.remove(last_accessed_file[0])
             # remove the file from the stats list
             stats.pop(0)
-            deletionCount = deletionCount + 1
+            deletion_count = deletion_count + 1
 
-        LOGGER.debug('Removed %d files to keep %s below %.0f megabytes' % (deletionCount, downloadDir, cacheSize))
+        LOGGER.debug('Removed %d files to keep %s below %.0f megabytes' % (deletion_count, download_dir, cache_size))
 
     except Exception as e:
         LOGGER.error(str(e))

@@ -8,4 +8,4 @@ def gui_test(pyweed):
         pyweed.mainWindow.eventsTable.selectRow(i)
     for i in range(5):
         pyweed.mainWindow.stationsTable.selectRow(i)
-    pyweed.open_waveforms_dialog()
+    pyweed.openWaveformsDialog()

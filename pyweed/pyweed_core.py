@@ -23,7 +23,7 @@ import logging
 
 # Pyweed UI components
 from pyweed.preferences import Preferences, user_config_path
-from pyweed.pyweed_utils import manageCache, iter_channels, get_sncl
+from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl
 from obspy.clients.fdsn import Client
 from pyweed.event_options import EventOptions
 from pyweed.station_options import StationOptions
@@ -164,7 +164,7 @@ class PyWeedCore(object):
         cache_size = int(self.preferences.Waveforms.cacheSize)
         LOGGER.info('Checking on download directory...')
         if os.path.exists(download_path):
-            manageCache(download_path, cache_size)
+            manage_cache(download_path, cache_size)
         elif init:
             try:
                 os.makedirs(download_path, 0o700)

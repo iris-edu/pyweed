@@ -60,12 +60,12 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         # Events
         LOGGER.info('Setting up event options dialog...')
         self.events_handler = EventsHandler(self)
-        self.events_handler.done.connect(self.on_events_loaded)
+        self.events_handler.done.connect(self.onEventsLoaded)
 
         # Stations
         LOGGER.info('Setting up station options dialog...')
         self.stations_handler = StationsHandler(self)
-        self.stations_handler.done.connect(self.on_stations_loaded)
+        self.stations_handler.done.connect(self.onStationsLoaded)
 
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
@@ -78,7 +78,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         # Python console
         self.console = ConsoleDialog(self, self.mainWindow)
 
-        self.configure_menu()
+        self.configureMenu()
 
         # Display MainWindow
         LOGGER.info('Showing main window...')
@@ -107,7 +107,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         if self.mainWindow:
             self.mainWindow.eventOptionsWidget.setOptions()
 
-    def on_events_loaded(self, events):
+    def onEventsLoaded(self, events):
         """
         Handler triggered when the EventsHandler finishes loading events
         """
@@ -133,7 +133,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         if self.mainWindow:
             self.mainWindow.stationOptionsWidget.setOptions()
 
-    def on_stations_loaded(self, stations):
+    def onStationsLoaded(self, stations):
         """
         Handler triggered when the StationsHandler finishes loading stations
         """
@@ -145,7 +145,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     # Waveforms
     ###############
 
-    def open_waveforms_dialog(self):
+    def openWaveformsDialog(self):
         self.waveformsDialog.show()
         self.waveformsDialog.loadWaveformChoices()
 
@@ -181,13 +181,13 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         if loadPath != '':
             try:
                 catalog = read_events(os.path.join(loadPath, 'events.xml'))
-                self.on_events_loaded(catalog)
+                self.onEventsLoaded(catalog)
                 self.mainWindow.selectAllEvents()
             except Exception as e:
                 LOGGER.error("Unable to load events! %s", e)
             try:
                 inventory = read_inventory(os.path.join(loadPath, 'stations.xml'))
-                self.on_stations_loaded(inventory)
+                self.onStationsLoaded(inventory)
                 self.mainWindow.selectAllStations()
             except Exception as e:
                 LOGGER.error("Unable to load stations! %s", e)
@@ -196,7 +196,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     # Other UI elements
     ###############
 
-    def configure_menu(self):
+    def configureMenu(self):
         # Create menuBar
         # see:  http://doc.qt.io/qt-4.8/qmenubar.html
         # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/

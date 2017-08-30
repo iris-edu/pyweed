@@ -257,10 +257,10 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Waveforms
-        self.waveformsHandler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.station_client)
+        self.waveforms_handler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.station_client)
         # The callbacks here are expensive, so use QueuedConnection to run them asynchronously
-        self.waveformsHandler.progress.connect(self.onWaveformDownloaded, QtCore.Qt.QueuedConnection)
-        self.waveformsHandler.done.connect(self.onAllDownloaded, QtCore.Qt.QueuedConnection)
+        self.waveforms_handler.progress.connect(self.onWaveformDownloaded, QtCore.Qt.QueuedConnection)
+        self.waveforms_handler.done.connect(self.onAllDownloaded, QtCore.Qt.QueuedConnection)
 
         # Spinner overlays for downloading and saving
         self.downloadSpinner = SpinnerWidget("Downloading...", parent=self.downloadGroupBox)
@@ -312,7 +312,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Toggle the Keep state
         waveformID = str(self.selectionTable.item(row, WAVEFORM_ID_COLUMN).text())
-        waveform = self.waveformsHandler.get_waveform(waveformID)
+        waveform = self.waveforms_handler.get_waveform(waveformID)
         waveform.keep = not waveform.keep
         keepItem = self.selectionTable.item(row, WAVEFORM_KEEP_COLUMN)
         keepItem.setKeep(waveform.keep)
@@ -328,7 +328,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.resetDownload()
 
-        self.waveformsHandler.create_waveforms(self.pyweed)
+        self.waveforms_handler.create_waveforms(self.pyweed)
 
         # Add event-SNCL combinations to the selection table
         self.loadSelectionTable(initial=True)
@@ -349,16 +349,16 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.stationComboBox.clear()
         self.stationComboBox.addItem('All stations')
 
-        found_networks = set()
-        found_stations = set()
+        foundNetworks = set()
+        foundStations = set()
         for (network, station, _channel) in self.pyweed.iter_selected_stations():
-            if network.code not in found_networks:
-                found_networks.add(network.code)
+            if network.code not in foundNetworks:
+                foundNetworks.add(network.code)
                 self.networkComboBox.addItem(network.code)
-            netsta_code = '.'.join((network.code, station.code))
-            if netsta_code not in found_stations:
-                found_stations.add(netsta_code)
-                self.stationComboBox.addItem(netsta_code)
+            netstaCode = '.'.join((network.code, station.code))
+            if netstaCode not in foundStations:
+                foundStations.add(netstaCode)
+                self.stationComboBox.addItem(netstaCode)
 
         LOGGER.debug('Finished loading waveform choices')
 
@@ -404,7 +404,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         """
         Iterate through the waveforms, optionally yielding only visible and/or saveable ones
         """
-        for waveform in self.waveformsHandler.waveforms:
+        for waveform in self.waveforms_handler.waveforms:
             if visible_only and not self.applyFilter(waveform):
                 continue
             if saveable_only and not (waveform.keep and waveform.mseed_exists):
@@ -443,7 +443,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
     def onDownloadCancel(self):
         if self.waveformsDownloadStatus == STATUS_WORKING:
             # Cancel running download
-            self.waveformsHandler.cancel_download()
+            self.waveforms_handler.cancel_download()
 
     def updateToolbars(self):
         """
@@ -542,25 +542,25 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         LOGGER.info("Starting download of waveform data")
 
         self.waveformsDownloadStatus = STATUS_WORKING
-        self.downloadCount = len(self.waveformsHandler.waveforms)
+        self.downloadCount = len(self.waveforms_handler.waveforms)
         self.downloadCompleted = 0
         self.downloadSpinner.show()
         self.updateToolbars()
 
         # Priority is given to waveforms shown on the screen
-        priority_ids = [waveform.waveform_id for waveform in self.waveformsHandler.waveforms]
+        priority_ids = [waveform.waveform_id for waveform in self.waveforms_handler.waveforms]
         other_ids = []
 
-        self.waveformsHandler.download_waveforms(
+        self.waveforms_handler.download_waveforms(
             priority_ids, other_ids, self.timeWindowAdapter.timeWindow)
 
         # Update the table rows
         for row in range(self.selectionTable.rowCount()):
             waveform_id = self.selectionTable.item(row, WAVEFORM_ID_COLUMN).text()
-            waveform = self.waveformsHandler.waveforms_by_id.get(waveform_id)
+            waveform = self.waveforms_handler.waveforms_by_id.get(waveform_id)
             self.selectionTable.item(row, WAVEFORM_IMAGE_COLUMN).setWaveform(waveform)
 
-    def get_table_row(self, waveform_id):
+    def getTableRow(self, waveform_id):
         """
         Get the table row for a given waveform
         """
@@ -580,12 +580,12 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadCompleted += 1
         self.downloadStatusLabel.setText("Downloaded %d of %d" % (self.downloadCompleted, self.downloadCount))
 
-        row = self.get_table_row(waveform_id)
+        row = self.getTableRow(waveform_id)
         if row is None:
             LOGGER.error("Couldn't find a row for waveform %s", waveform_id)
             return
 
-        waveform = self.waveformsHandler.waveforms_by_id.get(waveform_id)
+        waveform = self.waveforms_handler.waveforms_by_id.get(waveform_id)
         self.selectionTable.item(row, WAVEFORM_IMAGE_COLUMN).setWaveform(waveform)
 
         LOGGER.debug("Displayed waveform %s", waveform_id)
@@ -628,7 +628,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             outputDir = self.waveformDirectory
             outputFormat = self.saveFormatAdapter.getValue()
 
-            for result in self.waveformsHandler.save_waveforms_iter(outputDir, outputFormat, waveforms):
+            for result in self.waveforms_handler.save_waveforms_iter(outputDir, outputFormat, waveforms):
                 if isinstance(result.result, Exception):
                     LOGGER.error("Failed to save waveform %s: %s", result.waveform_id, result.result)
                     errors.append("%s: %s" % (result.waveform_id, result.result))

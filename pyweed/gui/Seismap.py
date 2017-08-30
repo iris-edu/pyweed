@@ -87,37 +87,37 @@ class Seismap(QtCore.QObject):
     drawEnd = pyqtSignal(object)
 
     # Cursors for pan and draw modes
-    pan_cursor = QtCore.Qt.PointingHandCursor
-    draw_cursor = QtCore.Qt.CrossCursor
+    panCursor = QtCore.Qt.PointingHandCursor
+    drawCursor = QtCore.Qt.CrossCursor
 
     # Markers
-    event_markers = None
-    station_markers = None
+    eventMarkers = None
+    stationMarkers = None
 
     def __init__(self, canvas):
         super(Seismap, self).__init__()
         self.canvas = canvas
-        self.map_figure = canvas.fig
-        self.map_axes = self.map_figure.add_axes([0.01, 0.01, .98, .98])
+        self.mapFigure = canvas.fig
+        self.mapAxes = self.mapFigure.add_axes([0.01, 0.01, .98, .98])
 
         # Trackers for the markers
-        self.event_markers = EventMarkers()
-        self.station_markers = StationMarkers()
+        self.eventMarkers = EventMarkers()
+        self.stationMarkers = StationMarkers()
 
         # Basic map features
-        self.init_basemap()
+        self.initBasemap()
 
-        self.init_drawing()
+        self.initDrawing()
 
-    def init_basemap(self):
+    def initBasemap(self):
         # NOTE:  http://matplotlib.org/basemap/api/basemap_api.html
         # NOTE:  https://gist.github.com/dannguyen/eb1c4e70565d8cb82d63
-        self.map_axes.clear()
+        self.mapAxes.clear()
 
         basemap_kwargs = {}
         basemap_kwargs.update(self.DEFAULT_BASEMAP_KWARGS)
         basemap_kwargs.update(
-            ax=self.map_axes
+            ax=self.mapAxes
         )
         self.basemap = Basemap(**basemap_kwargs)
 
@@ -128,23 +128,23 @@ class Seismap(QtCore.QObject):
 
         self.canvas.draw_idle()
 
-    def get_latlon(self, x, y):
+    def getLatLon(self, x, y):
         """
         Translate a canvas x/y coordinate to lat/lon
         """
         (lon, lat) = self.basemap(x, y, inverse=True)
         return (lat, lon)
 
-    def add_markers(self, markers, points):
+    def addMarkers(self, markers, points):
         """
         Display marker locations
 
-        @param markers: either self.event_markers or self.station_markers
+        @param markers: either self.eventMarkers or self.stationMarkers
         @param points: a list of (lat, lon) values
         """
 
-        self.clear_markers(markers, redraw=False)
-        self.clear_highlights(markers, redraw=False)
+        self.clearMarkers(markers, redraw=False)
+        self.clearHighlights(markers, redraw=False)
 
         # See http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
         if len(points):
@@ -160,15 +160,15 @@ class Seismap(QtCore.QObject):
 
         self.canvas.draw_idle()
 
-    def add_highlights(self, markers, points):
+    def addHighlights(self, markers, points):
         """
         Highlight selected items
 
-        @param markers: either self.event_markers or self.station_markers
+        @param markers: either self.eventMarkers or self.stationMarkers
         @param points: a list of (lat, lon) values
         """
 
-        self.clear_highlights(markers, redraw=False)
+        self.clearHighlights(markers, redraw=False)
 
         if len(points):
             (lats, lons) = zip(*points)
@@ -184,12 +184,12 @@ class Seismap(QtCore.QObject):
 
         self.canvas.draw_idle()
 
-    def add_marker_box(self, markers, n, e, s, w):
+    def addMarkerBox(self, markers, n, e, s, w):
         """
         Display a bounding box
         """
 
-        self.clear_bounding_markers(markers, redraw=False)
+        self.clearBoundingMarkers(markers, redraw=False)
 
         # Check for box wrapping around the map edge
         if e < w:
@@ -217,16 +217,16 @@ class Seismap(QtCore.QObject):
 
         self.canvas.draw_idle()
 
-    def add_marker_toroid(self, markers, lat, lon, minradius, maxradius):
+    def addMarkerToroid(self, markers, lat, lon, minradius, maxradius):
         """
         Display a toroidal bounding area
         """
 
-        self.clear_bounding_markers(markers, redraw=False)
+        self.clearBoundingMarkers(markers, redraw=False)
 
         for r in (minradius, maxradius):
             if r > 0:
-                paths = self.wrap_path(get_bounding_circle(lat, lon, r))
+                paths = self.wrapPath(get_bounding_circle(lat, lon, r))
                 for path in paths:
                     (lats, lons) = zip(*path)
                     (x, y) = self.basemap(lons, lats)
@@ -241,7 +241,7 @@ class Seismap(QtCore.QObject):
 
         self.canvas.draw_idle()
 
-    def clear_markers(self, markers, redraw=True):
+    def clearMarkers(self, markers, redraw=True):
         """
         Remove existing marker elements
         """
@@ -255,7 +255,7 @@ class Seismap(QtCore.QObject):
         if redraw:
             self.canvas.draw_idle()
 
-    def clear_highlights(self, markers, redraw=True):
+    def clearHighlights(self, markers, redraw=True):
         """
         Remove existing highlights
         """
@@ -268,7 +268,7 @@ class Seismap(QtCore.QObject):
         if redraw:
             self.canvas.draw_idle()
 
-    def clear_bounding_markers(self, markers, redraw=True):
+    def clearBoundingMarkers(self, markers, redraw=True):
         """
         Remove existing bounding box/toroid markers
         """
@@ -284,7 +284,7 @@ class Seismap(QtCore.QObject):
         if redraw:
             self.canvas.draw_idle()
 
-    def add_events(self, catalog):
+    def addEvents(self, catalog):
         """
         Display event locations
         """
@@ -294,33 +294,33 @@ class Seismap(QtCore.QObject):
             [get_preferred_origin(e) for e in catalog]
             if o
         ]
-        self.add_markers(self.event_markers, points)
+        self.addMarkers(self.eventMarkers, points)
 
-    def add_events_highlighting(self, points):
+    def addEventsHighlighting(self, points):
         """
         Highlights selected events
         """
-        self.add_highlights(self.event_markers, points)
+        self.addHighlights(self.eventMarkers, points)
 
-    def add_events_box(self, n, e, s, w):
+    def addEventsBox(self, n, e, s, w):
         """
         Display event box
         """
-        self.add_marker_box(self.event_markers, n, e, s, w)
+        self.addMarkerBox(self.eventMarkers, n, e, s, w)
 
-    def add_events_toroid(self, lat, lon, minradius, maxradius):
+    def addEventsToroid(self, lat, lon, minradius, maxradius):
         """
         Display event locations
         """
-        self.add_marker_toroid(self.event_markers, lat, lon, minradius, maxradius)
+        self.addMarkerToroid(self.eventMarkers, lat, lon, minradius, maxradius)
 
-    def clear_events_bounds(self):
+    def clearEventsBounds(self):
         """
         Clear event bounding markers
         """
-        self.clear_bounding_markers(self.event_markers)
+        self.clearBoundingMarkers(self.eventMarkers)
 
-    def add_stations(self, inventory):
+    def addStations(self, inventory):
         """
         Display station locations
         """
@@ -329,53 +329,53 @@ class Seismap(QtCore.QObject):
             for n in inventory.networks
             for s in n.stations
         ]
-        self.add_markers(self.station_markers, points)
+        self.addMarkers(self.stationMarkers, points)
 
-    def add_stations_highlighting(self, points):
+    def addStationsHighlighting(self, points):
         """
         Highlight selected stations
         """
-        self.add_highlights(self.station_markers, points)
+        self.addHighlights(self.stationMarkers, points)
 
-    def add_stations_box(self, n, e, s, w):
+    def addStationsBox(self, n, e, s, w):
         """
         Display station box outline
         """
-        self.add_marker_box(self.station_markers, n, e, s, w)
+        self.addMarkerBox(self.stationMarkers, n, e, s, w)
 
-    def add_stations_toroid(self, lat, lon, minradius, maxradius):
+    def addStationsToroid(self, lat, lon, minradius, maxradius):
         """
         Display station locations
         """
-        self.add_marker_toroid(self.station_markers, lat, lon, minradius, maxradius)
+        self.addMarkerToroid(self.stationMarkers, lat, lon, minradius, maxradius)
 
-    def clear_stations_bounds(self):
+    def clearStationsBounds(self):
         """
         Clear station bounding markers
         """
-        self.clear_bounding_markers(self.station_markers)
+        self.clearBoundingMarkers(self.stationMarkers)
 
-    def wrap_path(self, path):
+    def wrapPath(self, path):
         """
         Split a path of (lat, lon) values into a list of paths none of which crosses the map boundary
 
         This is a workaround for https://github.com/matplotlib/basemap/issues/214
         """
-        last_point = None
-        current_subpath = []
-        subpaths = [current_subpath]
+        lastPoint = None
+        currentSubpath = []
+        subpaths = [currentSubpath]
         for point in path:
             # Detect the path wrapping around the map boundary
-            midpoints = self.wrap_point(last_point, point)
+            midpoints = self.wrapPoint(lastPoint, point)
             if midpoints:
                 # The first midpoint goes at the end of the previous subpath
-                current_subpath.append(midpoints[0])
-                current_subpath = []
-                subpaths.append(current_subpath)
+                currentSubpath.append(midpoints[0])
+                currentSubpath = []
+                subpaths.append(currentSubpath)
                 # The second midpoint goes at the start of the new subpath
-                current_subpath.append(midpoints[1])
-            current_subpath.append(point)
-            last_point = point
+                currentSubpath.append(midpoints[1])
+            currentSubpath.append(point)
+            lastPoint = point
         # If the path crosses the map boundary, we will (usually?) have 3 subpaths, and the
         # first and last subpaths are actually contiguous so join them together
         if len(subpaths) > 2:
@@ -383,14 +383,14 @@ class Seismap(QtCore.QObject):
             subpaths = subpaths[1:]
         return subpaths
 
-    def wrap_point(self, p1, p2):
+    def wrapPoint(self, p1, p2):
         """
         Given two lat/lon pairs representing a line segment to be plotted, if the segment crosses
         the map boundary this returns two points (one at each edge of the map) where the segment
         crosses the boundary, or None if the segment doesn't cross the boundary.
 
         For example:
-        wrap_point([20, 170], [10, -170])
+        wrapPoint([20, 170], [10, -170])
         returns
         [[15, 180], [15, -180]]
 
@@ -413,47 +413,47 @@ class Seismap(QtCore.QObject):
                     return [[midlat, -180], [midlat, 180]]
         return None
 
-    def zoom_in(self):
+    def zoomIn(self):
         """
         Zoom into the map
         """
         # Zoom in by 2, by trimming 1/4 from each edge
-        xlim = self.map_axes.get_xlim()
+        xlim = self.mapAxes.get_xlim()
         xdelta = (xlim[1] - xlim[0]) / 4
-        ylim = self.map_axes.get_ylim()
+        ylim = self.mapAxes.get_ylim()
         ydelta = (ylim[1] - ylim[0]) / 4
 
-        self.map_axes.set_xlim(xlim[0] + xdelta, xlim[1] - xdelta)
-        self.map_axes.set_ylim(ylim[0] + ydelta, ylim[1] - ydelta)
+        self.mapAxes.set_xlim(xlim[0] + xdelta, xlim[1] - xdelta)
+        self.mapAxes.set_ylim(ylim[0] + ydelta, ylim[1] - ydelta)
         self.canvas.draw_idle()
 
-    def zoom_out(self):
+    def zoomOut(self):
         """
         Zoom out on the map
         """
         # Zoom out by 2, by adding 1/2 to each edge
-        xlim = self.map_axes.get_xlim()
+        xlim = self.mapAxes.get_xlim()
         xdelta = (xlim[1] - xlim[0]) / 2
-        ylim = self.map_axes.get_ylim()
+        ylim = self.mapAxes.get_ylim()
         ydelta = (ylim[1] - ylim[0]) / 2
 
-        self.map_axes.set_xlim(xlim[0] - xdelta, xlim[1] + xdelta)
-        self.map_axes.set_ylim(ylim[0] - ydelta, ylim[1] + ydelta)
+        self.mapAxes.set_xlim(xlim[0] - xdelta, xlim[1] + xdelta)
+        self.mapAxes.set_ylim(ylim[0] - ydelta, ylim[1] + ydelta)
         self.canvas.draw_idle()
 
-    def zoom_reset(self):
+    def zoomReset(self):
         """
         Zoom all the way out of the map
         """
-        self.map_axes.set_xlim(-180, 180)
-        self.map_axes.set_ylim(-90, 90)
+        self.mapAxes.set_xlim(-180, 180)
+        self.mapAxes.set_ylim(-90, 90)
         self.canvas.draw_idle()
 
-    def fit_canvas(self, *args):
+    def fitCanvas(self, *args):
         canvas_w = self.canvas.width()
         canvas_h = self.canvas.height()
-        map_xlim = self.map_axes.get_xlim()
-        map_ylim = self.map_axes.get_ylim()
+        map_xlim = self.mapAxes.get_xlim()
+        map_ylim = self.mapAxes.get_ylim()
 
         map_w = map_xlim[1] - map_xlim[0]
         map_h = map_ylim[1] - map_ylim[0]
@@ -461,10 +461,10 @@ class Seismap(QtCore.QObject):
 
         adjustment = ((prop_map_h - map_h) / 2)
 
-        self.map_axes.set_ylim(map_ylim[0] - adjustment, map_ylim[1] + adjustment)
+        self.mapAxes.set_ylim(map_ylim[0] - adjustment, map_ylim[1] + adjustment)
         self.canvas.draw_idle()
 
-    def init_drawing(self):
+    def initDrawing(self):
         # Map drawing mode
         self.draw_mode = None
         # Indicates that we are actually drawing (ie. mouse button is down)
@@ -474,13 +474,13 @@ class Seismap(QtCore.QObject):
         # Handler functions for mouse down/move/up, these are created when drawing is activated
         # See http://matplotlib.org/users/event_handling.html
         self.draw_handlers = {
-            'click': self.canvas.mpl_connect('button_press_event', self.on_mouse_down),
-            'scroll_wheel': self.canvas.mpl_connect('scroll_event', self.on_scroll_wheel),
-            'resize': self.canvas.mpl_connect('resize_event', self.fit_canvas),
+            'click': self.canvas.mpl_connect('button_press_event', self.onMouseDown),
+            'scroll_wheel': self.canvas.mpl_connect('scroll_event', self.onScrollWheel),
+            'resize': self.canvas.mpl_connect('resize_event', self.fitCanvas),
         }
-        self.update_cursor()
+        self.updateCursor()
 
-    def set_draw_mode(self, mode):
+    def setDrawMode(self, mode):
         """
         Initialize the given drawing mode
         """
@@ -488,9 +488,9 @@ class Seismap(QtCore.QObject):
         self.drawing = False
         self.draw_mode = mode
         self.drawStart.emit(DrawEvent(mode))
-        self.update_cursor()
+        self.updateCursor()
 
-    def clear_draw_mode(self):
+    def clearDrawMode(self):
         """
         Clear any active drawing mode
         """
@@ -500,33 +500,33 @@ class Seismap(QtCore.QObject):
                 # If we finished drawing bounds, pass back the parameters indicated
                 if self.draw_points:
                     if 'box' in self.draw_mode:
-                        points = self.draw_points_to_box()
+                        points = self.drawPointsToBox()
                     elif 'toroid' in self.draw_mode:
-                        points = self.draw_points_to_toroid()
+                        points = self.drawPointsToToroid()
             self.drawEnd.emit(DrawEvent(self.draw_mode, points))
         self.drawing = False
         self.draw_mode = None
-        self.update_cursor()
+        self.updateCursor()
 
-    def toggle_draw_mode(self, mode, toggle):
+    def toggleDrawMode(self, mode, toggle):
         """
         Event handler when a draw mode button is clicked
         """
         if toggle:
-            self.set_draw_mode(mode)
+            self.setDrawMode(mode)
         else:
-            self.clear_draw_mode()
+            self.clearDrawMode()
 
-    def update_cursor(self):
+    def updateCursor(self):
         """
         Set the cursor on the canvas according to the current mode
         """
         if self.draw_mode:
-            self.canvas.setCursor(self.draw_cursor)
+            self.canvas.setCursor(self.drawCursor)
         else:
-            self.canvas.setCursor(self.pan_cursor)
+            self.canvas.setCursor(self.panCursor)
 
-    def draw_points_to_box(self):
+    def drawPointsToBox(self):
         """
         Convert self.draw_points to a tuple of (n, e, s, w)
         """
@@ -539,7 +539,7 @@ class Seismap(QtCore.QObject):
             min(lon1, lon2)
         )
 
-    def draw_points_to_toroid(self):
+    def drawPointsToToroid(self):
         """
         Convert self.draw_points to a tuple of (lat, lon, radius)
         """
@@ -548,28 +548,28 @@ class Seismap(QtCore.QObject):
         radius = get_distance(lat1, lon1, lat2, lon2)
         return (lat1, lon1, radius)
 
-    def on_mouse_down(self, event):
+    def onMouseDown(self, event):
         """
         Handle a mouse click on the map
         """
         if self.draw_mode:
             # Start a drawing operation
-            (lat, lon) = self.get_latlon(event.xdata, event.ydata)
+            (lat, lon) = self.getLatLon(event.xdata, event.ydata)
             if lat is not None and lon is not None:
                 self.drawing = True
                 self.draw_points = [[lat, lon], [lat, lon]]
         else:
             # If there's no draw operation, pan the map
-            if event.inaxes == self.map_axes:
+            if event.inaxes == self.mapAxes:
                 LOGGER.debug("Starting pan")
                 self.drawing = True
-                self.map_axes.start_pan(event.x, event.y, event.button)
+                self.mapAxes.start_pan(event.x, event.y, event.button)
         # If we've started a drawing operation, connect listeners for activity
         if self.drawing:
-            self.draw_handlers['release'] = self.canvas.mpl_connect('button_release_event', self.on_mouse_up)
-            self.draw_handlers['move'] = self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
+            self.draw_handlers['release'] = self.canvas.mpl_connect('button_release_event', self.onMouseUp)
+            self.draw_handlers['move'] = self.canvas.mpl_connect('motion_notify_event', self.onMouseMove)
 
-    def on_mouse_up(self, event):
+    def onMouseUp(self, event):
         """
         Handle a mouse up event, this should only be called while the user is drawing on the map
         """
@@ -581,51 +581,51 @@ class Seismap(QtCore.QObject):
 
         # If there's no draw mode, we are probably panning so turn that off
         if not self.draw_mode:
-            self.map_axes.end_pan()
+            self.mapAxes.end_pan()
 
         # Exit drawing mode
-        self.clear_draw_mode()
+        self.clearDrawMode()
 
-    def on_mouse_move(self, event):
+    def onMouseMove(self, event):
         """
         Handle a mouse move event, this should only be called while the user is drawing on the map
         """
         if self.drawing:
             if self.draw_mode:
-                (lat, lon) = self.get_latlon(event.xdata, event.ydata)
+                (lat, lon) = self.getLatLon(event.xdata, event.ydata)
                 if lat is not None and lon is not None:
                     self.draw_points[1] = [lat, lon]
                     LOGGER.debug("Draw points: %s" % self.draw_points)
-                    self.update_draw_bounds()
+                    self.updateDrawBounds()
             else:
                 # If we aren't drawing anything, pan the map
-                self.map_axes.drag_pan(event.button, event.key, event.x, event.y)
+                self.mapAxes.drag_pan(event.button, event.key, event.x, event.y)
                 self.canvas.draw_idle()
 
-    def update_draw_bounds(self):
+    def updateDrawBounds(self):
         """
         Update the displayed bounding box/toroid as the user is drawing it
         """
         # Build options values based on box or toroid
         if 'box' in self.draw_mode:
-            (n, e, s, w) = self.draw_points_to_box()
+            (n, e, s, w) = self.drawPointsToBox()
             if 'events' in self.draw_mode:
-                self.add_events_box(n, e, s, w)
+                self.addEventsBox(n, e, s, w)
             elif 'stations' in self.draw_mode:
-                self.add_stations_box(n, e, s, w)
+                self.addStationsBox(n, e, s, w)
         elif 'toroid' in self.draw_mode:
-            (lat, lon, maxradius) = self.draw_points_to_toroid()
+            (lat, lon, maxradius) = self.drawPointsToToroid()
             if 'events' in self.draw_mode:
-                self.add_events_toroid(lat, lon, 0, maxradius)
+                self.addEventsToroid(lat, lon, 0, maxradius)
             elif 'stations' in self.draw_mode:
-                self.add_stations_toroid(lat, lon, 0, maxradius)
+                self.addStationsToroid(lat, lon, 0, maxradius)
 
-    def on_scroll_wheel(self, event):
+    def onScrollWheel(self, event):
         """
         Zoom on scroll wheel
         """
         if event.step:
             if event.step > 0:
-                self.zoom_in()
+                self.zoomIn()
             else:
-                self.zoom_out()
+                self.zoomOut()

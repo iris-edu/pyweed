@@ -18,7 +18,7 @@ from pyweed.gui.uic import MainWindow
 from pyweed.preferences import safe_int, safe_bool, bool_to_str
 import logging
 from pyweed.pyweed_utils import iter_channels, get_preferred_origin, get_preferred_magnitude
-from pyweed.seismap import Seismap
+from pyweed.gui.Seismap import Seismap
 from pyweed.gui.EventOptionsWidget import EventOptionsWidget
 from pyweed.gui.StationOptionsWidget import StationOptionsWidget
 from pyweed.gui.TableItems import TableItems, Column
@@ -213,14 +213,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Generate a handler to toggle a given drawing mode
         def drawModeFn(mode):
-            return lambda checked: self.seismap.toggle_draw_mode(mode, checked)
+            return lambda checked: self.seismap.toggleDrawMode(mode, checked)
         # Register draw mode toggle handlers
         for mode, button in self.drawButtons.items():
             button.clicked.connect(drawModeFn(mode))
 
-        self.mapZoomInButton.clicked.connect(self.seismap.zoom_in)
-        self.mapZoomOutButton.clicked.connect(self.seismap.zoom_out)
-        self.mapResetButton.clicked.connect(self.seismap.zoom_reset)
+        self.mapZoomInButton.clicked.connect(self.seismap.zoomIn)
+        self.mapZoomOutButton.clicked.connect(self.seismap.zoomOut)
+        self.mapResetButton.clicked.connect(self.seismap.zoomReset)
 
         self.seismap.drawEnd.connect(self.onMapDrawFinished)
 
@@ -281,14 +281,14 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         if events:
             options = self.eventOptionsWidget.getOptions()
-            markers = self.seismap.event_markers
+            markers = self.seismap.eventMarkers
         else:
             options = self.stationOptionsWidget.getOptions()
-            markers = self.seismap.station_markers
+            markers = self.seismap.stationMarkers
 
         try:
             if options["location_choice"] == EventOptions.LOCATION_BOX:
-                self.seismap.add_marker_box(
+                self.seismap.addMarkerBox(
                     markers,
                     float(options["maxlatitude"]),
                     float(options["maxlongitude"]),
@@ -296,7 +296,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
                     float(options["minlongitude"])
                 )
             elif options["location_choice"] == EventOptions.LOCATION_POINT:
-                self.seismap.add_marker_toroid(
+                self.seismap.addMarkerToroid(
                     markers,
                     float(options["latitude"]),
                     float(options["longitude"]),
@@ -304,7 +304,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
                     float(options["maxradius"])
                 )
             else:
-                self.seismap.clear_bounding_markers(markers)
+                self.seismap.clearBoundingMarkers(markers)
         except Exception as e:
             LOGGER.error("Failed to update seismap! %s", e, exc_info=True)
 
@@ -327,7 +327,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Add items to the map -------------------------------------------------
 
-        self.seismap.add_events(events)
+        self.seismap.addEvents(events)
 
         self.onEventSelectionChanged()
         status = 'Finished loading events'
@@ -362,7 +362,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         # Add items to the map -------------------------------------------------
 
-        self.seismap.add_stations(stations)
+        self.seismap.addStations(stations)
 
         self.onStationSelectionChanged()
         status = 'Finished loading stations'
@@ -370,7 +370,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         self.showMessage(status)
 
     def getWaveforms(self):
-        self.pyweed.open_waveforms_dialog()
+        self.pyweed.openWaveformsDialog()
 
     def selectAllEvents(self):
         """
@@ -407,7 +407,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Update the events_handler with the latest selection information
         self.pyweed.set_selected_event_ids(eventIDs)
 
-        self.seismap.add_events_highlighting(points)
+        self.seismap.addEventsHighlighting(points)
 
         self.manageGetWaveformsButton()
 
@@ -441,7 +441,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
         # Update the stations_handler with the latest selection information
         self.pyweed.set_selected_station_ids(sncls)
 
-        self.seismap.add_stations_highlighting(points)
+        self.seismap.addStationsHighlighting(points)
 
         self.manageGetWaveformsButton()
 

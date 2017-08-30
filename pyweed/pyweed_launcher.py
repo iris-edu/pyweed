@@ -33,7 +33,7 @@ def get_pyweed():
     """
     Load the PyWEED GUI code, this is where most of the expensive stuff happens
     """
-    from pyweed.pyweed_gui import PyWeedGUI
+    from pyweed.gui.PyWeedGUI import PyWeedGUI
     return PyWeedGUI()
 
 
