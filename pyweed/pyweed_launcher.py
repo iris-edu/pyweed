@@ -17,8 +17,17 @@ from __future__ import (absolute_import, division, print_function)
 
 import sys
 import os
-
 from future.utils import PY2
+import matplotlib
+
+# Configure matplotlib backend
+matplotlib.use('AGG')
+
+# For debugging, raise an exception on attempted chained assignment
+# See http://pandas.pydata.org/pandas-docs/version/0.19.1/indexing.html#returning-a-view-versus-a-copy
+# import pandas as pd
+# pd.set_option('mode.chained_assignment', 'raise')
+
 if PY2:
     # Configure PyQt4 -- in order for the Python console to work in Python 2, we need to load a particular
     # version of some internal libraries. This must be done before the first import of the PyQt4 libraries.

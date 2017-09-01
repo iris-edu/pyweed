@@ -16,11 +16,6 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import logging
 
-# For debugging, raise an exception on attempted chained assignment
-# See http://pandas.pydata.org/pandas-docs/version/0.19.1/indexing.html#returning-a-view-versus-a-copy
-# import pandas as pd
-# pd.set_option('mode.chained_assignment', 'raise')
-
 # Pyweed UI components
 from pyweed.preferences import Preferences, user_config_path
 from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl
@@ -125,7 +120,9 @@ class PyWeedCore(object):
         LOGGER.info("Saving preferences")
         try:
             self.preferences.EventOptions.update(self.event_options.get_options(stringify=True))
+            self.preferences.Data.eventDataCenter = self.event_data_center
             self.preferences.StationOptions.update(self.station_options.get_options(stringify=True))
+            self.preferences.Data.stationDataCenter = self.station_data_center
             self.preferences.save()
         except Exception as e:
             LOGGER.error("Unable to save configuration preferences: %s", e)

@@ -20,13 +20,9 @@ import platform
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-# Configure matplotlib backend
-import matplotlib
 from obspy.core.event.catalog import read_events
 from obspy.core.inventory.inventory import read_inventory
-matplotlib.use('AGG')
 
-# import gui.qrc  # NOQA: F401
 from pyweed import __version__, __app_name__
 from pyweed.gui.MainWindow import MainWindow
 from pyweed.gui.LoggingDialog import LoggingDialog
