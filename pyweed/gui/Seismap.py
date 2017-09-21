@@ -188,9 +188,6 @@ class Seismap(QtCore.QObject):
         """
         Display a bounding box
         """
-
-        self.clearBoundingMarkers(markers, redraw=False)
-
         # Check for box wrapping around the map edge
         if e < w:
             # Need to create two paths
@@ -221,9 +218,6 @@ class Seismap(QtCore.QObject):
         """
         Display a toroidal bounding area
         """
-
-        self.clearBoundingMarkers(markers, redraw=False)
-
         for r in (minradius, maxradius):
             if r > 0:
                 paths = self.wrapPath(get_bounding_circle(lat, lon, r))
@@ -606,6 +600,11 @@ class Seismap(QtCore.QObject):
         """
         Update the displayed bounding box/toroid as the user is drawing it
         """
+        # Clear any existing bounds
+        if 'events' in self.draw_mode:
+            self.clearEventsBounds()
+        elif 'stations' in self.draw_mode:
+            self.clearStationsBounds()
         # Build options values based on box or toroid
         if 'box' in self.draw_mode:
             (n, e, s, w) = self.drawPointsToBox()

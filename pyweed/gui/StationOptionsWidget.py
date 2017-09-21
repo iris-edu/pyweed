@@ -43,6 +43,9 @@ class StationOptionsWidget(BaseOptionsWidget, StationOptionsWidget.Ui_StationOpt
             '_locationGlobal': self.locationGlobalRadioButton,
             '_locationRange': self.locationRangeRadioButton,
             '_locationDistanceFromPoint': self.locationDistanceFromPointRadioButton,
+            '_locationDistanceFromEvents': self.locationDistanceFromEventsRadioButton,
+            'mindistance': self.distanceFromEventsMinDoubleSpinBox,
+            'maxdistance': self.distanceFromEventsMaxDoubleSpinBox,
         }
 
     def optionsToInputs(self, values):
@@ -51,6 +54,7 @@ class StationOptionsWidget(BaseOptionsWidget, StationOptionsWidget.Ui_StationOpt
         values['_locationGlobal'] = (location_choice == StationOptions.LOCATION_GLOBAL)
         values['_locationRange'] = (location_choice == StationOptions.LOCATION_BOX)
         values['_locationDistanceFromPoint'] = (location_choice == StationOptions.LOCATION_POINT)
+        values['_locationDistanceFromEvents'] = (location_choice == StationOptions.LOCATION_EVENTS)
         return values
 
     def inputsToOptions(self, values):
@@ -61,6 +65,8 @@ class StationOptionsWidget(BaseOptionsWidget, StationOptionsWidget.Ui_StationOpt
             values['location_choice'] = StationOptions.LOCATION_BOX
         elif strtobool(values.get('_locationDistanceFromPoint', 'F')):
             values['location_choice'] = StationOptions.LOCATION_POINT
+        elif strtobool(values.get('_locationDistanceFromEvents', 'F')):
+            values['location_choice'] = StationOptions.LOCATION_EVENTS
         return values
 
     def get_timeFromOtherButton(self):

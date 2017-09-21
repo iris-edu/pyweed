@@ -229,6 +229,7 @@ class PyWeedCore(QObject):
 
     def set_selected_event_ids(self, event_ids):
         self.selected_event_ids = event_ids
+        self.station_options.event_locations = self.iter_selected_event_locations()
 
     def iter_selected_events(self):
         """
@@ -239,6 +240,15 @@ class PyWeedCore(QObject):
                 event_id = event.resource_id.id
                 if event_id in self.selected_event_ids:
                     yield event
+
+    def iter_selected_event_locations(self):
+        """
+        Return an iterator of (lat, lon) pairs for each event
+        """
+        for event in self.iter_selected_events():
+            origin = get_preferred_origin(event)
+            if origin:
+                yield (origin.latitude, origin.longitude)
 
     ###############
     # Stations

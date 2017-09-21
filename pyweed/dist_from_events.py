@@ -1,0 +1,60 @@
+# -*- coding: utf-8 -*-
+"""
+Selecting stations based on selected events.
+
+:copyright:
+    Mazama Science, IRIS
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
+from __future__ import (absolute_import, division, print_function)
+
+
+class CrossBorderException(Exception):
+    pass
+
+
+class LatLonBox(object):
+    lat1 = None
+    lat2 = None
+    lon1 = None
+    lon2 = None
+
+    def __init__(self, distance):
+        self.distance = distance
+
+    def add_point(self, p):
+        if self.lat1 is None:
+            self.lat1 = p.lat - self.distance
+            self.lat2 = p.lat + self.distance
+            self.lon1 = p.lon - self.distance
+            self.lon2 = p.lon + self.distance
+        else:
+            self.lat1 = min(self.lat1, p.lat - self.distance)
+            self.lat2 = max(self.lat2, p.lat + self.distance)
+            self.lon1 = min(self.lon1, p.lon - self.distance)
+            self.lon2 = max(self.lon2, p.lon + self.distance)
+
+        if self.lat1 < -90 or self.lat2 > 90 or self.lon1 < -180 or self.lon2 > 180:
+            raise CrossBorderException()
+
+
+def get_combined_locations(points, distance):
+    """
+    Given a set of points and a distance, return a reasonable set of
+    bounding areas covering everything within that distance of any point.
+    """
+    # Very simple implementation, try to draw a box around all points
+    box = LatLonBox(distance)
+
+    if not points:
+        return []
+
+    try:
+        for p in points:
+            box.add_point(p)
+        return [box]
+    except CrossBorderException:
+        return []

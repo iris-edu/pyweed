@@ -25,6 +25,7 @@ from pyweed.gui.TableItems import TableItems, Column
 from pyweed.event_options import EventOptions
 from PyQt4.QtCore import pyqtSlot
 from pyweed.gui.SpinnerWidget import SpinnerWidget
+from pyweed.station_options import StationOptions
 
 LOGGER = logging.getLogger(__name__)
 
@@ -287,6 +288,7 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
             markers = self.seismap.stationMarkers
 
         try:
+            self.seismap.clearBoundingMarkers(markers)
             if options["location_choice"] == EventOptions.LOCATION_BOX:
                 self.seismap.addMarkerBox(
                     markers,
@@ -303,8 +305,18 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
                     float(options["minradius"]),
                     float(options["maxradius"])
                 )
-            else:
-                self.seismap.clearBoundingMarkers(markers)
+            elif options["location_choice"] == StationOptions.LOCATION_EVENTS:
+                # Show distance markers around all events
+                for event in self.pyweed.iter_selected_events():
+                    origin = get_preferred_origin(event)
+                    if origin:
+                        self.seismap.addMarkerToroid(
+                            markers,
+                            origin.latitude,
+                            origin.longitude,
+                            float(options["mindistance"]),
+                            float(options["maxdistance"])
+                        )
         except Exception as e:
             LOGGER.error("Failed to update seismap! %s", e, exc_info=True)
 

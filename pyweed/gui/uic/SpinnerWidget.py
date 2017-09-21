@@ -34,6 +34,7 @@ class Ui_SpinnerWidget(object):
         SpinnerWidget.setStyleSheet(_fromUtf8("QFrame { background-color: rgba(224,224,224,192)} \n"
 "QLabel { background-color: transparent }"))
         self.verticalLayout = QtGui.QVBoxLayout(SpinnerWidget)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.icon = QtGui.QLabel(SpinnerWidget)
         self.icon.setText(_fromUtf8(""))
