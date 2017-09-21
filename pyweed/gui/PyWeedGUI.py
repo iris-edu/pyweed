@@ -53,16 +53,6 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         # see:  http://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
         self.loggingDialog = LoggingDialog(self.mainWindow)
 
-        # Events
-        LOGGER.info('Setting up event options dialog...')
-        self.events_handler = EventsHandler(self)
-        self.events_handler.done.connect(self.onEventsLoaded)
-
-        # Stations
-        LOGGER.info('Setting up station options dialog...')
-        self.stations_handler = StationsHandler(self)
-        self.stations_handler.done.connect(self.onStationsLoaded)
-
         # Waveforms
         # NOTE:  The WaveformsHandler is created inside waveformsDialog.  It is only relevant to that Dialog.
         LOGGER.info('Setting up waveforms dialog...')
@@ -85,57 +75,29 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     # Events
     ###############
 
-    def fetch_events(self, options=None):
-        """
-        Load events
-        """
-        # TODO: this is a patch for https://github.com/obspy/obspy/issues/1629
-        if self.events:
-            self.events.clear()
-
-        if not options:
-            options = self.get_event_obspy_options()
-        LOGGER.info("Fetching events with parameters: %s" % repr(options))
-        self.events_handler.load_catalog(parameters=options)
-
     def set_event_options(self, options):
         super(PyWeedGUI, self).set_event_options(options)
         if self.mainWindow:
             self.mainWindow.eventOptionsWidget.setOptions()
 
-    def onEventsLoaded(self, events):
-        """
-        Handler triggered when the EventsHandler finishes loading events
-        """
-        if not isinstance(events, Exception):
-            self.set_events(events)
-        self.mainWindow.onEventsLoaded(events)
+    def on_events_loaded(self, events):
+        super(PyWeedGUI, self).on_events_loaded(events)
+        if self.mainWindow:
+            self.mainWindow.onEventsLoaded(events)
 
     ###############
     # Stations
     ###############
-
-    def fetch_stations(self, options=None):
-        """
-        Load stations
-        """
-        if not options:
-            options = self.get_station_obspy_options()
-        LOGGER.info("Fetching stations with parameters: %s" % repr(options))
-        self.stations_handler.load_inventory(parameters=options)
 
     def set_station_options(self, options):
         super(PyWeedGUI, self).set_station_options(options)
         if self.mainWindow:
             self.mainWindow.stationOptionsWidget.setOptions()
 
-    def onStationsLoaded(self, stations):
-        """
-        Handler triggered when the StationsHandler finishes loading stations
-        """
-        if not isinstance(stations, Exception):
-            self.set_stations(stations)
-        self.mainWindow.onStationsLoaded(stations)
+    def on_stations_loaded(self, stations):
+        super(PyWeedGUI, self).on_stations_loaded()
+        if self.mainWindow:
+            self.mainWindow.onStationsLoaded(stations)
 
     ###############
     # Waveforms
@@ -177,13 +139,13 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         if loadPath != '':
             try:
                 catalog = read_events(os.path.join(loadPath, 'events.xml'))
-                self.onEventsLoaded(catalog)
+                self.on_events_loaded(catalog)
                 self.mainWindow.selectAllEvents()
             except Exception as e:
                 LOGGER.error("Unable to load events! %s", e)
             try:
                 inventory = read_inventory(os.path.join(loadPath, 'stations.xml'))
-                self.onStationsLoaded(inventory)
+                self.on_stations_loaded(inventory)
                 self.mainWindow.selectAllStations()
             except Exception as e:
                 LOGGER.error("Unable to load stations! %s", e)

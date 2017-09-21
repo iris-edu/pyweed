@@ -18,10 +18,13 @@ import logging
 
 # Pyweed UI components
 from pyweed.preferences import Preferences, user_config_path
-from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl
+from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl, get_preferred_origin
 from obspy.clients.fdsn import Client
 from pyweed.event_options import EventOptions
 from pyweed.station_options import StationOptions
+from pyweed.events_handler import EventsHandler
+from pyweed.stations_handler import StationsHandler
+from PyQt4.QtCore import QObject
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,21 +42,25 @@ class NoConsoleLoggingFilter(logging.Filter):
         return True
 
 
-class PyWeedCore(object):
+class PyWeedCore(QObject):
     """
     This is intended to be the core PyWEED functionality, without any reference to the GUI layer.
     The original intent was to allow this to run independently, eg. from a script or interactive shell.
     """
 
+    preferences = None
+
     event_client = None
     event_data_center = None
-    station_client = None
-    station_data_center = None
-    preferences = None
     event_options = None
+    events_handler = None
     events = None
     selected_event_ids = None
+
+    station_client = None
+    station_data_center = None
     station_options = None
+    stations_handler = None
     stations = None
     selected_station_ids = None
 
@@ -65,7 +72,16 @@ class PyWeedCore(object):
         self.load_preferences()
         self.manage_cache()
 
+        self.events_handler = EventsHandler(self)
+        self.events_handler.done.connect(self.on_events_loaded)
+
+        self.stations_handler = StationsHandler(self)
+        self.stations_handler.done.connect(self.on_stations_loaded)
+
     def set_event_data_center(self, data_center):
+        """
+        Set the data center used for events
+        """
         if data_center != self.event_data_center or not self.event_client:
             # Use the station client if they're the same, otherwise create a client
             if data_center == self.station_data_center and self.station_client:
@@ -82,8 +98,11 @@ class PyWeedCore(object):
             self.event_client = client
 
     def set_station_data_center(self, data_center):
+        """
+        Set the data center used for stations
+        """
         if data_center != self.station_data_center or not self.station_client:
-            # Use the station client if they're the same, otherwise create a client
+            # Use the event client if they're the same, otherwise create a client
             if data_center == self.event_data_center and self.event_client:
                 client = self.event_client
             else:
@@ -169,6 +188,10 @@ class PyWeedCore(object):
                 LOGGER.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
                 raise
 
+    ###############
+    # Events
+    ###############
+
     def set_event_options(self, options):
         """
         Update the event options
@@ -184,11 +207,16 @@ class PyWeedCore(object):
 
     def fetch_events(self, options=None):
         """
-        NOT THREAD SAFE: The GUI subclass should override this
+        Launch a fetch operation for events
         """
-        if not options:
-            options = self.get_event_obspy_options()
-        self.set_events(self.event_client.get_events(**options))
+        self.events_handler.load_catalog(options)
+
+    def on_events_loaded(self, events):
+        """
+        Handler triggered when the EventsHandler finishes loading events
+        """
+        if not isinstance(events, Exception):
+            self.set_events(events)
 
     def set_events(self, events):
         """
@@ -206,10 +234,15 @@ class PyWeedCore(object):
         """
         Iterate over the selected events
         """
-        for event in self.events:
-            event_id = event.resource_id.id
-            if event_id in self.selected_event_ids:
-                yield event
+        if self.events:
+            for event in self.events:
+                event_id = event.resource_id.id
+                if event_id in self.selected_event_ids:
+                    yield event
+
+    ###############
+    # Stations
+    ###############
 
     def set_station_options(self, options):
         LOGGER.debug("Set station options: %s", repr(options))
@@ -223,11 +256,13 @@ class PyWeedCore(object):
 
     def fetch_stations(self, options=None):
         """
-        NOT THREAD SAFE: The GUI subclass should override this
+        Load stations
         """
-        if not options:
-            options = self.get_station_obspy_options()
-        self.set_stations(self.station_client.get_stations(**options))
+        self.stations_handler.load_inventory(options)
+
+    def on_stations_loaded(self, stations):
+        if not isinstance(stations, Exception):
+            self.set_stations(stations)
 
     def set_stations(self, stations):
         """
@@ -246,10 +281,11 @@ class PyWeedCore(object):
         Iterate over the selected stations (channels)
         Yields (network, station, channel) for each selected channel
         """
-        for (network, station, channel) in iter_channels(self.stations):
-            sncl = get_sncl(network, station, channel)
-            if sncl in self.selected_station_ids:
-                yield (network, station, channel)
+        if self.stations:
+            for (network, station, channel) in iter_channels(self.stations):
+                sncl = get_sncl(network, station, channel)
+                if sncl in self.selected_station_ids:
+                    yield (network, station, channel)
 
     def close(self):
         self.manage_cache(init=False)
