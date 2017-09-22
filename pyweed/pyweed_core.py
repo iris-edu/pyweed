@@ -18,12 +18,12 @@ import logging
 
 # Pyweed UI components
 from pyweed.preferences import Preferences, user_config_path
-from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl, get_preferred_origin
+from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl, get_preferred_origin, DataRequest
 from obspy.clients.fdsn import Client
 from pyweed.event_options import EventOptions
 from pyweed.station_options import StationOptions
 from pyweed.events_handler import EventsHandler
-from pyweed.stations_handler import StationsHandler
+from pyweed.stations_handler import StationsHandler, StationsDataRequest
 from PyQt4.QtCore import QObject
 
 LOGGER = logging.getLogger(__name__)
@@ -261,13 +261,22 @@ class PyWeedCore(QObject):
         """
         Get the options for making an event request from Obspy
         """
-        return self.station_options.get_obspy_options(self.iter_selected_event_locations())
+        return self.station_options.get_obspy_options()
 
     def fetch_stations(self, options=None):
         """
         Load stations
         """
-        self.stations_handler.load_inventory(options)
+        if options:
+            request = DataRequest(self.station_client, options)
+        else:
+            request = StationsDataRequest(
+                self.station_client,
+                self.station_options.get_obspy_options(),
+                self.station_options.get_event_distances(),
+                self.iter_selected_event_locations()
+            )
+        self.stations_handler.load_inventory(request)
 
     def on_stations_loaded(self, stations):
         if not isinstance(stations, Exception):

@@ -46,12 +46,11 @@ class StationsLoader(SignalingThread):
     """
     progress = QtCore.pyqtSignal()
 
-    def __init__(self, client, request):
+    def __init__(self, request):
         """
         Initialization.
         """
         # Keep a reference to globally shared components
-        self.client = client
         self.request = request
         self.futures = {}
         super(StationsLoader, self).__init__()
@@ -69,7 +68,7 @@ class StationsLoader(SignalingThread):
         with concurrent.futures.ThreadPoolExecutor(5) as executor:
             for sub_request in self.request.sub_requests:
                 # Dictionary lets us look up argument by result later
-                self.futures[executor.submit(load_stations, self.client, sub_request)] = sub_request
+                self.futures[executor.submit(load_stations, self.request.client, sub_request)] = sub_request
             # Iterate through Futures as they complete
             for result in concurrent.futures.as_completed(self.futures):
                 LOGGER.debug("Stations loaded")
@@ -82,8 +81,7 @@ class StationsLoader(SignalingThread):
                 except Exception:
                     self.progress.emit()
         self.futures = {}
-        if self.request.post_filter_fn:
-            inventory = self.post_filter_fn(inventory)
+        inventory = self.request.process_result(inventory)
         self.done.emit(inventory)
 
     def clearFutures(self):
@@ -115,7 +113,7 @@ class StationsDataRequest(DataRequest):
             self.event_locations = list(event_locations)
             self.distance_range = distance_range
             try:
-                combined_locations = get_combined_locations(event_locations, distance_range[1])
+                combined_locations = get_combined_locations(event_locations, distance_range['maxdistance'])
                 self.sub_requests = [
                     dict(
                         base_options,
@@ -133,18 +131,26 @@ class StationsDataRequest(DataRequest):
         else:
             self.sub_requests = [base_options]
 
-    def post_filter_one(self, station):
+    def filter_one_station(self, station):
+        """
+        Filter one station from the results
+        """
         for lat, lon in self.event_locations:
             dist = get_distance(lat, lon, station.latitude, station.longitude)
-            if self.distance_range[0] <= dist <= self.distance_range[1]:
+            if self.distance_range['mindistance'] <= dist <= self.distance_range['maxdistance']:
                 return True
         return False
 
-    def post_filter_fn(self, result):
+    def process_result(self, result):
+        """
+        If the request is based on distance from a set of events, we need to perform
+        a filter after the request, since the low-level request probably overselected.
+        """
+        result = super(StationsDataRequest, self).process_result(result)
         if isinstance(result, Inventory) and self.event_locations and self.distance_range:
             filtered_networks = []
             for network in result:
-                filtered_stations = [station for station in network if self.post_filter_one(station)]
+                filtered_stations = [station for station in network if self.filter_one_station(station)]
                 if filtered_stations:
                     network.stations = filtered_stations
                     filtered_networks.append(network)
@@ -168,7 +174,7 @@ class StationsHandler(SignalingObject):
 
     def load_inventory(self, request):
         try:
-            self.inventory_loader = StationsLoader(self.pyweed.station_client, request)
+            self.inventory_loader = StationsLoader(request)
             self.inventory_loader.done.connect(self.on_inventory_loaded)
             self.inventory_loader.start()
         except Exception as e:

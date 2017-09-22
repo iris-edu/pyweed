@@ -353,10 +353,13 @@ class DataRequest(object):
     client = None
     # List of option dictionaries, one for each sub-request required
     sub_requests = None
-    # Function to perform any post-processing required on the final result
-    post_filter_fn = None
 
     def __init__(self, client, *requests):
         self.client = client
         self.sub_requests = requests
 
+    def process_result(self, result):
+        """
+        Subclasses can define behavior here to do post-processing on the resulting data
+        """
+        return result

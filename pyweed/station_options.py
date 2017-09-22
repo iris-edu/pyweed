@@ -87,12 +87,4 @@ class StationOptions(Options):
         else:
             return {}
 
-    def filter_result(self, inventory):
-        """
-        After a request, filter the results if necessary
-        """
-        # Only handle filters based on event locations
-        if self.location_choice == self.LOCATION_EVENTS and self.event_locations:
-            pass
-
 
