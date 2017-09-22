@@ -14,9 +14,10 @@ from __future__ import (absolute_import, division, print_function)
 import logging
 from pyweed.signals import SignalingThread, SignalingObject
 from obspy.core.inventory.inventory import Inventory
-from pyweed.pyweed_utils import get_service_url, CancelledException
+from pyweed.pyweed_utils import get_service_url, CancelledException, DataRequest, get_distance
 from PyQt4 import QtCore
 import concurrent.futures
+from pyweed.dist_from_events import get_combined_locations, CrossBorderException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +46,13 @@ class StationsLoader(SignalingThread):
     """
     progress = QtCore.pyqtSignal()
 
-    def __init__(self, client, options):
+    def __init__(self, client, request):
         """
         Initialization.
         """
         # Keep a reference to globally shared components
         self.client = client
-        self.station_options = station_options
+        self.request = request
         self.futures = {}
         super(StationsLoader, self).__init__()
 
@@ -64,11 +65,11 @@ class StationsLoader(SignalingThread):
         self.futures = {}
 
         inventory = None
-        LOGGER.info("Making %d station requests" % len(self.request_params))
+        LOGGER.info("Making %d station requests" % len(self.request.sub_requests))
         with concurrent.futures.ThreadPoolExecutor(5) as executor:
-            for options in self.station_options.get_station_obspy_options():
-                # Dictionary to look up the waveform id by Future
-                self.futures[executor.submit(load_stations, self.client, options)] = 1
+            for sub_request in self.request.sub_requests:
+                # Dictionary lets us look up argument by result later
+                self.futures[executor.submit(load_stations, self.client, sub_request)] = sub_request
             # Iterate through Futures as they complete
             for result in concurrent.futures.as_completed(self.futures):
                 LOGGER.debug("Stations loaded")
@@ -81,6 +82,8 @@ class StationsLoader(SignalingThread):
                 except Exception:
                     self.progress.emit()
         self.futures = {}
+        if self.request.post_filter_fn:
+            inventory = self.post_filter_fn(inventory)
         self.done.emit(inventory)
 
     def clearFutures(self):
@@ -102,6 +105,53 @@ class StationsLoader(SignalingThread):
         self.clearFutures()
 
 
+class StationsDataRequest(DataRequest):
+    event_locations = None
+    distance_range = None
+
+    def __init__(self, client, base_options, distance_range, event_locations):
+        super(StationsDataRequest, self).__init__(client)
+        if distance_range and event_locations:
+            self.event_locations = list(event_locations)
+            self.distance_range = distance_range
+            try:
+                combined_locations = get_combined_locations(event_locations, distance_range[1])
+                self.sub_requests = [
+                    dict(
+                        base_options,
+                        minlatitude=box.lat1,
+                        maxlatitude=box.lat2,
+                        minlongitude=box.lon1,
+                        maxlongitude=box.lon2
+                    )
+                    for box in combined_locations
+                ]
+            except CrossBorderException:
+                # Can't break into subqueries, return the base (global, we assume) query
+                LOGGER.warning("Couldn't calculate a bounding box for events, using global")
+                self.sub_requests = [base_options]
+        else:
+            self.sub_requests = [base_options]
+
+    def post_filter_one(self, station):
+        for lat, lon in self.event_locations:
+            dist = get_distance(lat, lon, station.latitude, station.longitude)
+            if self.distance_range[0] <= dist <= self.distance_range[1]:
+                return True
+        return False
+
+    def post_filter_fn(self, result):
+        if isinstance(result, Inventory) and self.event_locations and self.distance_range:
+            filtered_networks = []
+            for network in result:
+                filtered_stations = [station for station in network if self.post_filter_one(station)]
+                if filtered_stations:
+                    network.stations = filtered_stations
+                    filtered_networks.append(network)
+            result.networks = filtered_networks
+        return result
+
+
 class StationsHandler(SignalingObject):
     """
     Container for stations.
@@ -116,9 +166,9 @@ class StationsHandler(SignalingObject):
         self.pyweed = pyweed
         self.inventory_loader = None
 
-    def load_inventory(self, station_options):
+    def load_inventory(self, request):
         try:
-            self.inventory_loader = StationsLoader(self.pyweed.station_client, station_options)
+            self.inventory_loader = StationsLoader(self.pyweed.station_client, request)
             self.inventory_loader.done.connect(self.on_inventory_loaded)
             self.inventory_loader.start()
         except Exception as e:

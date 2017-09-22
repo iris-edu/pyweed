@@ -25,17 +25,17 @@ class LatLonBox(object):
     def __init__(self, distance):
         self.distance = distance
 
-    def add_point(self, p):
+    def add_point(self, lat, lon):
         if self.lat1 is None:
-            self.lat1 = p.lat - self.distance
-            self.lat2 = p.lat + self.distance
-            self.lon1 = p.lon - self.distance
-            self.lon2 = p.lon + self.distance
+            self.lat1 = lat - self.distance
+            self.lat2 = lat + self.distance
+            self.lon1 = lon - self.distance
+            self.lon2 = lon + self.distance
         else:
-            self.lat1 = min(self.lat1, p.lat - self.distance)
-            self.lat2 = max(self.lat2, p.lat + self.distance)
-            self.lon1 = min(self.lon1, p.lon - self.distance)
-            self.lon2 = max(self.lon2, p.lon + self.distance)
+            self.lat1 = min(self.lat1, lat - self.distance)
+            self.lat2 = max(self.lat2, lat + self.distance)
+            self.lon1 = min(self.lon1, lon - self.distance)
+            self.lon2 = max(self.lon2, lon + self.distance)
 
         if self.lat1 < -90 or self.lat2 > 90 or self.lon1 < -180 or self.lon2 > 180:
             raise CrossBorderException()
@@ -53,8 +53,8 @@ def get_combined_locations(points, distance):
         return []
 
     try:
-        for p in points:
-            box.add_point(p)
+        for lat, lon in points:
+            box.add_point(lat, lon)
         return [box]
     except CrossBorderException:
         return []

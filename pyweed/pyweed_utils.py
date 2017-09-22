@@ -343,3 +343,20 @@ class CancelledException(Exception):
             return 'Cancelled'
         else:
             return s
+
+
+class DataRequest(object):
+    """
+    Wrapper object for a data request, which may or may not be more than a single web service query.
+    """
+    # The client to use
+    client = None
+    # List of option dictionaries, one for each sub-request required
+    sub_requests = None
+    # Function to perform any post-processing required on the final result
+    post_filter_fn = None
+
+    def __init__(self, client, *requests):
+        self.client = client
+        self.sub_requests = requests
+

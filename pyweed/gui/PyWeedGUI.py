@@ -95,7 +95,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
             self.mainWindow.stationOptionsWidget.setOptions()
 
     def on_stations_loaded(self, stations):
-        super(PyWeedGUI, self).on_stations_loaded()
+        super(PyWeedGUI, self).on_stations_loaded(stations)
         if self.mainWindow:
             self.mainWindow.onStationsLoaded(stations)
 

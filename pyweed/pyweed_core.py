@@ -229,7 +229,6 @@ class PyWeedCore(QObject):
 
     def set_selected_event_ids(self, event_ids):
         self.selected_event_ids = event_ids
-        self.station_options.event_locations = self.iter_selected_event_locations()
 
     def iter_selected_events(self):
         """
@@ -262,7 +261,7 @@ class PyWeedCore(QObject):
         """
         Get the options for making an event request from Obspy
         """
-        return self.station_options.get_obspy_options()
+        return self.station_options.get_obspy_options(self.iter_selected_event_locations())
 
     def fetch_stations(self, options=None):
         """
