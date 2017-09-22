@@ -324,19 +324,16 @@ class WaveformsHandler(SignalingObject):
         """
         Create a list of waveform entries based on the current event/station selections
         """
-        self.waveforms = []
-        self.waveforms_by_id = {}
-        # Get the events as a list
-        events = list(pyweed.iter_selected_events())
-
-        # Iterate through the stations
-        for (network, station, channel) in pyweed.iter_selected_stations():
-            for event in events:
-                waveform = WaveformEntry(
-                    event, network, station, channel
-                )
-                self.waveforms.append(waveform)
-                self.waveforms_by_id[waveform.waveform_id] = waveform
+        self.waveforms = [
+            WaveformEntry(
+                event, network, station, channel
+            )
+            for (event, network, station, channel) in pyweed.iter_selected_events_stations()
+        ]
+        self.waveforms_by_id = dict(
+            (waveform.waveform_id, waveform)
+            for waveform in self.waveforms
+        )
 
     def cancel_download(self):
         """

@@ -18,7 +18,7 @@ import logging
 
 # Pyweed UI components
 from pyweed.preferences import Preferences, user_config_path
-from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl, get_preferred_origin, DataRequest
+from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl, get_preferred_origin, DataRequest, get_distance
 from obspy.clients.fdsn import Client
 from pyweed.event_options import EventOptions
 from pyweed.station_options import StationOptions
@@ -251,12 +251,12 @@ class PyWeedCore(QObject):
 
     def iter_selected_event_locations(self):
         """
-        Return an iterator of (lat, lon) pairs for each event
+        Return an iterator of (id, (lat, lon)) for each event.
         """
         for event in self.iter_selected_events():
             origin = get_preferred_origin(event)
             if origin:
-                yield (origin.latitude, origin.longitude)
+                yield (event.resource_id.id, (origin.latitude, origin.longitude),)
 
     ###############
     # Stations
@@ -309,6 +309,53 @@ class PyWeedCore(QObject):
                 sncl = get_sncl(network, station, channel)
                 if sncl in self.selected_station_ids:
                     yield (network, station, channel)
+
+    ###############
+    # Waveforms
+    ###############
+
+    def iter_selected_events_stations(self):
+        """
+        Iterate through the selected event/station combinations.
+
+        The main use case this method is meant to handle is where the user
+        loaded stations based on selected events.
+
+        For example, if the user selected multiple events and searched for stations
+        within 20 degrees of any event, there may be stations that are within 20 degrees
+        of one event but farther away from others -- we want to ensure that we only include
+        the event/station combinations that are within 20 degrees of each other.
+        """
+        events = list(self.iter_selected_events())
+
+        # Look for any event-based distance filter
+        distance_range = self.station_options.get_event_distances()
+
+        if distance_range:
+            # Event locations by id
+            event_locations = dict(self.iter_selected_event_locations())
+        else:
+            event_locations = {}
+
+        # Iterate through the stations
+        for (network, station, channel) in self.iter_selected_stations():
+            for event in events:
+                if distance_range:
+                    event_location = event_locations.get(event.resource_id.id)
+                    if event_location:
+                        distance = get_distance(
+                            event_location[0], event_location[1],
+                            station.latitude, station.longitude)
+                        LOGGER.debug(
+                            "Distance from (%s, %s) to (%s, %s): %s",
+                            event_location[0], event_location[1],
+                            station.latitude, station.longitude,
+                            distance
+                        )
+                        if distance < distance_range['mindistance'] or distance > distance_range['maxdistance']:
+                            continue
+                # If we reach here, include this event/station pair
+                yield (event, network, station, channel)
 
     def close(self):
         self.manage_cache(init=False)

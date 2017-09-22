@@ -110,7 +110,8 @@ class StationsDataRequest(DataRequest):
     def __init__(self, client, base_options, distance_range, event_locations):
         super(StationsDataRequest, self).__init__(client)
         if distance_range and event_locations:
-            self.event_locations = list(event_locations)
+            # Get a list of just the (lat, lon) for each event
+            self.event_locations = list((loc[1] for loc in event_locations))
             self.distance_range = distance_range
             try:
                 combined_locations = get_combined_locations(self.event_locations, self.distance_range['maxdistance'])
