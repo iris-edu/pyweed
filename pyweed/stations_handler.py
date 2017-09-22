@@ -113,7 +113,7 @@ class StationsDataRequest(DataRequest):
             self.event_locations = list(event_locations)
             self.distance_range = distance_range
             try:
-                combined_locations = get_combined_locations(event_locations, distance_range['maxdistance'])
+                combined_locations = get_combined_locations(self.event_locations, self.distance_range['maxdistance'])
                 self.sub_requests = [
                     dict(
                         base_options,

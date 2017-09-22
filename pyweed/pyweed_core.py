@@ -209,7 +209,16 @@ class PyWeedCore(QObject):
         """
         Launch a fetch operation for events
         """
-        self.events_handler.load_catalog(options)
+        if options:
+            # Simple request
+            request = DataRequest(self.event_client, options)
+        else:
+            # Potentially complex request
+            request = DataRequest(
+                self.event_client,
+                self.event_options.get_obspy_options()
+            )
+        self.events_handler.load_catalog(request)
 
     def on_events_loaded(self, events):
         """
@@ -257,19 +266,15 @@ class PyWeedCore(QObject):
         LOGGER.debug("Set station options: %s", repr(options))
         self.station_options.set_options(options)
 
-    def get_station_obspy_options(self):
-        """
-        Get the options for making an event request from Obspy
-        """
-        return self.station_options.get_obspy_options()
-
     def fetch_stations(self, options=None):
         """
         Load stations
         """
         if options:
+            # Simple request
             request = DataRequest(self.station_client, options)
         else:
+            # Potentially complex request
             request = StationsDataRequest(
                 self.station_client,
                 self.station_options.get_obspy_options(),
