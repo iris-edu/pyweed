@@ -75,3 +75,14 @@ class StationOptionsWidget(BaseOptionsWidget, StationOptionsWidget.Ui_StationOpt
     def get_locationFromOtherButton(self):
         return self.locationFromEventsToolButton
 
+    def onEventSelectionChanged(self):
+        """
+        This should be called whenever the event selection has changed.
+        If the "distance from selected events" is enabled, this will emit a
+        change event.
+        """
+        key = '_locationDistanceFromEvents'
+        LOGGER.debug("StationOptionsWidget.onEventSelectionChanged: %s", self.getInputValue(key))
+        if self.getInputValue(key):
+            self.changed.emit(key)
+            self.changedCoords.emit(key)

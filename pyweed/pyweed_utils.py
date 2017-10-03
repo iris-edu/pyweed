@@ -118,15 +118,16 @@ def iter_channels(inventory, dedupe=True):
     multiple epochs for a given channel. Only the first channel will be included in this case.
     """
     last_sncl = None
-    for network in inventory.networks:
-        for station in network.stations:
-            for channel in station.channels:
-                if dedupe:
-                    sncl = get_sncl(network, station, channel)
-                    if sncl == last_sncl:
-                        continue
-                    last_sncl = sncl
-                yield (network, station, channel)
+    if inventory:
+        for network in inventory.networks:
+            for station in network.stations:
+                for channel in station.channels:
+                    if dedupe:
+                        sncl = get_sncl(network, station, channel)
+                        if sncl == last_sncl:
+                            continue
+                        last_sncl = sncl
+                    yield (network, station, channel)
 
 
 def get_sncl(network, station, channel):

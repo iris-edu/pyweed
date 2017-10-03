@@ -421,6 +421,8 @@ class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
 
         self.seismap.addEventsHighlighting(points)
 
+        self.stationOptionsWidget.onEventSelectionChanged()
+
         self.manageGetWaveformsButton()
 
     def selectAllStations(self):

@@ -122,7 +122,7 @@ class BaseOptionsWidget(QtGui.QDialog):
         Return true if the given key represents a coordinate input.
         Subclasses may override/extend this.
         """
-        for marker in ('latitude', 'longitude', 'radius', '_location',):
+        for marker in ('latitude', 'longitude', 'radius', '_location', 'distance',):
             if marker in key:
                 return True
         return False
