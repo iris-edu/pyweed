@@ -82,7 +82,8 @@ class StationOptionsWidget(BaseOptionsWidget, StationOptionsWidget.Ui_StationOpt
         change event.
         """
         key = '_locationDistanceFromEvents'
-        LOGGER.debug("StationOptionsWidget.onEventSelectionChanged: %s", self.getInputValue(key))
-        if self.getInputValue(key):
+        inputValue = self.getInputValue(key)
+        LOGGER.debug("StationOptionsWidget.onEventSelectionChanged: %s", inputValue)
+        if inputValue and strtobool(inputValue):
             self.changed.emit(key)
             self.changedCoords.emit(key)
