@@ -10,10 +10,18 @@ cd /tmp/
 
 export ARCH=`uname -m`
 
+CONDA_INSTALL_PATH="$HOME/.pyweed/miniconda"
+
 ###
 # Install Anaconda if not found
 
 echo "Looking for Anaconda installation"
+
+# Anaconda may have been previously installed but not on the existing path, so add the install
+# path to ensure we find it in that case
+export PATH="$PATH:$CONDA_INSTALL_PATH/bin"
+hash -r
+
 conda info > /dev/null 2>&1
 if (( $? )); then
   echo "
@@ -29,8 +37,8 @@ Anaconda Python not found, do you want to install it? [yes|no]
   echo "Downloading Miniconda";
   curl -Ss -o miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-${ARCH}.sh
 
-  bash miniconda.sh -b -p $HOME/miniconda
-  export PATH="$HOME/miniconda/bin:$PATH"
+  bash miniconda.sh -b -p $CONDA_INSTALL_PATH
+  export PATH="$CONDA_INSTALL_PATH/bin:$PATH"
   hash -r
   conda config --set always_yes yes --set changeps1 no
   conda update -q conda
@@ -73,7 +81,7 @@ Install PyWEED to /Applications folder? [yes|no]
   if [[ ($ANS != 'yes') && ($ANS != 'y') ]]; then
     echo "Application is available at $PWD/PyWEED.app"
   else
-    mv $PWD/PyWEED.app /Applications/
+    mv -f $PWD/PyWEED.app /Applications/
     echo "Installed to /Applications/PyWEED.app"
   fi
 fi
