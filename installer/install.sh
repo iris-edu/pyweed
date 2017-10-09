@@ -5,8 +5,15 @@ else
 fi
 echo "Identified OS as $OS"
 
-# Run in /tmp/
-cd /tmp/
+# Run in a temp directory
+WORKING_DIR=`mktemp -d`
+if (( $? )); then
+  # Probably no mktemp, generate a time-based directory name
+  WORKING_DIR=`date "+/tmp/pyweed.%s"`
+fi
+echo "Working in $WORKING_DIR"
+mkdir -p "$WORKING_DIR"
+cd "$WORKING_DIR"
 
 export ARCH=`uname -m`
 
@@ -62,7 +69,7 @@ else
 fi
 
 echo "Working to $ENV_ACTION PyWEED environment"
-curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/master/environment.yml
+curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/environment.yml
 conda env $ENV_ACTION
 source activate pyweed
 
@@ -81,6 +88,11 @@ Install PyWEED to /Applications folder? [yes|no]
   if [[ ($ANS != 'yes') && ($ANS != 'y') ]]; then
     echo "Application is available at $PWD/PyWEED.app"
   else
+    # Move the old version out of the way if necessary
+    if [ -e "/Applications/PyWEED.app" ]; then
+      mv "/Applications/PyWEED.app" "$PWD/PyWEED.prev.app"
+      echo "Previous application moved to $PWD/PyWEED.prev.app"
+    fi
     mv -f $PWD/PyWEED.app /Applications/
     echo "Installed to /Applications/PyWEED.app"
   fi
