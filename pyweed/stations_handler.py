@@ -81,6 +81,9 @@ class StationsLoader(SignalingThread):
                 except Exception:
                     self.progress.emit()
         self.futures = {}
+        # If no inventory object (ie. no sub-requests were run) create a dummy one
+        if not inventory:
+            inventory = Inventory([], 'INTERNAL')
         inventory = self.request.process_result(inventory)
         self.done.emit(inventory)
 

@@ -599,12 +599,17 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         if self.waveformsDownloadStatus == STATUS_WORKING:
             self.downloadSpinner.hide()
-            self.waveformsDownloadStatus = STATUS_DONE
-            self.updateToolbars()
 
-            # Save data if appropriate
+            # If normal result, mark as done. If an error, mark as ready (ie. user can download again)
+            if isinstance(result, Exception):
+                self.waveformsDownloadStatus = STATUS_READY
+            else:
+                self.waveformsDownloadStatus = STATUS_DONE
+                # Initiate save if that was queued
             if self.waveformsSaveStatus == STATUS_WORKING:
                 self.saveWaveformData()
+
+            self.updateToolbars()
 
     @QtCore.pyqtSlot()
     def saveWaveformData(self):

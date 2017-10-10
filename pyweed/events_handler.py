@@ -63,7 +63,7 @@ class EventsLoader(SignalingThread):
         self.futures = {}
 
         catalog = None
-        LOGGER.info("Making %d event requests" % len(self.request.sub_requests))
+        LOGGER.info("Making %d event requests", len(self.request.sub_requests))
         with concurrent.futures.ThreadPoolExecutor(5) as executor:
             for sub_request in self.request.sub_requests:
                 # Dictionary lets us look up argument by result later
@@ -80,7 +80,11 @@ class EventsLoader(SignalingThread):
                 except Exception:
                     self.progress.emit()
         self.futures = {}
+        if not catalog:
+            catalog = Catalog()
+        LOGGER.info("Loader processing")
         catalog = self.request.process_result(catalog)
+        LOGGER.info("Loader done")
         self.done.emit(catalog)
 
     def clearFutures(self):
