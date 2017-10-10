@@ -35,3 +35,6 @@ class SplashScreenHandler(logging.Handler):
     def finish(self, mainWin):
         super(SplashScreenHandler, self).close()
         self.splash.finish(mainWin)
+        logger = logging.getLogger()
+        logger.removeHandler(self)
+        print("Splash screen finished")

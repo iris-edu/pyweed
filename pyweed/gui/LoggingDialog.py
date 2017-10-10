@@ -13,12 +13,16 @@ from pyweed.gui.BaseDialog import BaseDialog
 from pyweed.gui.uic import LoggingDialog
 from pyweed.gui.MyTextEditLoggingHandler import MyTextEditLoggingHandler
 import logging
+from PyQt4 import QtCore
 
 
 class LoggingDialog(BaseDialog, LoggingDialog.Ui_LoggingDialog):
     """
     Dialog window displaying all logs.
     """
+
+    append = QtCore.pyqtSignal(str)
+
     def __init__(self, parent=None):
         super(LoggingDialog, self).__init__(parent=parent)
         self.setupUi(self)
@@ -28,8 +32,14 @@ class LoggingDialog(BaseDialog, LoggingDialog.Ui_LoggingDialog):
         self.loggingPlainTextEdit.setReadOnly(True)
 
         # Add a widget logging handler to the logger
-        loggingHandler = MyTextEditLoggingHandler(widget=self.loggingPlainTextEdit)
+        loggingHandler = MyTextEditLoggingHandler(signal=self.append)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         loggingHandler.setFormatter(formatter)
 
         logging.getLogger().addHandler(loggingHandler)
+
+        self.append.connect(self.appendMessage)
+
+    def appendMessage(self, msg):
+        self.loggingPlainTextEdit.appendPlainText(msg)
+

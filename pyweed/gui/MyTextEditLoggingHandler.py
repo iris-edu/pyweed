@@ -15,10 +15,10 @@ import logging
 
 
 class MyTextEditLoggingHandler(logging.Handler):
-    def __init__(self, widget=None):
+    def __init__(self, signal=None):
         super(MyTextEditLoggingHandler, self).__init__(logging.INFO)
-        self.widget = widget
+        self.signal = signal
 
     def emit(self, record):
         msg = self.format(record)
-        self.widget.appendPlainText(msg)
+        self.signal.emit(msg)
