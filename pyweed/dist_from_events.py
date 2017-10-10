@@ -10,6 +10,9 @@ Selecting stations based on selected events.
 """
 
 from __future__ import (absolute_import, division, print_function)
+from logging import getLogger
+
+LOGGER = getLogger(__name__)
 
 
 class CrossBorderException(Exception):
@@ -40,6 +43,9 @@ class LatLonBox(object):
         if self.lat1 < -90 or self.lat2 > 90 or self.lon1 < -180 or self.lon2 > 180:
             raise CrossBorderException()
 
+    def __str__(self):
+        return "[%s, %s, %s, %s]" % (self.lat1, self.lon1, self.lat2, self.lon2)
+
 
 def get_combined_locations(points, distance):
     """
@@ -52,9 +58,7 @@ def get_combined_locations(points, distance):
     if not points:
         return []
 
-    try:
-        for lat, lon in points:
-            box.add_point(lat, lon)
-        return [box]
-    except CrossBorderException:
-        return []
+    for lat, lon in points:
+        box.add_point(lat, lon)
+    LOGGER.info("Combined points into: %s", box)
+    return [box]
