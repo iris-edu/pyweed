@@ -36,6 +36,9 @@ class SpinnerWidget(QtGui.QFrame, SpinnerWidget.Ui_SpinnerWidget):
             self.cancelButton.hide()
         self.hide()
 
+    def setText(self, text):
+        self.label.setText(text)
+
     def showEvent(self, *args, **kwargs):
         """
         Widget is being shown

@@ -13,7 +13,7 @@ http://stackoverflow.com/questions/25533140/sorting-qtablewidget-items-numerical
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
-from pyweed.gui.utils import CustomTableWidgetItemMixin
+from pyweed.gui.TableWidget import CustomTableWidgetItemMixin
 
 
 class MyNumericTableWidgetItem (CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):

@@ -15,7 +15,7 @@ http://stackoverflow.com/questions/14365875/qt-cannot-put-an-image-in-a-table
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
-from pyweed.gui.utils import CustomTableWidgetItemMixin
+from pyweed.gui.TableWidget import CustomTableWidgetItemMixin
 
 
 class MyTableWidgetImageItem(CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):

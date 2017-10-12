@@ -17,9 +17,10 @@ from pyweed.gui.TableItems import TableItems, Column
 from pyweed.pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHASES
 from pyweed.preferences import safe_int
 from PyQt4.QtGui import QTableWidgetItem
-from pyweed.gui.utils import ComboBoxAdapter, CustomTableWidgetItemMixin
+from pyweed.gui.Adapters import ComboBoxAdapter
 from pyweed.gui.BaseDialog import BaseDialog
 from pyweed.gui.SpinnerWidget import SpinnerWidget
+from pyweed.gui.TableWidget import CustomTableWidgetItemMixin
 
 LOGGER = getLogger(__name__)
 
@@ -283,9 +284,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         # NOTE:  http://www.tutorialspoint.com/pyqt/pyqt_qcombobox_widget.htm
         # NOTE:  currentIndexChanged() responds to both user and programmatic changes.
         #        Use activated() for user initiated changes
-        self.eventComboBox.activated.connect(self.loadFilteredSelectionTable)
-        self.networkComboBox.activated.connect(self.loadFilteredSelectionTable)
-        self.stationComboBox.activated.connect(self.loadFilteredSelectionTable)
+        self.eventComboBox.activated.connect(self.onFilterChanged)
+        self.networkComboBox.activated.connect(self.onFilterChanged)
+        self.stationComboBox.activated.connect(self.onFilterChanged)
 
         # Connect the timewindow signals
         self.timeWindowAdapter.changed.connect(self.resetDownload)
@@ -318,7 +319,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         keepItem.setKeep(waveform.keep)
 
     @QtCore.pyqtSlot()
-    def loadWaveformChoices(self, filterColumn=None, filterText=None):
+    def loadWaveformChoices(self):
         """
         Fill the selectionTable with all SNCL-Event combinations selected in the MainWindow.
         This function is triggered whenever the "Get Waveforms" button in the MainWindow is clicked.
@@ -329,9 +330,6 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.resetDownload()
 
         self.waveforms_handler.create_waveforms(self.pyweed)
-
-        # Add event-SNCL combinations to the selection table
-        self.loadSelectionTable(initial=True)
 
         # Add events to the eventComboBox -------------------------------
 
@@ -360,45 +358,41 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                 foundStations.add(netstaCode)
                 self.stationComboBox.addItem(netstaCode)
 
+        self.loadSelectionTable()
+
+        # Start downloading data
+        self.downloadWaveformData()
+
         LOGGER.debug('Finished loading waveform choices')
 
     @QtCore.pyqtSlot()
-    def loadSelectionTable(self, initial=False):
+    def loadSelectionTable(self):
         """
         Add event-SNCL combinations to the selection table
-
-        @param initial: True if this is the initial load (ie. not filtering existing data)
         """
 
         LOGGER.debug('Loading waveform selection table...')
 
+        if not self.filters:
+            self.filters = {
+                'event': self.eventComboBox.currentText(),
+                'network': self.networkComboBox.currentText(),
+                'station': self.stationComboBox.currentText(),
+            }
+
         # Use WaveformTableItems to put the data into the table
         if not self.tableItems:
             self.tableItems = WaveformTableItems(
-                self.selectionTable,
-                self.filters
+                self.selectionTable
             )
         self.tableItems.fill(self.iterWaveforms(visible_only=True))
-
-        # Start downloading the waveform data if this is an initial load
-        if initial:
-            self.downloadWaveformData()
 
         LOGGER.debug('Finished loading waveform selection table')
 
     @QtCore.pyqtSlot(int)
-    def loadFilteredSelectionTable(self):
-        """
-        Filter waveformsDF based on filter selections and then reload the selectionTable.
-        """
-        LOGGER.debug('Filtering...')
-        self.filters = {
-            'event': self.eventComboBox.currentText(),
-            'network': self.networkComboBox.currentText(),
-            'station': self.stationComboBox.currentText(),
-        }
+    def onFilterChanged(self):
+        self.filters = {}
         self.loadSelectionTable()
-        LOGGER.debug('Finished filtering waveformsDF')
 
     def iterWaveforms(self, visible_only=False, saveable_only=False):
         """
@@ -578,7 +572,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         LOGGER.debug("Ready to display waveform %s (%s)", waveform_id, QtCore.QThread.currentThreadId())
 
         self.downloadCompleted += 1
-        self.downloadStatusLabel.setText("Downloaded %d of %d" % (self.downloadCompleted, self.downloadCount))
+        msg = "Downloaded %d of %d" % (self.downloadCompleted, self.downloadCount)
+        self.downloadStatusLabel.setText(msg)
+        self.downloadSpinner.setText(msg)
 
         row = self.getTableRow(waveform_id)
         if row is None:
@@ -606,8 +602,8 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             else:
                 self.waveformsDownloadStatus = STATUS_DONE
                 # Initiate save if that was queued
-            if self.waveformsSaveStatus == STATUS_WORKING:
-                self.saveWaveformData()
+                if self.waveformsSaveStatus == STATUS_WORKING:
+                    self.saveWaveformData()
 
             self.updateToolbars()
 
