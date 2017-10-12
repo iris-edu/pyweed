@@ -41,9 +41,6 @@ class Ui_SpinnerWidget(object):
         self.icon.setAlignment(QtCore.Qt.AlignBottom|QtCore.Qt.AlignHCenter)
         self.icon.setObjectName(_fromUtf8("icon"))
         self.verticalLayout.addWidget(self.icon)
-        self.progressBar = QtGui.QProgressBar(SpinnerWidget)
-        self.progressBar.setObjectName(_fromUtf8("progressBar"))
-        self.verticalLayout.addWidget(self.progressBar)
         self.label = QtGui.QLabel(SpinnerWidget)
         self.label.setText(_fromUtf8(""))
         self.label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
@@ -61,7 +58,7 @@ class Ui_SpinnerWidget(object):
         self.horizontalLayout.addWidget(self.cancelButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout.setStretch(0, 1)
-        self.verticalLayout.setStretch(2, 1)
+        self.verticalLayout.setStretch(1, 1)
 
         self.retranslateUi(SpinnerWidget)
         QtCore.QMetaObject.connectSlotsByName(SpinnerWidget)

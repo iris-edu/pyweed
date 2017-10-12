@@ -169,7 +169,7 @@
                <string>Download</string>
               </property>
               <property name="checkable">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -211,7 +211,7 @@
           <number>2</number>
          </property>
          <item>
-          <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0,0">
+          <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0">
            <property name="verticalSpacing">
             <number>2</number>
            </property>
@@ -224,6 +224,12 @@
               <spacer name="horizontalSpacer_4">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
                </property>
               </spacer>
              </item>
@@ -321,7 +327,7 @@
                <string>Save</string>
               </property>
               <property name="checkable">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>

@@ -29,6 +29,7 @@ class SpinnerWidget(QtGui.QFrame, SpinnerWidget.Ui_SpinnerWidget):
         self.setupUi(self)
         self.movie = QtGui.QMovie(":qrc/rotator-32.gif")
         self.icon.setMovie(self.movie)
+        self.originalLabelText = labelText
         self.label.setText(labelText)
         if cancellable:
             self.cancelButton.clicked.connect(self.cancelled.emit)
@@ -36,8 +37,8 @@ class SpinnerWidget(QtGui.QFrame, SpinnerWidget.Ui_SpinnerWidget):
             self.cancelButton.hide()
         self.hide()
 
-    def setText(self, text):
-        self.label.setText(text)
+    def setLabel(self, labelText):
+        self.label.setText(labelText)
 
     def showEvent(self, *args, **kwargs):
         """
@@ -45,6 +46,7 @@ class SpinnerWidget(QtGui.QFrame, SpinnerWidget.Ui_SpinnerWidget):
         """
         self.setGeometry(self.parent().contentsRect())
         self.movie.start()
+        self.label.setText(self.originalLabelText)
         return super(SpinnerWidget, self).showEvent(*args, **kwargs)
 
     def hideEvent(self, *args, **kwargs):

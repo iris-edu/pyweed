@@ -443,44 +443,8 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         """
         Update the UI elements to reflect the current status
         """
-        return
-        # Download controls
-#         if self.waveformsDownloadStatus == STATUS_WORKING:
-#             # Currently downloading, disable most of the UI
-#             self.downloadGroupBox.setEnabled(False)
-#             self.downloadPushButton.setChecked(True)
-#             self.downloadPushButton.setText('Downloading...')
-#         else:
-#             self.downloadGroupBox.setEnabled(True)
-#             self.downloadPushButton.setChecked(False)
-#             if self.waveformsDownloadStatus == STATUS_DONE:
-#                 # Disabled if download has finished (and nothing has changed)
-#                 self.downloadPushButton.setEnabled(False)
-#                 self.downloadPushButton.setText('Download Complete')
-#             else:
-#                 self.downloadPushButton.setEnabled(True)
-#                 self.downloadPushButton.setText('Download')
-#
-#         # Save controls
-#         if self.waveformsSaveStatus == STATUS_WORKING:
-#             # Currently saving
-#             self.saveGroupBox.setEnabled(False)
-#             self.savePushButton.setText('Saving...')
-#             self.savePushButton.setChecked(True)
-#             # May be waiting for download to finish
-#             if self.waveformsDownloadStatus != STATUS_DONE:
-#                 self.saveStatusLabel.setText('Waiting for downloads')
-#             else:
-#                 self.saveStatusLabel.setText('Saving...')
-#         else:
-#             # Available
-#             self.saveGroupBox.setEnabled(True)
-#             self.savePushButton.setText('Save')
-#             self.savePushButton.setChecked(False)
-#             # When the save is complete the status will be put in the label, don't change it
-#             # unless the process is reset (ie. we return to READY status)
-#             if self.waveformsSaveStatus == STATUS_READY:
-#                 self.saveStatusLabel.setText('')
+        self.downloadPushButton.setEnabled(self.waveformsDownloadStatus == STATUS_READY)
+
 
     @QtCore.pyqtSlot()
     def onSavePushButton(self):
@@ -493,12 +457,12 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             if self.waveformsDownloadStatus == STATUS_DONE:
                 # If any downloads are complete, we can trigger the save now
                 self.saveWaveformData()
-            elif self.waveformsDownloadStatus == STATUS_WORKING:
-                # Currently downloading, we just have to wait -- update to indicate this to the user
-                self.updateToolbars()
             else:
-                # We need to actually initiate the download first
-                self.downloadWaveformData()
+                # Otherwise we have to wait until the download is done, indicate this to the user
+                self.saveSpinner.setLabel("Waiting for downloads to finish")
+                # If not already downloading, try to start
+                if self.waveformsDownloadStatus != STATUS_WORKING:
+                    self.downloadWaveformData()
 
     @QtCore.pyqtSlot()
     def resetDownload(self):
@@ -573,8 +537,8 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.downloadCompleted += 1
         msg = "Downloaded %d of %d" % (self.downloadCompleted, self.downloadCount)
-        self.downloadStatusLabel.setText(msg)
-        self.downloadSpinner.setText(msg)
+        # self.downloadStatusLabel.setText(msg)
+        self.downloadSpinner.setLabel(msg)
 
         row = self.getTableRow(waveform_id)
         if row is None:
@@ -601,6 +565,8 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                 self.waveformsDownloadStatus = STATUS_READY
             else:
                 self.waveformsDownloadStatus = STATUS_DONE
+                self.downloadStatusLabel.setText("Downloaded %d waveforms" % len(self.waveforms_handler.waveforms))
+
                 # Initiate save if that was queued
                 if self.waveformsSaveStatus == STATUS_WORKING:
                     self.saveWaveformData()
@@ -635,16 +601,17 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                     errors.append("%s: %s" % (result.waveform_id, result.result))
                 elif result.result:
                     savedCount += 1
+                    self.saveSpinner.setLabel("Saved %d waveforms" % savedCount)
+                    QtGui.QApplication.processEvents()  # update GUI
                 else:
                     skippedCount += 1
-                self.saveStatusLabel.setText("Saved %d waveforms" % (savedCount + skippedCount))
-                self.saveStatusLabel.repaint()
-                QtGui.QApplication.processEvents()  # update GUI
+            self.saveStatusLabel.setText("Saved %d waveforms" % savedCount)
+            self.saveStatusLabel.repaint()
 
             LOGGER.info("Save complete: %d saved, %d already existed, %d errors", savedCount, skippedCount, len(errors))
 
             if errors:
-                # Truncate the list of error if it's very long
+                # Truncate the list of errors if it's very long
                 errorCount = len(errors)
                 if errorCount > 20:
                     errors = errors[:20]
