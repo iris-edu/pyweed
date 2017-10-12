@@ -30,6 +30,8 @@ import concurrent.futures
 
 LOGGER = getLogger(__name__)
 
+THREAD_POOL_SIZE = 10
+
 
 class WaveformEntry(AttribDict):
     """
@@ -244,7 +246,7 @@ class WaveformsLoader(SignalingThread):
         self.setPriority(QtCore.QThread.LowestPriority)
         self.clearFutures()
         self.futures = {}
-        with concurrent.futures.ThreadPoolExecutor(5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(THREAD_POOL_SIZE) as executor:
             for waveform in self.waveforms:
                 # Dictionary to look up the waveform id by Future
                 self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
