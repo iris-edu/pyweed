@@ -175,3 +175,10 @@ class TableItems(object):
                 self.table.setColumnWidth(i, column.width)
             else:
                 self.table.resizeColumnToContents(i)
+
+    def filter(self, filterFn):
+        for row in range(self.table.rowCount()):
+            if not filterFn or filterFn(row):
+                self.table.showRow(row)
+            else:
+                self.table.hideRow(row)

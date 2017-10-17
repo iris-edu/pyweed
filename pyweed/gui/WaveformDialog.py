@@ -373,34 +373,51 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         LOGGER.debug('Loading waveform selection table...')
 
-        if not self.filters:
-            self.filters = {
-                'event': self.eventComboBox.currentText(),
-                'network': self.networkComboBox.currentText(),
-                'station': self.stationComboBox.currentText(),
-            }
-
         # Use WaveformTableItems to put the data into the table
         if not self.tableItems:
             self.tableItems = WaveformTableItems(
                 self.selectionTable
             )
-        self.tableItems.fill(self.iterWaveforms(visible_only=True))
+        self.tableItems.fill(self.iterWaveforms())
+
+        self.filterSelectionTable()
 
         LOGGER.debug('Finished loading waveform selection table')
 
     @QtCore.pyqtSlot(int)
     def onFilterChanged(self):
         self.filters = {}
-        self.loadSelectionTable()
+        self.filterSelectionTable()
 
-    def iterWaveforms(self, visible_only=False, saveable_only=False):
+    def filterSelectionTable(self):
         """
-        Iterate through the waveforms, optionally yielding only visible and/or saveable ones
+        Filter the selection table based on the currently defined filters
+        """
+        if self.tableItems:
+
+            if not self.filters:
+                self.filters = {
+                    'event': self.eventComboBox.currentText(),
+                    'network': self.networkComboBox.currentText(),
+                    'station': self.stationComboBox.currentText(),
+                }
+
+            filterResults = dict(
+                (waveform.waveform_id, self.applyFilter(waveform))
+                for waveform in self.iterWaveforms()
+            )
+
+            def filterFn(row):
+                waveformID = str(self.selectionTable.item(row, WAVEFORM_ID_COLUMN).text())
+                return filterResults.get(waveformID)
+
+            self.tableItems.filter(filterFn)
+
+    def iterWaveforms(self, saveable_only=False):
+        """
+        Iterate through the waveforms, optionally yielding only the saveable ones
         """
         for waveform in self.waveforms_handler.waveforms:
-            if visible_only and not self.applyFilter(waveform):
-                continue
             if saveable_only and not (waveform.keep and waveform.mseed_exists):
                 continue
             yield waveform
@@ -444,7 +461,6 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         Update the UI elements to reflect the current status
         """
         self.downloadPushButton.setEnabled(self.waveformsDownloadStatus == STATUS_READY)
-
 
     @QtCore.pyqtSlot()
     def onSavePushButton(self):
