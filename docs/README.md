@@ -4,11 +4,9 @@ PyWEED is a cross-platform downloadable app for retrieving event-based seismic d
 
 __This software is still under development and has not been publicly released__
 
-# Installation
+Send comments/problems to adam@iris.washington.edu.
 
-(This is a work in progress, please report problems to adam@iris.washington.edu.)
-
-## Quick Install (Mac/Linux only)
+## Bash Install (Mac/Linux only)
 
 On Mac and Linux, this command should perform a complete installation:
 
@@ -16,19 +14,15 @@ On Mac and Linux, this command should perform a complete installation:
 bash <(curl -Ss https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/install.sh)
 ```
 
-This runs a script that essentially does the steps outlined in the Manual Install below.
+This runs a script that essentially performs the steps outlined in the Conda Install below.
 
-## Manual Install
+## Conda Install (Mac/Linux/Windows)
 
-On Windows (or if the Quick Install shown above fails), you will need to install some components manually.
+### Install Conda if needed
 
-### Install Anaconda
+If you don't have [Conda](https://conda.io/docs/) installed already, we recommend using [Miniconda](https://conda.io/miniconda.html).
 
-The best way to run PyWEED is with [Anaconda](https://docs.continuum.io/anaconda/).
-
-If you don't have Anaconda installed, we recommend using [miniconda](http://conda.pydata.org/miniconda.html)
-(a stripped-down version of Anaconda). Follow the [Quick Install](http://conda.pydata.org/docs/install/quick.html)
-instructions.
+__[Miniconda Installers](https://conda.io/miniconda.html)__
 
 The installation process should put the `conda` command in your shell `PATH`.
 
@@ -37,7 +31,7 @@ The installation process should put the `conda` command in your shell `PATH`.
 [Anaconda environments](https://conda.io/docs/using/envs.html) allow different projects to each have their own
 version of Python and various dependencies.
 
-Download the PyWEED environment definition from https://raw.githubusercontent.com/iris-edu/pyweed/master/environment.yml
+Download the PyWEED environment definition from https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/environment.yml
 
 Then run:
 
