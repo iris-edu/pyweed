@@ -14,6 +14,6 @@ dependencies:
 - pyqt=4.11.4
 - qtconsole
 - pyzmq
+- pyproj
 - pip:
   - pyweed==0.4.dev4
-  - geographiclib

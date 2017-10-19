@@ -15,13 +15,17 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import logging
 import re
-from geographiclib.geodesic import Geodesic
+from pyproj import Geod
 from obspy.taup.tau import TauPyModel
 from future.moves.urllib.parse import urlencode
 
 LOGGER = logging.getLogger(__name__)
-GEOD = Geodesic.WGS84
+GEOD = Geod(ellps='WGS84')
 TAUP = TauPyModel()
+
+# Rough meters/degree calculation
+M_PER_DEG = (GEOD.inv(0, 0, 0, 1)[2] + GEOD.inv(0, 0, 1, 0)[2]) / 2
+
 
 
 class OutputFormat(object):
@@ -278,8 +282,9 @@ def get_distance(lat1, lon1, lat2, lon2):
     """
     Get the distance between two points in degrees
     """
-    dist = GEOD.Inverse(lat1, lon1, lat2, lon2, Geodesic.DISTANCE)
-    return dist['a12']
+    # NOTE that GEOD takes longitude first!
+    dist = GEOD.inv(lon1, lat1, lon2, lat2)
+    return dist[2]
 
 
 def get_arrivals(distance, event_depth):
@@ -311,13 +316,18 @@ def get_bounding_circle(lat, lon, radius, num_points=36):
     """
     Returns groups of lat/lon pairs representing a circle on the map
     """
-    return [
-        (g['lat2'], g['lon2'])
-        for g in [
-            GEOD.ArcDirect(lat, lon, (i * 360) / num_points, radius)
-            for i in range(0, num_points + 1)
-        ]
-    ]
+    radius_meters = radius * M_PER_DEG
+    # NOTE that GEOD takes longitude first!
+    trans = GEOD.fwd(
+        [lon] * num_points,
+        [lat] * num_points,
+        list(((i * 360) / num_points) for i in range(num_points)),
+        [radius_meters] * num_points
+    )
+    points = list(zip(trans[1], trans[0]))
+    # We need to complete the circle by adding the first point again as the last point
+    points.append(points[0])
+    return points
 
 
 def get_service_url(client, service, parameters):

@@ -14,5 +14,4 @@ dependencies:
 - pyqt=4.11.4
 - qtconsole
 - pyzmq
-- pip:
-  - geographiclib
+- pyproj

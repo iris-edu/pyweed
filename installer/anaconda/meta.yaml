@@ -26,8 +26,11 @@ requirements:
   run:
     - python
     - obspy
-    - pyqt 4.11.4
+    - pyqt 4.11*
     - qtconsole
+    - basemap
+    - pyproj
+    - pillow
     - mock  # [py2k]
 
 test:
