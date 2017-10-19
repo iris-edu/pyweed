@@ -1,0 +1,47 @@
+{% set name = "pyweed" %}
+{% set version = "0.4.dev4" %}
+{% set sha256 = "da8d2010a9f9545f1d8139c7d3c5248cffa350a14b4c60b4fdd9a2366fce4f4c" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  #url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  #sha256: {{ sha256 }}
+  git_url: https://github.com/iris-edu/pyweed.git
+  # path: /workspace/test/pyweed
+
+
+build:
+  number: 0
+  # preserve_egg_dir: yes
+  # detect_binary_files_with_prefix: true
+  script: python setup.py install --single-version-externally-managed --record record.txt
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+    - obspy
+    - pyqt 4.11.4
+    - qtconsole
+    - mock  # [py2k]
+
+test:
+  requires:
+    - flake8
+  imports:
+    - pyweed
+  commands:
+
+about:
+  home: https://github.com/iris-edu/pyweed
+  license: LGPLv3
+  summary: "PyWEED: A cross-platform app for retrieving event-based seismic data."
+
+extra:
+  recipe-maintainers:
+    - adam-iris
