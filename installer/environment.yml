@@ -16,4 +16,4 @@ dependencies:
 - pyzmq
 - pyproj
 - pip:
-  - pyweed==0.4.dev4
+  - pyweed==0.5.0
