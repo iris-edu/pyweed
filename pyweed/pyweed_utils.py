@@ -283,8 +283,8 @@ def get_distance(lat1, lon1, lat2, lon2):
     Get the distance between two points in degrees
     """
     # NOTE that GEOD takes longitude first!
-    dist = GEOD.inv(lon1, lat1, lon2, lat2)
-    return dist[2]
+    _az, _baz, meters = GEOD.inv(lon1, lat1, lon2, lat2)
+    return meters / M_PER_DEG
 
 
 def get_arrivals(distance, event_depth):

@@ -111,6 +111,12 @@ class StationsDataRequest(DataRequest):
     distance_range = None
 
     def __init__(self, client, base_options, distance_range, event_locations):
+        """
+        :param client: an ObsPy FDSN client
+        :param base_options: the basic query options (ie. from StationOptions)
+        :param distance_range: a tuple of (min, max) if querying by distance from events
+        :param event_locations: a list of selected event locations if querying by distance from events
+        """
         super(StationsDataRequest, self).__init__(client)
         if distance_range and event_locations:
             # Get a list of just the (lat, lon) for each event

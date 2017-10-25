@@ -9,6 +9,7 @@ Manage the splash screen
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+import sys
 import logging
 from PyQt4 import QtGui, QtCore
 
@@ -25,7 +26,7 @@ class SplashScreenHandler(logging.Handler):
         logger.addHandler(self)
 
         self.splash.show()
-        print("Splash screen should be visible")
+        logger.info("Splash screen should be visible")
 
     def emit(self, record):
         msg = self.format(record)
@@ -37,4 +38,4 @@ class SplashScreenHandler(logging.Handler):
         self.splash.finish(mainWin)
         logger = logging.getLogger()
         logger.removeHandler(self)
-        print("Splash screen finished")
+        logger.info("Splash screen finished")
