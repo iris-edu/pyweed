@@ -79,7 +79,7 @@ source activate pyweed
 if [[ $OS == 'MacOSX' ]]; then
   echo "Creating Mac app bundle"
   hash -r
-  pyweed_build_osx
+  pyweed_build_launcher
   echo "
 Install PyWEED to /Applications folder? [yes|no]
 [no] >>> "
