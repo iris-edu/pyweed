@@ -66,13 +66,16 @@ Update the *sha256* value with the checksum value from the PyPi download page (i
 conda build -c conda-forge --python 3.5 [path containing meta.yaml]
 ```
 
-For example, if `meta.yaml` is at `recipe/meta.yaml` you would say:
+* `-c conda-forge` ensures that conda can build with packages from conda-forge
+* `--python 3.5` ensures that conda builds using Python 3
+
+For example, to build from `recipe/meta.yaml` you would say:
 
 ```
 conda build -c conda-forge --python 3.5 recipe
 ```
 
-Near the end, it should say where the built package can be found, eg.
+Near the end of a successful build, it should say where the built package can be found, eg.
 
     TEST END: /workspace/anaconda/conda-bld/osx-64/pyweed-0.5.2.dev1-py35hf6ed582_0.tar.bz2
 
