@@ -46,7 +46,7 @@ On Mac, you can create a clickable app bundle, which you can then copy into `App
 
 ```
 source activate pyweed
-pyweed_build_osx
+pyweed_build_launcher
 mv PyWEED.app /Applications/
 ```
 
