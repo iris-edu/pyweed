@@ -50,9 +50,11 @@ You will need to fork a GitHub project, make changes, then submit a pull request
 The version is defined at the top of the `meta.yaml` file:
 
 ```
+{% raw %}
 {% set name = "pyweed" %}
 {% set version = "0.5.2.dev0" %}
 {% set sha256 = "3e1e8e35cba3f09a52a540b4351042d9e62a98bc430d7f70315df621fb2177f1" %}
+{% endraw %}
 ```
 
 Change *version* to match the new version number.
