@@ -20,6 +20,13 @@ import os
 from future.utils import PY2
 import matplotlib
 
+# If running under windows, redirect stdout/stderr, since writing to them will crash Python if there's
+# not a console. See https://bugs.python.org/issue706263
+if sys.executable.endswith('pythonw.exe'):
+    nul = open(os.devnull, 'w')
+    sys.stderr = nul
+    sys.stdout = nul
+
 # Configure matplotlib backend
 matplotlib.use('AGG')
 

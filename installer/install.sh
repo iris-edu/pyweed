@@ -57,27 +57,23 @@ else
 fi
 
 ###
-# Create/update the conda environment
+# Create/update the pyweed conda environment
 
 conda env list | grep '^pyweed\s' > /dev/null
 if (( $? )); then
-  echo "No pyweed environment found"
-  ENV_ACTION="create"
+  echo "No pyweed environment found. Creating one."
+  conda create -n pyweed -c conda-forge python=3 pyweed
 else
-  echo "Found a pyweed environment"
-  ENV_ACTION="update"
+  echo "Found a pyweed environment. Trying to update."
+  conda install -n pyweed -c conda-forge pyweed
 fi
-
-echo "Working to $ENV_ACTION PyWEED environment"
-curl -Ss -o environment.yml https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/environment.yml
-conda env $ENV_ACTION
-source activate pyweed
 
 ###
 # Mac .app bundle
 
 if [[ $OS == 'MacOSX' ]]; then
   echo "Creating Mac app bundle"
+  source activate pyweed
   hash -r
   pyweed_build_launcher
   echo "

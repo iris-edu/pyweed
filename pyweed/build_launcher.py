@@ -13,13 +13,13 @@ def build_mac_launcher():
     """
     base_path = "%s.app" % __app_name__
 
-    os.makedirs("%s/Contents/MacOS" % base_path, exist_ok=True)
-    os.makedirs("%s/Contents/Resources" % base_path, exist_ok=True)
+    os.makedirs(os.path.join(base_path, "Contents", "MacOS"), exist_ok=True)
+    os.makedirs(os.path.join(base_path, "Contents", "Resources"), exist_ok=True)
 
     bundle_identifier = "edu.iris.%s" % __app_name__
     app_version_string = "%s %s" % (__app_name__, __version__)
 
-    with open("%s/Contents/Info.plist" % base_path, "w") as f:
+    with open(os.path.join(base_path, "Contents", "Info.plist"), "w") as f:
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
         <plist version="1.0">
@@ -56,18 +56,18 @@ def build_mac_launcher():
         </plist>
         """ % (__app_name__, app_version_string, bundle_identifier, __app_name__, app_version_string, __version__))
 
-    with open("%s/Contents/PkgInfo" % base_path, "w") as f:
+    with open(os.path.join(base_path, "Contents", "PkgInfo"), "w") as f:
         f.write("APPL????")
 
     icons_stream = pkg_resources.resource_stream('pyweed', 'app.icns')
-    with open("%s/Contents/Resources/app.icns" % base_path, "wb") as f:
+    with open(os.path.join(base_path, "Contents", "Resources", "app.icns"), "wb") as f:
         f.write(icons_stream.read())
 
     # This is the executable script packaged up by setup.py
     conda_bin_path = os.path.dirname(sys.executable)
     bin_src = os.path.join(conda_bin_path, 'pyweed')
     # We will copy it into the app bundle
-    bin_dest = "%s/Contents/MacOS/%s" % (base_path, __app_name__)
+    bin_dest = os.path.join(base_path, "Contents", "MacOS", __app_name__)
     copy2(bin_src, bin_dest)
 
 
@@ -80,8 +80,12 @@ def build_windows_launcher():
         f.write("""%s -m pyweed.pyweed_launcher""" % sys.executable)
 
 
-if __name__ == '__main__':
+def build():
     if sys.platform.startswith('win'):
         build_windows_launcher()
     elif sys.platform.startswith('darwin'):
         build_mac_launcher()
+
+
+if __name__ == '__main__':
+    build()
