@@ -6,7 +6,9 @@ Some helpful links:
 https://packaging.python.org/tutorials/distributing-packages/  
 https://docs.anaconda.com/docs_oss/conda/building/bpp
 
-This process requires installing some additional conda packages:
+__It is helpful to do all this work in a Python 3 environment!__ Otherwise various flags (omitted here) are required.
+
+Some additional conda packages are required:
 
 ```
 conda install conda-build
@@ -45,35 +47,44 @@ Find the download page for the new version; this should have a __sha256__ value 
 
 Follow the instructions here: https://conda-forge.org/#update_recipe
 
-You will need to fork a GitHub project, make changes, then submit a pull request to apply your changes.
+You will need to fork the GitHub project here: https://github.com/conda-forge/pyweed-feedstock
+
+After making the following changes, submit a pull request to update the conda-forge project. This will trigger
+a number of automated tests, and possibly a manual review. (This may take a few days!)
 
 The version is defined at the top of the `meta.yaml` file:
+{% raw %}
 
 ```
-{% raw %}
 {% set name = "pyweed" %}
 {% set version = "0.5.2.dev0" %}
 {% set sha256 = "3e1e8e35cba3f09a52a540b4351042d9e62a98bc430d7f70315df621fb2177f1" %}
-{% endraw %}
 ```
 
-Change *version* to match the new version number.
-Update the *sha256* value with the checksum value from the PyPi download page (ie. https://pypi.org/project/pyweed/0.5.2.dev0/#files)
+{% endraw %}
+Change __version__ to match the new version number, and
+update the __sha256__ value with the checksum value from the PyPi download page 
+(ie. https://pypi.org/project/pyweed/0.5.2.dev0/#files)
 
 ### Test Build
 
 ```
-conda build -c conda-forge --python 3.5 [path containing meta.yaml]
+conda build -c conda-forge [path containing meta.yaml]
 ```
-
-* `-c conda-forge` ensures that conda can build with packages from conda-forge
-* `--python 3.5` ensures that conda builds using Python 3
 
 For example, to build from `recipe/meta.yaml` you would say:
 
 ```
-conda build -c conda-forge --python 3.5 recipe
+conda build -c conda-forge recipe
 ```
+
+If you get a message like:
+
+```
+Skipped: /workspace/test/staged-recipes/recipes/pyweed defines build/skip for this configuration.
+```
+
+this means conda found Python 2 by default -- make sure you are in a Python 3 environment!
 
 Near the end of a successful build, it should say where the built package can be found, eg.
 
@@ -83,7 +94,8 @@ Near the end of a successful build, it should say where the built package can be
 
 You can install the test build locally as well.
 
-First, create a new environment based on the recipe requirements. (You shouldn't have to do this, but you do; see https://github.com/conda/conda/issues/466)
+First, create a new environment based on the recipe requirements. 
+(You shouldn't have to do this, but you do; see https://github.com/conda/conda/issues/466)
 
 ie. if the recipe says
 
@@ -102,10 +114,8 @@ requirements:
 Create a "pyweed-temp" environment like
 
 ```
-conda create -n pweed-temp python=3.5 obspy pyqt=4.11 qtconsole basemap pyproj pillow
+conda create -n pyweed-temp obspy pyqt=4.11 qtconsole basemap pyproj pillow
 ```
-
-(Giving the version `python=3.5` here, along with the `--python 3.5` bit above, are to ensure that Python 3 is used.)
 
 Then activate the environment
 
@@ -128,4 +138,5 @@ $ which pyweed
 
 ## 4. Submit the updated recipe
 
-Check in the changes and submit a pull request to the `conda-forge` repo. This will build and test the changes, and upon successful completion the new version will be made available.
+Check in the changes and submit a pull request to the `conda-forge` repo. This will build and test the changes, 
+and upon successful completion the new version will be made available.

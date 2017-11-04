@@ -24,47 +24,46 @@ If you don't have [Conda](https://conda.io/docs/) installed already, we recommen
 
 __[Miniconda Installers](https://conda.io/miniconda.html)__
 
+__PyWEED requires Python 3.5 or higher!__
+
 The installation process should put the `conda` command in your shell `PATH`.
 
-### Install the PyWEED environment
+### Install PyWEED
 
-[Anaconda environments](https://conda.io/docs/using/envs.html) allow different projects to each have their own
-version of Python and various dependencies.
+For a simple install:
 
-Download the PyWEED environment definition from https://raw.githubusercontent.com/iris-edu/pyweed/master/installer/environment.yml
+```
+conda install -c conda-forge pyweed
+```
 
-Then run:
+If you use conda for other projects, it is much more reliable to create a separate 
+[environment](https://conda.io/docs/using/envs.html) for PyWEED; this will prevent conflicts between PyWEED's
+support libraries and those for other projects.
 
-`conda env create -f environment.yml`
+```
+conda create -n pyweed python=3 pyweed
+```
 
 This will create an environment named `pyweed` in your Anaconda system, and install PyWEED and all of its dependencies
 into that environment.
 
-### Create a clickable app (Mac only)
-
-On Mac, you can create a clickable app bundle, which you can then copy into `Applications`.
-
-```
-source activate pyweed
-pyweed_build_launcher
-mv PyWEED.app /Applications/
-```
-
-You can then launch this instead of using the command line (described below) to run PyWEED.
-
 # Running PyWEED
 
-You can run PyWEED from the command line by activating the `pyweed` environment, then running the `pyweed` command:
+If you created a separate environment for PyWEED, activate that first:
 
 ```
 source activate pyweed
-pyweed
 ```
 
-__In Windows__ the activation command is slightly different:
+Or on Windows:
 
 ```
 activate pyweed
+```
+
+Then you can run PyWEED from the command line:
+
+```
 pyweed
 ```
 
@@ -75,6 +74,16 @@ You can launch PyWEED from a Python shell as well. Be sure you are running the s
 ```
 from pyweed import pyweed_launcher
 pyweed_launcher.launch()
+```
+
+## Mac application bundle
+
+On Mac, you can create a clickable app bundle, which you can then copy into `Applications`.
+
+```
+source activate pyweed
+pyweed_build_launcher
+mv PyWEED.app /Applications/
 ```
 
 # Configuration
