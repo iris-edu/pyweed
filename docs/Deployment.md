@@ -84,7 +84,7 @@ If you get a message like:
 Skipped: /workspace/test/staged-recipes/recipes/pyweed defines build/skip for this configuration.
 ```
 
-this means conda found Python 2 by default -- make sure you are in a Python 3 environment!
+this means conda found Python 2 by default -- the easiest workaround is to add `--python 3` to the build command.
 
 Near the end of a successful build, it should say where the built package can be found, eg.
 
