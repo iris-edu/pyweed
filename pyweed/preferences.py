@@ -104,7 +104,7 @@ class Preferences(object):
         self.Waveforms.saveFormat = "MSEED"
 
         self.Logging = Section.create("Logging")
-        self.Logging.level = "DEBUG"
+        self.Logging.level = "INFO"
 
         self.Map = Section.create("Map")
 

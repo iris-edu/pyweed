@@ -210,7 +210,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         website = "https://github.com/iris-edu/pyweed"
         # email = "adam@iris.washington.edu"
         license_link = "https://github.com/iris-edu/pyweed/blob/master/LICENSE"
-        license_name = "MIT"
+        license_name = "LGPLv3"
         mazama_link = "http://mazamascience.com"
         mazama_name = "Mazama Science"
         iris_link = "http://ds.iris.edu/ds/nodes/dmc/"

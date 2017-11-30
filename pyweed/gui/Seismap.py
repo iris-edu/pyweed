@@ -80,6 +80,7 @@ class Seismap(QtCore.QObject):
     # Default kwargs
     DEFAULT_BASEMAP_KWARGS = dict(
         projection='cyl',  # We only support cylindrical projection for now
+        resolution='l',  # c/l/i/h/f
     )
 
     # Signals emitted when starting/ending a draw operation
@@ -121,7 +122,7 @@ class Seismap(QtCore.QObject):
         )
         self.basemap = Basemap(**basemap_kwargs)
 
-        self.basemap.bluemarble(scale=0.1, alpha=0.42)
+        self.basemap.bluemarble(scale=0.25, alpha=0.42)
         self.basemap.drawcoastlines(color='#555566', linewidth=1)
         self.basemap.drawmeridians(np.arange(0, 360, 30))
         self.basemap.drawparallels(np.arange(-90, 90, 30))
