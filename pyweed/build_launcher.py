@@ -75,9 +75,12 @@ def build_windows_launcher():
     """
     Build a batch file launcher for Windows
     """
+    # This should be run with pythonw so it puts the right executable in the batch file
+    if 'pythonw' not in sys.executable:
+        raise Exception("This should be run with pythonw rather than the standard python executable.")
     bat_file = '%s.bat' % __app_name__
     with open(bat_file, "w") as f:
-        f.write("""%s -m pyweed.pyweed_launcher""" % sys.executable)
+        f.write("""cmd /C start /B %s -m pyweed.pyweed_launcher >nul 2>&1""" % sys.executable)
 
 
 def build():

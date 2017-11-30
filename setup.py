@@ -31,29 +31,37 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'description.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+
 def custom_command(subclass):
     orig_run = subclass.run
 
     def custom_run(self):
         # Check that this version of python is OK
-        if sys.version_info < (3,5):
+        if sys.version_info < (3, 5):
             sys.exit('Sorry, Python versions earlier than 3.5 are not supported')
         orig_run(self)
-        self.announce(
-'''###########################################
+        self.announce('''
+###########################################
 PyWEED has been installed!
-###########################################''', level=log.INFO)
+###########################################'''.strip(), level=log.INFO)
 
     subclass.run = custom_run
     return subclass
+
 
 @custom_command
 class CustomDevelopCommand(develop):
     pass
 
+
 @custom_command
 class CustomInstallCommand(install):
-    pass
+    def run(self):
+        # Base install first
+        install.run(self)
+        # Build a launcher if possible
+        pyweed.build_launcher.build()
+
 
 setup(
     name='pyweed',
@@ -104,7 +112,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(), #find_packages(exclude=['contrib', 'docs', 'tests']),
+    packages=find_packages(),  # find_packages(exclude=['contrib', 'docs', 'tests']),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
