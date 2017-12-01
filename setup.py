@@ -57,10 +57,11 @@ class CustomDevelopCommand(develop):
 @custom_command
 class CustomInstallCommand(install):
     def run(self):
+        build_launcher = importlib.import_module('%s.build_launcher' % module_name)
         # Base install first
         install.run(self)
         # Build a launcher if possible
-        pyweed.build_launcher.build()
+        build_launcher.build()
 
 
 setup(

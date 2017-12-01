@@ -6,12 +6,15 @@ import os
 from shutil import copy2
 import pkg_resources
 
+MAC_INSTALL_BASE_PATH='/tmp/'
+WINDOWS_INSTALL_BASE_PATH=''
+
 
 def build_mac_launcher():
     """
     Build an .app bundle on Mac
     """
-    base_path = "%s.app" % __app_name__
+    base_path = os.path.join(MAC_INSTALL_BASE_PATH, "%s.app" % __app_name__)
 
     os.makedirs(os.path.join(base_path, "Contents", "MacOS"), exist_ok=True)
     os.makedirs(os.path.join(base_path, "Contents", "Resources"), exist_ok=True)
@@ -69,6 +72,8 @@ def build_mac_launcher():
     # We will copy it into the app bundle
     bin_dest = os.path.join(base_path, "Contents", "MacOS", __app_name__)
     copy2(bin_src, bin_dest)
+    # Tell the user
+    sys.stdout.write("Mac Application saved to %s." % base_path)
 
 
 def build_windows_launcher():
@@ -78,9 +83,11 @@ def build_windows_launcher():
     # This should be run with pythonw so it puts the right executable in the batch file
     if 'pythonw' not in sys.executable:
         raise Exception("This should be run with pythonw rather than the standard python executable.")
-    bat_file = '%s.bat' % __app_name__
+    bat_file = os.path.join(WINDOWS_INSTALL_BASE_PATH, "%s.app" % __app_name__)
     with open(bat_file, "w") as f:
         f.write("""cmd /C start /B %s -m pyweed.pyweed_launcher >nul 2>&1""" % sys.executable)
+    # Tell the user
+    sys.stdout.write("Batch file to launch PyWEED saved to %s." % bat_file)
 
 
 def build():
