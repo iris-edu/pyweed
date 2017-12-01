@@ -13,16 +13,18 @@ WINDOWS_INSTALL_BASE_PATH=''
 def build_mac_launcher():
     """
     Build an .app bundle on Mac
+    
+    :returns: the full path of the .app bundle
     """
-    base_path = os.path.join(MAC_INSTALL_BASE_PATH, "%s.app" % __app_name__)
+    app_bundle_path = os.path.join(MAC_INSTALL_BASE_PATH, "%s.app" % __app_name__)
 
-    os.makedirs(os.path.join(base_path, "Contents", "MacOS"), exist_ok=True)
-    os.makedirs(os.path.join(base_path, "Contents", "Resources"), exist_ok=True)
+    os.makedirs(os.path.join(app_bundle_path, "Contents", "MacOS"), exist_ok=True)
+    os.makedirs(os.path.join(app_bundle_path, "Contents", "Resources"), exist_ok=True)
 
     bundle_identifier = "edu.iris.%s" % __app_name__
     app_version_string = "%s %s" % (__app_name__, __version__)
 
-    with open(os.path.join(base_path, "Contents", "Info.plist"), "w") as f:
+    with open(os.path.join(app_bundle_path, "Contents", "Info.plist"), "w") as f:
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
         <plist version="1.0">
@@ -59,26 +61,27 @@ def build_mac_launcher():
         </plist>
         """ % (__app_name__, app_version_string, bundle_identifier, __app_name__, app_version_string, __version__))
 
-    with open(os.path.join(base_path, "Contents", "PkgInfo"), "w") as f:
+    with open(os.path.join(app_bundle_path, "Contents", "PkgInfo"), "w") as f:
         f.write("APPL????")
 
     icons_stream = pkg_resources.resource_stream('pyweed', 'app.icns')
-    with open(os.path.join(base_path, "Contents", "Resources", "app.icns"), "wb") as f:
+    with open(os.path.join(app_bundle_path, "Contents", "Resources", "app.icns"), "wb") as f:
         f.write(icons_stream.read())
 
     # This is the executable script packaged up by setup.py
     conda_bin_path = os.path.dirname(sys.executable)
     bin_src = os.path.join(conda_bin_path, 'pyweed')
     # We will copy it into the app bundle
-    bin_dest = os.path.join(base_path, "Contents", "MacOS", __app_name__)
+    bin_dest = os.path.join(app_bundle_path, "Contents", "MacOS", __app_name__)
     copy2(bin_src, bin_dest)
-    # Tell the user
-    sys.stdout.write("Mac Application saved to %s." % base_path)
+    return app_bundle_path
 
 
 def build_windows_launcher():
     """
     Build a batch file launcher for Windows
+    
+    :returns: the full filename of the launcher
     """
     # This should be run with pythonw so it puts the right executable in the batch file
     if 'pythonw' not in sys.executable:
@@ -86,15 +89,14 @@ def build_windows_launcher():
     bat_file = os.path.join(WINDOWS_INSTALL_BASE_PATH, "%s.app" % __app_name__)
     with open(bat_file, "w") as f:
         f.write("""cmd /C start /B %s -m pyweed.pyweed_launcher >nul 2>&1""" % sys.executable)
-    # Tell the user
-    sys.stdout.write("Batch file to launch PyWEED saved to %s." % bat_file)
+    return bat_file
 
 
 def build():
     if sys.platform.startswith('win'):
-        build_windows_launcher()
+        return build_windows_launcher()
     elif sys.platform.startswith('darwin'):
-        build_mac_launcher()
+        return build_mac_launcher()
 
 
 if __name__ == '__main__':

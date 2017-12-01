@@ -40,10 +40,6 @@ def custom_command(subclass):
         if sys.version_info < (3, 5):
             sys.exit('Sorry, Python versions earlier than 3.5 are not supported')
         orig_run(self)
-        self.announce('''
-###########################################
-PyWEED has been installed!
-###########################################'''.strip(), level=log.INFO)
 
     subclass.run = custom_run
     return subclass
@@ -61,7 +57,18 @@ class CustomInstallCommand(install):
         # Base install first
         install.run(self)
         # Build a launcher if possible
-        build_launcher.build()
+        launcher = build_launcher.build()
+        if launcher:
+            self.announce(
+                ('''
+###########################################
+A clickable PyWEED launcher was built and
+is available at
+%s
+You can move this to your applications folder.
+###########################################
+                ''' % launcher).strip(),
+                level=log.INFO)
 
 
 setup(
