@@ -5,15 +5,16 @@ from pyweed import __version__, __app_name__, __pkg_path___
 import os
 from shutil import copy2
 import pkg_resources
+import re
 
-MAC_INSTALL_BASE_PATH='/tmp/'
-WINDOWS_INSTALL_BASE_PATH=''
+MAC_INSTALL_BASE_PATH = '/tmp/'
+WINDOWS_INSTALL_BASE_PATH = ''
 
 
 def build_mac_launcher():
     """
     Build an .app bundle on Mac
-    
+
     :returns: the full path of the .app bundle
     """
     app_bundle_path = os.path.join(MAC_INSTALL_BASE_PATH, "%s.app" % __app_name__)
@@ -83,12 +84,13 @@ def build_windows_launcher():
     
     :returns: the full filename of the launcher
     """
-    # This should be run with pythonw so it puts the right executable in the batch file
-    if 'pythonw' not in sys.executable:
-        raise Exception("This should be run with pythonw rather than the standard python executable.")
-    bat_file = os.path.join(WINDOWS_INSTALL_BASE_PATH, "%s.app" % __app_name__)
+    # Assume we are called by python.exe, we want the launcher to use the corresponding pythonw.exe
+    python_exe = re.sub(r'(python)(\.)', r'\1w\2', sys.executable)
+    if not os.path.exists(python_exe):
+        raise Exception("Can't find %s" % python_exe)
+    bat_file = os.path.join(WINDOWS_INSTALL_BASE_PATH, "%s.bat" % __app_name__)
     with open(bat_file, "w") as f:
-        f.write("""cmd /C start /B %s -m pyweed.pyweed_launcher >nul 2>&1""" % sys.executable)
+        f.write("""cmd /C start /B %s -m pyweed.pyweed_launcher >nul 2>&1""" % python_exe)
     return bat_file
 
 
