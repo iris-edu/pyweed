@@ -132,7 +132,7 @@
       <widget class="QWidget" name="eventAndStationWidget" native="true">
        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
         <property name="spacing">
-         <number>-1</number>
+         <number>2</number>
         </property>
         <property name="leftMargin">
          <number>0</number>
@@ -181,12 +181,6 @@
               </property>
               <item>
                <widget class="QToolButton" name="toggleEventOptions">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
                 <property name="text">
                  <string>&lt; Options</string>
                 </property>
