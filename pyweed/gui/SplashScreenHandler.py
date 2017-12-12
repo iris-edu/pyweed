@@ -8,8 +8,7 @@ Manage the splash screen
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
-import sys
+import pyweed
 import logging
 from PyQt5 import QtGui, QtWidgets, QtCore
 
@@ -25,6 +24,7 @@ class SplashScreenHandler(logging.Handler):
         logger = logging.getLogger()
         logger.addHandler(self)
 
+        self.splash.showMessage("Welcome to %s %s" % (pyweed.__app_name__, pyweed.__version__))
         self.splash.show()
         logger.info("Splash screen should be visible")
 
