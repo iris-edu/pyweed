@@ -17,6 +17,7 @@ cd "$WORKING_DIR"
 
 export ARCH=`uname -m`
 
+# Where to install conda if it's not there already
 CONDA_INSTALL_PATH="$HOME/.pyweed/miniconda"
 
 ###
@@ -45,8 +46,6 @@ Anaconda Python not found, do you want to install it? [yes|no]
   curl -Ss -o miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-${ARCH}.sh
 
   bash miniconda.sh -b -p $CONDA_INSTALL_PATH
-  export PATH="$CONDA_INSTALL_PATH/bin:$PATH"
-  hash -r
   conda config --set always_yes yes --set changeps1 no
   conda update -q conda
 
@@ -72,18 +71,18 @@ fi
 # Mac .app bundle
 
 if [[ $OS == 'MacOSX' ]]; then
-  echo "Creating Mac app bundle"
-  source activate pyweed
-  hash -r
-  pyweed_build_launcher
   echo "
 Install PyWEED to /Applications folder? [yes|no]
 [no] >>> "
   read ans
   ANS=`echo "$ans" | tr '[:upper:]' '[:lower:]'`
   if [[ ($ANS != 'yes') && ($ANS != 'y') ]]; then
-    echo "Application is available at $PWD/PyWEED.app"
+    echo "Skipping application bundle"
   else
+    echo "Creating Mac app bundle"
+    source activate pyweed
+    hash -r
+    pyweed_build_launcher
     # Move the old version out of the way if necessary
     if [ -e "/Applications/PyWEED.app" ]; then
       mv "/Applications/PyWEED.app" "$PWD/PyWEED.prev.app"
@@ -94,4 +93,16 @@ Install PyWEED to /Applications folder? [yes|no]
   fi
 fi
 
-echo "Done!"
+###
+# User instructions
+
+source activate pyweed
+BIN=`command -v pyweed`
+if [[ $BIN != '' ]]; then 
+  echo "
+You can launch PyWEED from the command line by calling:
+
+$BIN
+
+"
+fi

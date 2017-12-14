@@ -1,6 +1,9 @@
 # PyWEED
 
-PyWEED is a cross-platform downloadable app for retrieving event-based seismic data
+PyWEED is an application for retrieving event-based seismic data.
+
+PyWEED works on Windows, Mac, and Linux (64-bit). It is built on [ObsPy](https://obspy.org/) and 
+[PyQt](https://pypi.python.org/pypi/PyQt4).
 
 ![Main Window](MainWindow.png)
 
@@ -8,12 +11,14 @@ PyWEED is a cross-platform downloadable app for retrieving event-based seismic d
 
 ## [Installation](Installation.md)
 
-## User Guide
-
-Coming soon!
-
 ## Support
+
+[Demo Screencast](https://vimeo.com/246357529) on Vimeo.
+
+User Docs (coming soon)
 
 Send comments/problems to adam@iris.washington.edu.
 
-## [Developer Docs](Developer.md)
+---
+
+[Developer Docs](Developer.md)

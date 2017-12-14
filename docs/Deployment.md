@@ -43,14 +43,18 @@ You should see the new version listed on the PyPi page: https://pypi.org/project
 
 Find the download page for the new version; this should have a __sha256__ value which you will need for the next step.
 
-## 3. Update the conda-forge recipe
+## 3. Create an updated conda build recipe
 
-Follow the instructions here: https://conda-forge.org/#update_recipe
+The official instructions are here: https://conda-forge.org/#update_recipe
 
-You will need to fork the GitHub project here: https://github.com/conda-forge/pyweed-feedstock
+NOTE: __This step can take a day or more__, since it has to go through the conda-forge automated builder. It can
+also get held up if the conda-forge linter doesn't like something about your changes. Plan accordingly!
 
-After making the following changes, submit a pull request to update the conda-forge project. This will trigger
-a number of automated tests, and possibly a manual review. (This may take a few days!)
+### Update the build recipe
+
+Fork the conda-forge feedstock project here: https://github.com/conda-forge/pyweed-feedstock
+
+You will modify your forked version, then submit a pull request to push your changes back to the main repo.
 
 The version is defined at the top of the `meta.yaml` file:
 {% raw %}
@@ -63,8 +67,7 @@ The version is defined at the top of the `meta.yaml` file:
 
 {% endraw %}
 Change __version__ to match the new version number, and
-update the __sha256__ value with the checksum value from the PyPi download page 
-(ie. https://pypi.org/project/pyweed/0.5.2.dev0/#files)
+update the __sha256__ value with the value from the PyPi page in the previous step.
 
 ### Test Build
 
@@ -84,7 +87,9 @@ If you get a message like:
 Skipped: /workspace/test/staged-recipes/recipes/pyweed defines build/skip for this configuration.
 ```
 
-this means conda found Python 2 by default -- the easiest workaround is to add `--python 3` to the build command.
+this means conda found Python 2 by default -- the easiest workaround is to add `--python 3` to the build command:
+`conda build -c conda-forge --python 3 recipe`
+
 
 Near the end of a successful build, it should say where the built package can be found, eg.
 
@@ -111,13 +116,13 @@ requirements:
     - pillow
 ```
 
-Create a "pyweed-temp" environment like
+Create a scratch environment (we'll call it "pyweed-temp"):
 
 ```
 conda create -n pyweed-temp obspy pyqt=4.11 qtconsole basemap pyproj pillow
 ```
 
-Then activate the environment
+Then activate the environment:
 
 ```
 source activate pyweed-temp
@@ -136,7 +141,12 @@ $ which pyweed
 /workspace/anaconda/envs/pyweed-test/bin/pyweed
 ```
 
-## 4. Submit the updated recipe
+## 4. Update conda-forge
 
-Check in the changes and submit a pull request to the `conda-forge` repo. This will build and test the changes, 
-and upon successful completion the new version will be made available.
+1. Check in the changes to your forked GitHub repo.
+2. Submit a pull request to the [base conda-forge repo](https://github.com/conda-forge/pyweed-feedstock). 
+3. You will need to wait until the automated build and test have succeeded. __This may take a day or so.__ 
+4. At that point, you should be able to approve the pull request. 
+5. You need to wait _again_ for the finalized packages to be built and uploaded. The easiest option is to watch
+the [package page](https://anaconda.org/conda-forge/pyweed) which shows the latest available version for each
+platform. When the new version is available for all platforms, the release is finished!
