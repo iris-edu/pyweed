@@ -175,12 +175,18 @@
              <number>0</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="eventsButtonLayout">
+             <layout class="QHBoxLayout" name="eventsButtonLayout" stretch="0,1">
               <property name="spacing">
                <number>12</number>
               </property>
               <item>
                <widget class="QToolButton" name="toggleEventOptions">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
                  <string>&lt; Options</string>
                 </property>
@@ -198,7 +204,7 @@
                  <string>Get Events</string>
                 </property>
                 <property name="default">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -270,7 +276,7 @@
              <number>0</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="stationsButtonLayout">
+             <layout class="QHBoxLayout" name="stationsButtonLayout" stretch="1,0">
               <property name="spacing">
                <number>12</number>
               </property>
@@ -280,7 +286,7 @@
                  <string>Get Stations</string>
                 </property>
                 <property name="default">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>

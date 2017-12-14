@@ -63,7 +63,7 @@ class PyWeedCore(QObject):
     stations_handler = None
     stations = None
     selected_station_ids = None
-
+    
     def __init__(self):
         super(PyWeedCore, self).__init__()
         self.configure_logging()

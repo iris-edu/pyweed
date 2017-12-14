@@ -108,7 +108,8 @@ class EventsLoader(SignalingThread):
 
 class EventsHandler(SignalingObject):
     """
-    Container for events.
+    This is the handler that the application works with. 
+    Most of the work is pushed off into the thread, this handler mainly acts as a bridge.
     """
 
     def __init__(self, pyweed):
