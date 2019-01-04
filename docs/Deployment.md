@@ -3,8 +3,8 @@
 These are instructions for releasing a new version of PyWEED to [conda-forge](https://conda-forge.org/).
 
 Some helpful links:  
-<https://packaging.python.org/tutorials/distributing-packages/>
-https://docs.anaconda.com/docs_oss/conda/building/bpp
+<https://packaging.python.org/tutorials/distributing-packages/> 
+<https://docs.anaconda.com/docs_oss/conda/building/bpp>
 
 __It is helpful to do all this work in a Python 3 environment!__ Otherwise various flags (omitted here) are required.
 
@@ -39,20 +39,20 @@ Upload to PyPi with:
 twine upload dist/pyweed-0.5.5.tar.gz
 ```
 
-You should see the new version listed on the PyPi page: https://pypi.org/project/pyweed/#history
+You should see the new version listed on the PyPi page: <https://pypi.org/project/pyweed/#history>
 
 Find the download page for the new version; this should have a __sha256__ value which you will need for the next step.
 
 ## 3. Create an updated conda build recipe
 
-The official instructions are here: https://conda-forge.org/#update_recipe
+The official instructions are here: <https://conda-forge.org/#update_recipe>
 
 NOTE: __This step can take a day or more__, since it has to go through the conda-forge automated builder. It can
 also get held up if the conda-forge linter doesn't like something about your changes. Plan accordingly!
 
 ### Update the build recipe
 
-Fork the conda-forge feedstock project here: https://github.com/conda-forge/pyweed-feedstock
+Fork the conda-forge feedstock project here: <https://github.com/conda-forge/pyweed-feedstock>
 
 You will modify your forked version, then submit a pull request to push your changes back to the main repo.
 
@@ -100,7 +100,7 @@ Near the end of a successful build, it should say where the built package can be
 You can install the test build locally as well.
 
 First, create a new environment based on the recipe requirements. 
-(You shouldn't have to do this, but you do; see https://github.com/conda/conda/issues/466)
+(You shouldn't have to do this, but you do; see <https://github.com/conda/conda/issues/466>)
 
 ie. if the recipe says
 
