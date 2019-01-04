@@ -3,7 +3,7 @@
 These are instructions for releasing a new version of PyWEED to [conda-forge](https://conda-forge.org/).
 
 Some helpful links:  
-https://packaging.python.org/tutorials/distributing-packages/  
+<https://packaging.python.org/tutorials/distributing-packages/>
 https://docs.anaconda.com/docs_oss/conda/building/bpp
 
 __It is helpful to do all this work in a Python 3 environment!__ Otherwise various flags (omitted here) are required.
