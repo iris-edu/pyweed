@@ -27,6 +27,11 @@ if sys.executable.endswith('pythonw.exe'):
     sys.stderr = nul
     sys.stdout = nul
 
+# Set up the PROJ_LIB environment variable needed by matplotlib
+# See https://github.com/conda-forge/basemap-feedstock/issues/30
+if not os.environ.get('PROJ_LIB') and os.environ.get('CONDA_PREFIX'):
+    os.environ['PROJ_LIB'] = os.path.join(os.environ['CONDA_PREFIX'], 'share', 'proj')
+
 # Configure matplotlib backend
 matplotlib.use('AGG')
 
@@ -43,6 +48,18 @@ if PY2:
     import sip
     sip.setapi("QString", 2)
     sip.setapi("QVariant", 2)
+
+
+def init_strptime():
+    """ Workaround for https://github.com/obspy/obspy/issues/2147 """
+    try:
+        import locale
+        # locale.setlocale(locale.LC_TIME, ('en_US', 'UTF-8'))
+        from obspy.clients.fdsn.routing.routing_client import RoutingClient  # NOQA
+        locale.setlocale(locale.LC_TIME, '')
+    except Exception:
+        pass
+init_strptime()
 
 
 def get_pyweed():
