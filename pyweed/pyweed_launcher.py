@@ -62,6 +62,14 @@ def init_strptime():
 init_strptime()
 
 
+def fix_locale():
+    """
+    Fix for issues with locale-bound number handling, we basically force decimals to use '.' rather than ','
+    """
+    from PyQt4.QtCore import QLocale
+    QLocale.setDefault(QLocale.c())
+
+
 def get_pyweed():
     """
     Load the PyWEED GUI code, this is where most of the expensive stuff happens
@@ -80,6 +88,8 @@ def launch():
 
     # See https://stackoverflow.com/questions/31952711/
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_X11InitThreads)
+
+    fix_locale()
 
     app = QtGui.QApplication(sys.argv)
     splashScreenHandler = SplashScreenHandler()
