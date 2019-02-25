@@ -13,7 +13,7 @@ from pyweed.gui.BaseDialog import BaseDialog
 from pyweed.gui.uic import LoggingDialog
 from pyweed.gui.MyTextEditLoggingHandler import MyTextEditLoggingHandler
 import logging
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 
 
 class LoggingDialog(BaseDialog, LoggingDialog.Ui_LoggingDialog):

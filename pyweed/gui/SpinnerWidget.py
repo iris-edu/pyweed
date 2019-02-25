@@ -9,14 +9,14 @@ Spinner overlay to indicate that an operation is in progress.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore
 from logging import getLogger
 from pyweed.gui.uic import SpinnerWidget
 
 LOGGER = getLogger(__name__)
 
 
-class SpinnerWidget(QtGui.QFrame, SpinnerWidget.Ui_SpinnerWidget):
+class SpinnerWidget(QtWidgets.QFrame, SpinnerWidget.Ui_SpinnerWidget):
     """
     Spinner overlay widget. When shown, this covers the parent window and
     plays an animated spinner graphic along with a text message.

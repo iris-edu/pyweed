@@ -9,14 +9,14 @@ Base classes for EventOptionsWidet and StationOptionsWidget
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 import logging
 from distutils.util import strtobool
 
 LOGGER = logging.getLogger(__name__)
 
 
-class BaseOptionsWidget(QtGui.QDialog):
+class BaseOptionsWidget(QtWidgets.QDialog):
     """
     Base functionality for the EventOptionsWidget and StationOptionsWidget.
     """
@@ -136,13 +136,13 @@ class BaseOptionsWidget(QtGui.QDialog):
         """
         one_input = self.inputs.get(key)
         if one_input:
-            if isinstance(one_input, QtGui.QDateTimeEdit):
+            if isinstance(one_input, QtWidgets.QDateTimeEdit):
                 # DateTime
                 return one_input.dateTime().toString(QtCore.Qt.ISODate)
-            elif isinstance(one_input, QtGui.QAbstractButton):
+            elif isinstance(one_input, QtWidgets.QAbstractButton):
                 # Radio/checkbox button
                 return str(one_input.isChecked())
-            elif isinstance(one_input, QtGui.QComboBox):
+            elif isinstance(one_input, QtWidgets.QComboBox):
                 return one_input.currentText()
             elif hasattr(one_input, 'text'):
                 return one_input.text()
@@ -155,22 +155,22 @@ class BaseOptionsWidget(QtGui.QDialog):
         """
         one_input = self.inputs.get(key)
         if one_input:
-            if isinstance(one_input, QtGui.QDateTimeEdit):
+            if isinstance(one_input, QtWidgets.QDateTimeEdit):
                 # Ugh, complicated conversion from UTCDateTime
                 dt = QtCore.QDateTime.fromString(value, QtCore.Qt.ISODate)
                 one_input.setDateTime(dt)
-            elif isinstance(one_input, QtGui.QDoubleSpinBox):
+            elif isinstance(one_input, QtWidgets.QDoubleSpinBox):
                 # Float value
                 one_input.setValue(float(value))
-            elif isinstance(one_input, QtGui.QComboBox):
+            elif isinstance(one_input, QtWidgets.QComboBox):
                 # Combo box
                 index = one_input.findText(value)
                 if index > -1:
                     one_input.setCurrentIndex(index)
-            elif isinstance(one_input, QtGui.QLineEdit):
+            elif isinstance(one_input, QtWidgets.QLineEdit):
                 # Text input
                 one_input.setText(value)
-            elif isinstance(one_input, QtGui.QAbstractButton):
+            elif isinstance(one_input, QtWidgets.QAbstractButton):
                 # Radio/checkbox button
                 one_input.setChecked(strtobool(str(value)))
             else:

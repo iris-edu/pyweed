@@ -15,7 +15,7 @@ from pyweed.signals import SignalingThread, SignalingObject
 import logging
 from obspy.core.event.catalog import Catalog
 from pyweed.pyweed_utils import get_service_url, CancelledException
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 import concurrent.futures
 
 LOGGER = logging.getLogger(__name__)

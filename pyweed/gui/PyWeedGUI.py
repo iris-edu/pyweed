@@ -17,8 +17,7 @@ import sys
 import logging
 import os.path
 import platform
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtWidgets
 
 from obspy.core.event.catalog import read_events
 from obspy.core.inventory.inventory import read_inventory
@@ -116,7 +115,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         Save the selected events/stations
         """
         # If the user quits or cancels this dialog, '' is returned
-        savePath = str(QtGui.QFileDialog.getExistingDirectory(
+        savePath = str(QtWidgets.QFileDialog.getExistingDirectory(
             parent=self.mainWindow,
             caption="Save Summary to"))
         if savePath != '':
@@ -133,7 +132,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
 
     def loadSummary(self):
         # If the user quits or cancels this dialog, '' is returned
-        loadPath = str(QtGui.QFileDialog.getExistingDirectory(
+        loadPath = str(QtWidgets.QFileDialog.getExistingDirectory(
             parent=self.mainWindow,
             caption="Load Summary from"))
         if loadPath != '':
@@ -157,46 +156,46 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
     def configureMenu(self):
         # Create menuBar
         # see:  http://doc.qt.io/qt-4.8/qmenubar.html
-        # see:  http://zetcode.com/gui/pyqt4/menusandtoolbars/
+        # see:  http://zetcode.com/gui/PyQt5/menusandtoolbars/
         # see:  https://pythonprogramming.net/menubar-pyqt-tutorial/
         # see:  http://www.dreamincode.net/forums/topic/261282-a-basic-pyqt-tutorial-notepad/
-        mainMenu = QtGui.QMenuBar()
+        mainMenu = QtWidgets.QMenuBar()
         # mainMenu.setNativeMenuBar(False)
 
         fileMenu = mainMenu.addMenu('&File')
 
-        saveSummaryAction = QtGui.QAction("Save Summary", self.mainWindow)
+        saveSummaryAction = QtWidgets.QAction("Save Summary", self.mainWindow)
         saveSummaryAction.triggered.connect(self.saveSummary)
         fileMenu.addAction(saveSummaryAction)
 
-        loadSummaryAction = QtGui.QAction("Load Summary", self.mainWindow)
+        loadSummaryAction = QtWidgets.QAction("Load Summary", self.mainWindow)
         loadSummaryAction.triggered.connect(self.loadSummary)
         fileMenu.addAction(loadSummaryAction)
 
-        quitAction = QtGui.QAction("&Quit", self.mainWindow)
+        quitAction = QtWidgets.QAction("&Quit", self.mainWindow)
         quitAction.setShortcut("Ctrl+Q")
         quitAction.triggered.connect(self.closeApplication)
         fileMenu.addAction(quitAction)
 
         viewMenu = mainMenu.addMenu('View')
 
-        showConsoleAction = QtGui.QAction("Show Python Console", self)
+        showConsoleAction = QtWidgets.QAction("Show Python Console", self)
         showConsoleAction.triggered.connect(self.console.show)
         viewMenu.addAction(showConsoleAction)
 
-        showLogsAction = QtGui.QAction("Show Logs", self)
+        showLogsAction = QtWidgets.QAction("Show Logs", self)
         showLogsAction.triggered.connect(self.loggingDialog.show)
         viewMenu.addAction(showLogsAction)
 
         optionsMenu = mainMenu.addMenu('Options')
 
-        showPreferencesAction = QtGui.QAction("Preferences", self)
+        showPreferencesAction = QtWidgets.QAction("Preferences", self)
         showPreferencesAction.triggered.connect(self.preferencesDialog.exec_)
         optionsMenu.addAction(showPreferencesAction)
 
         helpMenu = mainMenu.addMenu('Help')
 
-        aboutPyweedAction = QtGui.QAction("&About PYWEED", self)
+        aboutPyweedAction = QtWidgets.QAction("&About PYWEED", self)
         aboutPyweedAction.triggered.connect(self.showAboutDialog)
         helpMenu.addAction(aboutPyweedAction)
         helpMenu.addSeparator()
@@ -206,7 +205,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
 
     def showAboutDialog(self):
         """Display About message box."""
-        # see:  http://www.programcreek.com/python/example/62361/PyQt4.QtGui.QMessageBox
+        # see:  http://www.programcreek.com/python/example/62361/PyQt5.QtGui.QMessageBox
         website = "https://github.com/iris-edu/pyweed"
         # email = "adam@iris.washington.edu"
         license_link = "https://github.com/iris-edu/pyweed/blob/master/LICENSE"
@@ -216,7 +215,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         iris_link = "http://ds.iris.edu/ds/nodes/dmc/"
         iris_name = "IRIS"
 
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtWidgets.QMessageBox()
         msgBox.setWindowTitle("About %s" % __app_name__)
         msgBox.setTextFormat(QtCore.Qt.RichText)
         # msgBox.setIconPixmap(QtGui.QPixmap(ComicTaggerSettings.getGraphic('about.png')))
@@ -235,10 +234,10 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
                        " for <a href='{0}'>{1}</a>".format(iris_link, iris_name) +
                        ".")
 
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msgBox.exec_()
         # NOTE:  For info on " modalSession has been exited prematurely" error on OS X see:
-        # NOTE:    https://forum.qt.io/topic/43618/modal-sessions-with-pyqt4-and-os-x/2
+        # NOTE:    https://forum.qt.io/topic/43618/modal-sessions-with-PyQt5-and-os-x/2
 
     def closeApplication(self):
         LOGGER.info('Closing application...')
@@ -246,7 +245,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         self.mainWindow.savePreferences()
         self.waveformsDialog.savePreferences()
         self.close()
-        QtGui.QApplication.quit()
+        QtWidgets.QApplication.quit()
 
 
 if __name__ == "__main__":

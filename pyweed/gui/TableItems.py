@@ -10,7 +10,7 @@ Common library for adding data to a QTableWidget.
 """
 
 from pyweed.gui.MyNumericTableWidgetItem import MyNumericTableWidgetItem
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 from logging import getLogger
 
 LOGGER = getLogger(__name__)
@@ -99,7 +99,7 @@ class TableItems(object):
 
     def stringWidget(self, s, **props):
         """ Create a new item displaying the given string """
-        return self.applyProps(QtGui.QTableWidgetItem(s), **props)
+        return self.applyProps(QtWidgets.QTableWidgetItem(s), **props)
 
     def numericWidget(self, i, text=None, **props):
         """
@@ -114,7 +114,7 @@ class TableItems(object):
 
     def checkboxWidget(self, b, **props):
         """ Create a new checkbox widget showing the given boolean state """
-        checkboxItem = self.applyProps(QtGui.QTableWidgetItem(), **props)
+        checkboxItem = self.applyProps(QtWidgets.QTableWidgetItem(), **props)
         checkboxItem.setFlags(QtCore.Qt.ItemIsEnabled)
         if b:
             checkboxItem.setCheckState(QtCore.Qt.Checked)

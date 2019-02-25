@@ -11,12 +11,12 @@ http://stackoverflow.com/questions/25533140/sorting-qtablewidget-items-numerical
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 from pyweed.gui.TableWidget import CustomTableWidgetItemMixin
 
 
-class MyNumericTableWidgetItem (CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):
+class MyNumericTableWidgetItem (CustomTableWidgetItemMixin, QtWidgets.QTableWidgetItem):
     """
     Custom QTableWidgetItem that forces numerical sorting
 
@@ -33,4 +33,4 @@ class MyNumericTableWidgetItem (CustomTableWidgetItemMixin, QtGui.QTableWidgetIt
             otherDataValue = float(other.data(QtCore.Qt.UserRole))
             return selfDataValue < otherDataValue
         else:
-            return QtGui.QTableWidgetItem.__lt__(self, other)
+            return QtWidgets.QTableWidgetItem.__lt__(self, other)

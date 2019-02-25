@@ -15,7 +15,7 @@ import os
 from obspy import UTCDateTime
 from pyweed.signals import SignalingThread, SignalingObject
 import collections
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 import obspy
 from logging import getLogger
 import matplotlib

@@ -13,10 +13,10 @@ http://stackoverflow.com/questions/5553342/adding-images-to-a-qtablewidget-in-py
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 
 
-class MyTableWidgetImageWidget(QtGui.QLabel):
+class MyTableWidgetImageWidget(QtWidgets.QLabel):
 
     def __init__(self, parent=None, imagePath=None):
         super(MyTableWidgetImageWidget, self).__init__(parent)

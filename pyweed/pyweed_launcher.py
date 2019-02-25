@@ -41,8 +41,8 @@ matplotlib.use('AGG')
 # pd.set_option('mode.chained_assignment', 'raise')
 
 if PY2:
-    # Configure PyQt4 -- in order for the Python console to work in Python 2, we need to load a particular
-    # version of some internal libraries. This must be done before the first import of the PyQt4 libraries.
+    # Configure PyQt5 -- in order for the Python console to work in Python 2, we need to load a particular
+    # version of some internal libraries. This must be done before the first import of the PyQt5 libraries.
     # See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
     os.environ['QT_API'] = 'pyqt'
     import sip
@@ -66,7 +66,7 @@ def fix_locale():
     """
     Fix for issues with locale-bound number handling, we basically force decimals to use '.' rather than ','
     """
-    from PyQt4.QtCore import QLocale
+    from PyQt5.QtCore import QLocale
     QLocale.setDefault(QLocale.c())
 
 
@@ -82,7 +82,7 @@ def launch():
     """
     Basic startup process.
     """
-    from PyQt4 import QtGui, QtCore
+    from PyQt5 import QtCore, QtWidgets
     from pyweed.gui.SplashScreenHandler import SplashScreenHandler
     import pyweed.gui.qrc  # NOQA
 
@@ -91,7 +91,7 @@ def launch():
 
     fix_locale()
 
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     splashScreenHandler = SplashScreenHandler()
     app.processEvents()
     pyweed = get_pyweed()

@@ -9,9 +9,9 @@ Various Qt widget utilities
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore
 from logging import getLogger
-from PyQt4.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot
 
 LOGGER = getLogger(__name__)
 

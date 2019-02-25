@@ -11,7 +11,7 @@ normalize for all of our secondary windows.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 import platform
 
 # Identify the platform
@@ -19,7 +19,7 @@ IS_DARWIN = (platform.system() == 'Darwin')
 IS_LINUX = (platform.system() == 'Linux')
 
 
-class BaseDialog(QtGui.QDialog):
+class BaseDialog(QtWidgets.QDialog):
     def __init__(self, parent=None, *args, **kwargs):
         # On non-Mac platforms, a dialog with a parent will always float above the parent. We want these
         # windows to be independent, so in that case remove the parent.

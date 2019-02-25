@@ -13,7 +13,7 @@ from __future__ import (absolute_import, division, print_function)
 
 from pyweed import __version__, __app_name__
 
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 from pyweed.gui.uic import MainWindow
 from pyweed.preferences import safe_int, safe_bool, bool_to_str
 import logging
@@ -23,7 +23,7 @@ from pyweed.gui.EventOptionsWidget import EventOptionsWidget
 from pyweed.gui.StationOptionsWidget import StationOptionsWidget
 from pyweed.gui.TableItems import TableItems, Column
 from pyweed.event_options import EventOptions
-from PyQt4.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot
 from pyweed.gui.SpinnerWidget import SpinnerWidget
 from pyweed.station_options import StationOptions
 
@@ -121,7 +121,7 @@ class StationTableItems(TableItems):
                 ]
 
 
-class MainWindow(QtGui.QMainWindow, MainWindow.Ui_MainWindow):
+class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
 
     eventTableItems = None
     stationTableItems = None

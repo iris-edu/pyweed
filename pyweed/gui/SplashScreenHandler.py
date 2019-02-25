@@ -11,7 +11,7 @@ Manage the splash screen
 
 import sys
 import logging
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 
 class SplashScreenHandler(logging.Handler):
@@ -19,7 +19,7 @@ class SplashScreenHandler(logging.Handler):
     def __init__(self,):
         super(SplashScreenHandler, self).__init__(level=logging.INFO)
         pixmap = QtGui.QPixmap(":qrc/splash.png")
-        self.splash = QtGui.QSplashScreen(pixmap, QtCore.Qt.WindowStaysOnTopHint)
+        self.splash = QtWidgets.QSplashScreen(pixmap, QtCore.Qt.WindowStaysOnTopHint)
 
         # Attach as handler to the root logger
         logger = logging.getLogger()
@@ -31,7 +31,7 @@ class SplashScreenHandler(logging.Handler):
     def emit(self, record):
         msg = self.format(record)
         self.splash.showMessage(msg)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
     def finish(self, mainWin):
         super(SplashScreenHandler, self).close()

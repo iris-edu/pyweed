@@ -19,8 +19,8 @@ import numpy as np
 from mpl_toolkits.basemap import Basemap
 from pyweed.pyweed_utils import get_bounding_circle, get_preferred_origin, get_distance
 from logging import getLogger
-from PyQt4 import QtCore
-from PyQt4.QtCore import pyqtSignal
+from PyQt5 import QtCore
+from PyQt5.QtCore import pyqtSignal
 
 LOGGER = getLogger(__name__)
 

@@ -9,14 +9,13 @@ Dialog for selecting and downloading waveform data
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore
 from pyweed.gui.uic import WaveformDialog
 from pyweed.waveforms_handler import WaveformsHandler
 from logging import getLogger
 from pyweed.gui.TableItems import TableItems, Column
 from pyweed.pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHASES
 from pyweed.preferences import safe_int
-from PyQt4.QtGui import QTableWidgetItem
 from pyweed.gui.Adapters import ComboBoxAdapter
 from pyweed.gui.BaseDialog import BaseDialog
 from pyweed.gui.SpinnerWidget import SpinnerWidget
@@ -32,7 +31,7 @@ STATUS_DONE = "done"  # Finished
 STATUS_ERROR = "error"  # Something went wrong
 
 
-class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem):
+class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QtWidgets.QTableWidgetItem):
     """
     Custom QTableWidgetItem that indicates whether the row is included in the request
 
@@ -69,7 +68,7 @@ class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QTableWidgetItem)
             self.setData(QtCore.Qt.DecorationRole, self.uncheckedIcon)
 
 
-class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtGui.QTableWidgetItem):
+class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtWidgets.QTableWidgetItem):
     """
     Custom QTableWidgetItem that shows a waveform image (or a status message)
     """
@@ -302,7 +301,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
     # NOTE:  http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
     # NOTE:  http://stackoverflow.com/questions/30462078/using-a-checkbox-in-pyqt
-    @QtCore.pyqtSlot(QTableWidgetItem)
+    @QtCore.pyqtSlot(QtWidgets.QTableWidgetItem)
     def handleTableItemClicked(self, item):
         """
         Triggered whenever an item in the waveforms table is clicked.
@@ -600,7 +599,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.updateToolbars()
 
         # Update GUI in case we came from an internal call
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         errors = []
         savedCount = 0
@@ -618,7 +617,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                 elif result.result:
                     savedCount += 1
                     self.saveSpinner.setLabel("Saved %d waveforms" % savedCount)
-                    QtGui.QApplication.processEvents()  # update GUI
+                    QtWidgets.QApplication.processEvents()  # update GUI
                 else:
                     skippedCount += 1
             self.saveStatusLabel.setText("Saved %d waveforms" % savedCount)
@@ -638,7 +637,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         except Exception as e:
             LOGGER.error(e)
             self.waveformsSaveStatus = STATUS_ERROR
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
                 str(e)
@@ -655,11 +654,11 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         This function is triggered whenever the user presses the "to <directory>" button.
         """
         # If the user quits or cancels this dialog, '' is returned
-        newDirectory = str(QtGui.QFileDialog.getExistingDirectory(
+        newDirectory = str(QtWidgets.QFileDialog.getExistingDirectory(
             self,
             "Waveform Directory",
             self.waveformDirectory,
-            QtGui.QFileDialog.ShowDirsOnly))
+            QtWidgets.QFileDialog.ShowDirsOnly))
 
         if newDirectory != '':
             self.waveformDirectory = newDirectory

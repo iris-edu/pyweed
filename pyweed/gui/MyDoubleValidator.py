@@ -13,8 +13,8 @@ https://gist.github.com/jirivrany/4473639
 
 from sys import float_info
 
-from PyQt4.QtGui import QValidator
-from PyQt4.QtGui import QDoubleValidator
+from PyQt5.QtGui import QValidator
+from PyQt5.QtGui import QDoubleValidator
 
 
 class MyDoubleValidator(QDoubleValidator):

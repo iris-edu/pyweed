@@ -24,7 +24,7 @@ from pyweed.event_options import EventOptions
 from pyweed.station_options import StationOptions
 from pyweed.events_handler import EventsHandler
 from pyweed.stations_handler import StationsHandler, StationsDataRequest
-from PyQt4.QtCore import QObject
+from PyQt5.QtCore import QObject
 
 LOGGER = logging.getLogger(__name__)
 

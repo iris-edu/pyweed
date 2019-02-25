@@ -2,59 +2,45 @@
 
 # Form implementation generated from reading ui file 'pyweed/gui/uic/SpinnerWidget.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_SpinnerWidget(object):
     def setupUi(self, SpinnerWidget):
-        SpinnerWidget.setObjectName(_fromUtf8("SpinnerWidget"))
+        SpinnerWidget.setObjectName("SpinnerWidget")
         SpinnerWidget.resize(306, 207)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(SpinnerWidget.sizePolicy().hasHeightForWidth())
         SpinnerWidget.setSizePolicy(sizePolicy)
-        SpinnerWidget.setStyleSheet(_fromUtf8("QFrame { background-color: rgba(224,224,224,192)} \n"
-"QLabel { background-color: transparent }"))
-        self.verticalLayout = QtGui.QVBoxLayout(SpinnerWidget)
+        SpinnerWidget.setStyleSheet("QFrame { background-color: rgba(224,224,224,192)} \n"
+"QLabel { background-color: transparent }")
+        self.verticalLayout = QtWidgets.QVBoxLayout(SpinnerWidget)
         self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.icon = QtGui.QLabel(SpinnerWidget)
-        self.icon.setText(_fromUtf8(""))
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.icon = QtWidgets.QLabel(SpinnerWidget)
+        self.icon.setText("")
         self.icon.setAlignment(QtCore.Qt.AlignBottom|QtCore.Qt.AlignHCenter)
-        self.icon.setObjectName(_fromUtf8("icon"))
+        self.icon.setObjectName("icon")
         self.verticalLayout.addWidget(self.icon)
-        self.label = QtGui.QLabel(SpinnerWidget)
-        self.label.setText(_fromUtf8(""))
+        self.label = QtWidgets.QLabel(SpinnerWidget)
+        self.label.setText("")
         self.label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
-        self.label.setObjectName(_fromUtf8("label"))
+        self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.cancelButton = QtGui.QPushButton(SpinnerWidget)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.cancelButton = QtWidgets.QPushButton(SpinnerWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
         self.cancelButton.setSizePolicy(sizePolicy)
-        self.cancelButton.setObjectName(_fromUtf8("cancelButton"))
+        self.cancelButton.setObjectName("cancelButton")
         self.horizontalLayout.addWidget(self.cancelButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout.setStretch(0, 1)
@@ -64,6 +50,7 @@ class Ui_SpinnerWidget(object):
         QtCore.QMetaObject.connectSlotsByName(SpinnerWidget)
 
     def retranslateUi(self, SpinnerWidget):
-        SpinnerWidget.setWindowTitle(_translate("SpinnerWidget", "Form", None))
-        self.cancelButton.setText(_translate("SpinnerWidget", "Cancel", None))
+        _translate = QtCore.QCoreApplication.translate
+        SpinnerWidget.setWindowTitle(_translate("SpinnerWidget", "Form"))
+        self.cancelButton.setText(_translate("SpinnerWidget", "Cancel"))
 

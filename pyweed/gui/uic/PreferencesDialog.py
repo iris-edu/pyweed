@@ -2,75 +2,61 @@
 
 # Form implementation generated from reading ui file 'pyweed/gui/uic/PreferencesDialog.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_PreferencesDialog(object):
     def setupUi(self, PreferencesDialog):
-        PreferencesDialog.setObjectName(_fromUtf8("PreferencesDialog"))
+        PreferencesDialog.setObjectName("PreferencesDialog")
         PreferencesDialog.setWindowModality(QtCore.Qt.ApplicationModal)
         PreferencesDialog.resize(287, 241)
         PreferencesDialog.setModal(True)
-        self.verticalLayout = QtGui.QVBoxLayout(PreferencesDialog)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.dataCentersGroupBox = QtGui.QGroupBox(PreferencesDialog)
-        self.dataCentersGroupBox.setObjectName(_fromUtf8("dataCentersGroupBox"))
-        self.formLayout_4 = QtGui.QFormLayout(self.dataCentersGroupBox)
-        self.formLayout_4.setObjectName(_fromUtf8("formLayout_4"))
-        self.label = QtGui.QLabel(self.dataCentersGroupBox)
-        self.label.setObjectName(_fromUtf8("label"))
-        self.formLayout_4.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
-        self.eventDataCenterComboBox = QtGui.QComboBox(self.dataCentersGroupBox)
-        self.eventDataCenterComboBox.setObjectName(_fromUtf8("eventDataCenterComboBox"))
-        self.formLayout_4.setWidget(0, QtGui.QFormLayout.FieldRole, self.eventDataCenterComboBox)
-        self.label_2 = QtGui.QLabel(self.dataCentersGroupBox)
-        self.label_2.setObjectName(_fromUtf8("label_2"))
-        self.formLayout_4.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_2)
-        self.stationDataCenterComboBox = QtGui.QComboBox(self.dataCentersGroupBox)
-        self.stationDataCenterComboBox.setObjectName(_fromUtf8("stationDataCenterComboBox"))
-        self.formLayout_4.setWidget(1, QtGui.QFormLayout.FieldRole, self.stationDataCenterComboBox)
+        self.verticalLayout = QtWidgets.QVBoxLayout(PreferencesDialog)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.dataCentersGroupBox = QtWidgets.QGroupBox(PreferencesDialog)
+        self.dataCentersGroupBox.setObjectName("dataCentersGroupBox")
+        self.formLayout_4 = QtWidgets.QFormLayout(self.dataCentersGroupBox)
+        self.formLayout_4.setObjectName("formLayout_4")
+        self.label = QtWidgets.QLabel(self.dataCentersGroupBox)
+        self.label.setObjectName("label")
+        self.formLayout_4.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
+        self.eventDataCenterComboBox = QtWidgets.QComboBox(self.dataCentersGroupBox)
+        self.eventDataCenterComboBox.setObjectName("eventDataCenterComboBox")
+        self.formLayout_4.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.eventDataCenterComboBox)
+        self.label_2 = QtWidgets.QLabel(self.dataCentersGroupBox)
+        self.label_2.setObjectName("label_2")
+        self.formLayout_4.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
+        self.stationDataCenterComboBox = QtWidgets.QComboBox(self.dataCentersGroupBox)
+        self.stationDataCenterComboBox.setObjectName("stationDataCenterComboBox")
+        self.formLayout_4.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.stationDataCenterComboBox)
         self.verticalLayout.addWidget(self.dataCentersGroupBox)
-        self.groupBox = QtGui.QGroupBox(PreferencesDialog)
+        self.groupBox = QtWidgets.QGroupBox(PreferencesDialog)
         self.groupBox.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
-        self.groupBox.setObjectName(_fromUtf8("groupBox"))
-        self.formLayout_3 = QtGui.QFormLayout(self.groupBox)
-        self.formLayout_3.setObjectName(_fromUtf8("formLayout_3"))
-        self.label_3 = QtGui.QLabel(self.groupBox)
-        self.label_3.setObjectName(_fromUtf8("label_3"))
-        self.formLayout_3.setWidget(0, QtGui.QFormLayout.LabelRole, self.label_3)
-        self.cacheSizeSpinBox = QtGui.QSpinBox(self.groupBox)
+        self.groupBox.setObjectName("groupBox")
+        self.formLayout_3 = QtWidgets.QFormLayout(self.groupBox)
+        self.formLayout_3.setObjectName("formLayout_3")
+        self.label_3 = QtWidgets.QLabel(self.groupBox)
+        self.label_3.setObjectName("label_3")
+        self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_3)
+        self.cacheSizeSpinBox = QtWidgets.QSpinBox(self.groupBox)
         self.cacheSizeSpinBox.setMaximum(500)
-        self.cacheSizeSpinBox.setObjectName(_fromUtf8("cacheSizeSpinBox"))
-        self.formLayout_3.setWidget(0, QtGui.QFormLayout.FieldRole, self.cacheSizeSpinBox)
+        self.cacheSizeSpinBox.setObjectName("cacheSizeSpinBox")
+        self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.cacheSizeSpinBox)
         self.verticalLayout.addWidget(self.groupBox)
-        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setSpacing(2)
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        spacerItem = QtGui.QSpacerItem(0, 0, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        spacerItem = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
-        self.okButton = QtGui.QPushButton(PreferencesDialog)
+        self.okButton = QtWidgets.QPushButton(PreferencesDialog)
         self.okButton.setDefault(True)
-        self.okButton.setObjectName(_fromUtf8("okButton"))
+        self.okButton.setObjectName("okButton")
         self.horizontalLayout.addWidget(self.okButton)
-        self.cancelButton = QtGui.QPushButton(PreferencesDialog)
-        self.cancelButton.setObjectName(_fromUtf8("cancelButton"))
+        self.cancelButton = QtWidgets.QPushButton(PreferencesDialog)
+        self.cancelButton.setObjectName("cancelButton")
         self.horizontalLayout.addWidget(self.cancelButton)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout.setStretch(2, 1)
@@ -79,13 +65,14 @@ class Ui_PreferencesDialog(object):
         QtCore.QMetaObject.connectSlotsByName(PreferencesDialog)
 
     def retranslateUi(self, PreferencesDialog):
-        PreferencesDialog.setWindowTitle(_translate("PreferencesDialog", "Preferences", None))
-        self.dataCentersGroupBox.setTitle(_translate("PreferencesDialog", "Data Centers", None))
-        self.label.setText(_translate("PreferencesDialog", "Events", None))
-        self.label_2.setText(_translate("PreferencesDialog", "Stations", None))
-        self.groupBox.setTitle(_translate("PreferencesDialog", "Advanced", None))
-        self.label_3.setText(_translate("PreferencesDialog", "Cache", None))
-        self.cacheSizeSpinBox.setSuffix(_translate("PreferencesDialog", " Mbytes", None))
-        self.okButton.setText(_translate("PreferencesDialog", "Save", None))
-        self.cancelButton.setText(_translate("PreferencesDialog", "Cancel", None))
+        _translate = QtCore.QCoreApplication.translate
+        PreferencesDialog.setWindowTitle(_translate("PreferencesDialog", "Preferences"))
+        self.dataCentersGroupBox.setTitle(_translate("PreferencesDialog", "Data Centers"))
+        self.label.setText(_translate("PreferencesDialog", "Events"))
+        self.label_2.setText(_translate("PreferencesDialog", "Stations"))
+        self.groupBox.setTitle(_translate("PreferencesDialog", "Advanced"))
+        self.label_3.setText(_translate("PreferencesDialog", "Cache"))
+        self.cacheSizeSpinBox.setSuffix(_translate("PreferencesDialog", " Mbytes"))
+        self.okButton.setText(_translate("PreferencesDialog", "Save"))
+        self.cancelButton.setText(_translate("PreferencesDialog", "Cancel"))
 

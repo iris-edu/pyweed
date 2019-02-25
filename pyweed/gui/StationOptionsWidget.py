@@ -9,7 +9,7 @@ Station Options
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore
 from pyweed.gui.uic import StationOptionsWidget
 import logging
 from pyweed.station_options import StationOptions

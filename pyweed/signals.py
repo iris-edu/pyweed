@@ -9,7 +9,7 @@ Base classes standardizing some Qt signals.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 
 
 # NOTE:  http://stackoverflow.com/questions/9957195/updating-gui-elements-in-multithreaded-pyqt

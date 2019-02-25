@@ -9,7 +9,7 @@ Preferences dialog
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 from pyweed.gui.uic import PreferencesDialog
 from logging import getLogger
 from obspy.clients.fdsn.header import URL_MAPPINGS
@@ -18,7 +18,7 @@ from obspy.clients.fdsn.client import Client
 LOGGER = getLogger(__name__)
 
 
-class PreferencesDialog(QtGui.QDialog, PreferencesDialog.Ui_PreferencesDialog):
+class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialog):
     """
     Dialog window for editing preferences.
     """
@@ -61,7 +61,7 @@ class PreferencesDialog(QtGui.QDialog, PreferencesDialog.Ui_PreferencesDialog):
                 self.data_centers[self.stationDataCenterComboBox.currentIndex()])
         except Exception as e:
             # Error usually means that the user selected a data center that doesn't provide the given service
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 "Unable to update data center",
                 str(e)

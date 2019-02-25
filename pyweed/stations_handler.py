@@ -15,7 +15,7 @@ import logging
 from pyweed.signals import SignalingThread, SignalingObject
 from obspy.core.inventory.inventory import Inventory
 from pyweed.pyweed_utils import get_service_url, CancelledException, DataRequest, get_distance
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 import concurrent.futures
 from pyweed.dist_from_events import get_combined_locations, CrossBorderException
 

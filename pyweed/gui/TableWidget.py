@@ -9,10 +9,10 @@ Widgets for use with a QTableWidgetItem
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 
 # QTableWidgetItem subclass type iterator
-_next_type = QtGui.QTableWidgetItem.UserType
+_next_type = QtWidgets.QTableWidgetItem.UserType
 
 
 class CustomTableWidgetItemMixin(object):

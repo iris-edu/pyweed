@@ -9,7 +9,7 @@ Event Options
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore
 from pyweed.gui.uic import EventOptionsWidget
 import logging
 from distutils.util import strtobool
