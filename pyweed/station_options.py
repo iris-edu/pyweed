@@ -10,8 +10,6 @@ Station Options
 """
 
 from pyweed.options import Options, DateOption, FloatOption, Option
-import copy
-from pyweed.dist_from_events import get_combined_locations, CrossBorderException
 from pyweed.pyweed_utils import get_preferred_origin
 from logging import getLogger
 

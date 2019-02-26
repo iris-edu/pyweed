@@ -15,7 +15,7 @@ from __future__ import (absolute_import, division, print_function)
 
 import os
 import platform
-from future.moves.configparser import SafeConfigParser
+from configparser import ConfigParser
 
 
 def safe_bool(s, default=False):
@@ -122,7 +122,7 @@ class Preferences(object):
         """
         Saves the user's preferences to config file
         """
-        config = SafeConfigParser()
+        config = ConfigParser()
 
         sections = [
             self.Data,
@@ -158,7 +158,7 @@ class Preferences(object):
         else:
             # Override defaults with anything found in config.ini
             f = open(path, "r")
-            config = SafeConfigParser()
+            config = ConfigParser()
             config.readfp(f)
 
             sections = [

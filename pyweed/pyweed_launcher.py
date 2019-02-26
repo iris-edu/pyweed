@@ -17,7 +17,6 @@ from __future__ import (absolute_import, division, print_function)
 
 import sys
 import os
-from future.utils import PY2
 import matplotlib
 
 # If running under windows, redirect stdout/stderr, since writing to them will crash Python if there's
@@ -39,15 +38,6 @@ matplotlib.use('AGG')
 # See http://pandas.pydata.org/pandas-docs/version/0.19.1/indexing.html#returning-a-view-versus-a-copy
 # import pandas as pd
 # pd.set_option('mode.chained_assignment', 'raise')
-
-if PY2:
-    # Configure PyQt5 -- in order for the Python console to work in Python 2, we need to load a particular
-    # version of some internal libraries. This must be done before the first import of the PyQt5 libraries.
-    # See http://stackoverflow.com/questions/11513132/embedding-ipython-qt-console-in-a-pyqt-application/20610786#20610786
-    os.environ['QT_API'] = 'pyqt'
-    import sip
-    sip.setapi("QString", 2)
-    sip.setapi("QVariant", 2)
 
 
 def init_strptime():

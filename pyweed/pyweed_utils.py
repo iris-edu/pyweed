@@ -17,7 +17,7 @@ import logging
 import re
 from pyproj import Geod
 from obspy.taup.tau import TauPyModel
-from future.moves.urllib.parse import urlencode
+from urllib.parse import urlencode
 
 LOGGER = logging.getLogger(__name__)
 GEOD = Geod(ellps='WGS84')
