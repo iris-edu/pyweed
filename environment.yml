@@ -6,12 +6,12 @@ dependencies:
 - python=3.6
 - basemap
 - future
-- matplotlib=2
+- matplotlib
 - numpy
 - obspy=1.1
 - pandas
 - pillow
-- pyqt=4.11
+- pyqt=5.6
 - qtconsole
 - pyzmq
 - pyproj
