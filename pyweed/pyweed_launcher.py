@@ -18,18 +18,29 @@ from __future__ import (absolute_import, division, print_function)
 import sys
 import os
 import matplotlib
+import platform
+
+# Windows needs different treatement in a few places
+is_windows = (platform.system() == 'Windows')
 
 # If running under windows, redirect stdout/stderr, since writing to them will crash Python if there's
 # not a console. See https://bugs.python.org/issue706263
-if sys.executable.endswith('pythonw.exe'):
+if is_windows:
     nul = open(os.devnull, 'w')
     sys.stderr = nul
     sys.stdout = nul
 
 # Set up the PROJ_LIB environment variable needed by matplotlib
 # See https://github.com/conda-forge/basemap-feedstock/issues/30
-if not os.environ.get('PROJ_LIB') and os.environ.get('CONDA_PREFIX'):
-    os.environ['PROJ_LIB'] = os.path.join(os.environ['CONDA_PREFIX'], 'share', 'proj')
+if not os.environ.get('PROJ_LIB'):
+    # Look for a prefix from Conda or use the standard one
+    prefix = os.environ.get('CONDA_PREFIX') or sys.prefix
+    if prefix:
+        # Location differs between platforms
+        if is_windows:
+            os.environ['PROJ_LIB'] = os.path.join(prefix, 'Library', 'share', 'proj')
+        else:
+            os.environ['PROJ_LIB'] = os.path.join(prefix, 'share', 'proj')
 
 # Configure matplotlib backend
 matplotlib.use('AGG')
