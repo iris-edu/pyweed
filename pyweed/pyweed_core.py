@@ -50,15 +50,14 @@ class PyWeedCore(QObject):
 
     preferences = None
 
-    event_client = None
-    event_data_center = None
+    clients = None
+    data_centers = None
+
     event_options = None
     events_handler = None
     events = None
     selected_event_ids = None
 
-    station_client = None
-    station_data_center = None
     station_options = None
     stations_handler = None
     stations = None
@@ -66,6 +65,8 @@ class PyWeedCore(QObject):
     
     def __init__(self):
         super(PyWeedCore, self).__init__()
+        self.clients = {}
+        self.data_centers = {}
         self.configure_logging()
         self.event_options = EventOptions()
         self.station_options = StationOptions()
@@ -78,44 +79,97 @@ class PyWeedCore(QObject):
         self.stations_handler = StationsHandler(self)
         self.stations_handler.done.connect(self.on_stations_loaded)
 
+    @property
+    def event_data_center(self):
+        return self.data_centers.get('event')
+
+    @property
+    def station_data_center(self):
+        return self.data_centers.get('station')
+
+    @property
+    def dataselect_data_center(self):
+        return self.data_centers.get('dataselect')
+
+    @property
+    def event_client(self):
+        return self.clients.get('event')
+
+    @property
+    def station_client(self):
+        return self.clients.get('station')
+
+    @property
+    def dataselect_client(self):
+        return self.clients.get('dataselect')
+
     def set_event_data_center(self, data_center):
-        """
-        Set the data center used for events
-        """
-        if data_center != self.event_data_center or not self.event_client:
-            # Use the station client if they're the same, otherwise create a client
-            if data_center == self.station_data_center and self.station_client:
-                client = self.station_client
-            else:
-                LOGGER.info("Creating ObsPy client for %s", data_center)
-                client = Client(data_center)
-            # Verify that this client supports events
-            if 'event' not in client.services:
-                LOGGER.error("The %s data center does not provide an event service" % data_center)
-                return
-            # Update settings
-            self.event_data_center = data_center
-            self.event_client = client
+        self.set_data_center('event', data_center)
 
     def set_station_data_center(self, data_center):
+        self.set_data_center('station', data_center)
+
+    def set_dataselect_data_center(self, data_center):
+        self.set_data_center('dataselect', data_center)
+
+    def set_data_center(self, service, data_center):
         """
-        Set the data center used for stations
+        Set the data center used for the given service
         """
-        if data_center != self.station_data_center or not self.station_client:
-            # Use the event client if they're the same, otherwise create a client
-            if data_center == self.event_data_center and self.event_client:
-                client = self.event_client
-            else:
-                LOGGER.info("Creating ObsPy client for %s", data_center)
-                client = Client(data_center)
-            # Verify that this client supports station and dataselect
-            for service in ('station', 'dataselect',):
-                if service not in client.services:
-                    LOGGER.error("The %s data center does not provide a %s service" % (data_center, service))
-                    return
-            # Update settings
-            self.station_data_center = data_center
-            self.station_client = client
+        if data_center == self.data_centers.get(service) and self.clients.get(service):
+            # Already set, no action needed
+            return
+        
+        # See if we can reuse one of the other clients
+        client = self.find_existing_client(service, data_center)
+        if not client:
+            LOGGER.info("Creating ObsPy %s client for %s", service, data_center)
+            try:
+                client = self.create_client(service, data_center)
+            except Exception as e:
+                LOGGER.error("Couldn't create ObsPy client: %s", e)
+                return
+        # Verify that this client supports the service we need
+        if service not in client.services:
+            LOGGER.error("The %s data center does not provide a %s service" % (data_center, service))
+            return
+        # Update settings
+        self.data_centers[service] = data_center
+        self.clients[service] = client
+
+    def find_existing_client(self, service, data_center):
+        """
+        Search for an existing client (associated with a different service) that can also work for
+        the given service. This is to handle the common case where all the clients are targeting the
+        same data center.
+        """
+        for other_service in ('event', 'station', 'dataselect'):
+            other_client = (
+                other_service != service 
+                and data_center == self.data_centers.get(other_service) 
+                and self.clients.get(other_service))
+            if other_client:
+                return other_client
+        return None
+
+    def create_client(self, service, url_or_label):
+        """
+        Create an ObsPy Client
+        
+        @param service: service type (eg. 'event' or 'station')
+        @param url_or_label: either an ObsPy label or a URL for that service
+        
+        NOTE: url_or_label here is different from the Client's base_url -- the base_url is just the
+        base domain, so it can only do standard FDSN service paths (eg. starting with /fdsnws)
+        To allow totally custom URLs, we take the URL for the service itself
+        (eg. https://service.iris.edu/fdsnwsbeta/station/1/) and explicitly map it.
+        """
+        if url_or_label.startswith('http'):
+            service_mappings = {}
+            service_mappings[service] = url_or_label
+            return Client(url_or_label, service_mappings=service_mappings)
+        else:
+            return Client(url_or_label)
 
     def load_preferences(self):
         """
@@ -131,6 +185,7 @@ class PyWeedCore(QObject):
         self.set_event_data_center(self.preferences.Data.eventDataCenter)
         self.set_station_options(self.preferences.StationOptions)
         self.set_station_data_center(self.preferences.Data.stationDataCenter)
+        self.set_dataselect_data_center(self.preferences.Data.stationDataCenter)
 
     def save_preferences(self):
         """
