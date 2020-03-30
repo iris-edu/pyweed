@@ -16,6 +16,7 @@ import os
 import logging
 import re
 from pyproj import Geod
+from obspy import UTCDateTime
 from obspy.taup.tau import TauPyModel
 from urllib.parse import urlencode
 
@@ -259,11 +260,13 @@ class TimeWindow(object):
         Given an event time and a dictionary of arrival times (see Distances below)
         calculate the full time window
         """
+        start_offset = arrivals.get(self.start_phase, 0) - self.start_offset
+        end_offset = arrivals.get(self.end_phase, 0) + self.end_offset
         return (
             # Start time
-            event_time + arrivals.get(self.start_phase, 0) - self.start_offset,
+            UTCDateTime(event_time + start_offset),
             # End time
-            event_time + arrivals.get(self.end_phase, 0) + self.end_offset,
+            UTCDateTime(event_time + end_offset),
         )
 
     def __eq__(self, other):

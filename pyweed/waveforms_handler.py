@@ -121,8 +121,8 @@ class WaveformEntry(AttribDict):
 
         (self.start_time, self.end_time) = self.time_window.calculate_window(
             self.event_time, self.arrivals)
-        self.start_string = UTCDateTime(self.start_time).format_iris_web_service().replace(':', '_')
-        self.end_string = UTCDateTime(self.end_time).format_iris_web_service().replace(':', '_')
+        self.start_string = self.start_time.format_iris_web_service().replace(':', '_')
+        self.end_string = self.end_time.format_iris_web_service().replace(':', '_')
 
         self.base_filename = "%s_%s_%s" % (self.sncl, self.start_string, self.end_string)
         self.mseed_path = os.path.join(self.download_dir, "%s.mseed" % self.base_filename)
@@ -185,7 +185,7 @@ def load_waveform(client, waveform):
             })
             LOGGER.info("Retrieving waveform data for %s from %s", waveform_id, service_url)
             st = client.get_waveforms(
-                network, station, location, channel, waveform.start_string, waveform.end_string)
+                network, station, location, channel, waveform.start_time, waveform.end_time)
             # Write to file
             st.write(mseedFile, format="MSEED")
 
