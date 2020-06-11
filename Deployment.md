@@ -2,11 +2,12 @@
 
 These are instructions for releasing a new version of PyWEED to [conda-forge](https://conda-forge.org/).
 
-Some helpful links:  
-<https://packaging.python.org/tutorials/distributing-packages/>  
-<https://docs.anaconda.com/docs_oss/conda/building/bpp>
+Some helpful links:
 
-__It is helpful to do all this work in a Python 3 environment!__ Otherwise various flags (omitted here) are required.
+* <https://packaging.python.org/tutorials/distributing-packages/>
+* <https://enterprise-docs.anaconda.com/en/latest/data-science-workflows/packages/build.html>
+
+__Do all this work in a Python 3 environment!__ Otherwise various flags (omitted here) are required.
 
 Some additional conda packages are required:
 
@@ -19,7 +20,7 @@ conda install twine
 
 The version is set in `pyweed/__init__.py`.
 
-This should follow the 
+This should follow the
 [Python Semantic Versioning](https://packaging.python.org/tutorials/distributing-packages/#semantic-versioning-preferred)
 scheme.
 
@@ -99,7 +100,7 @@ Near the end of a successful build, it should say where the built package can be
 
 You can install the test build locally as well.
 
-First, create a new environment based on the recipe requirements. 
+First, create a new environment based on the recipe requirements.
 (You shouldn't have to do this, but you do; see <https://github.com/conda/conda/issues/466>)
 
 ie. if the recipe says
@@ -144,9 +145,9 @@ $ which pyweed
 ## 4. Update conda-forge
 
 1. Check in the changes to your forked GitHub repo.
-2. Submit a pull request to the [base conda-forge repo](https://github.com/conda-forge/pyweed-feedstock). 
-3. You will need to wait until the automated build and test have succeeded. __This may take a day or so.__ 
-4. At that point, you should be able to approve the pull request. 
+2. Submit a pull request to the [base conda-forge repo](https://github.com/conda-forge/pyweed-feedstock).
+3. You will need to wait until the automated build and test have succeeded. __This may take a day or so.__
+4. At that point, you should be able to approve the pull request.
 5. You need to wait _again_ for the finalized packages to be built and uploaded. The easiest option is to watch
 the [package page](https://anaconda.org/conda-forge/pyweed) which shows the latest available version for each
 platform. When the new version is available for all platforms, the release is finished!
