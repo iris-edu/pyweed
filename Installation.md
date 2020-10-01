@@ -1,6 +1,8 @@
 # PyWEED Installation
 
-PyWEED is distributed as a [conda](https://conda.io/docs/) package.
+PyWEED is distributed as an [anaconda](https://conda.io/docs/) package.
+
+Some troubleshooting information can be found in [Support](Support.md).
 
 ## Install Anaconda/Miniconda (if needed)
 
