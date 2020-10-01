@@ -19,7 +19,7 @@ __[User Guide](UserGuide/index.md)__
 
 __[Support](Support.md)__
 
-Please send comments/problems to pyweed@iris.washington.edu.
+Please send comments/problems to [pyweed@iris.washington.edu](pyweed@iris.washington.edu).
 
 ---
 
