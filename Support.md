@@ -1,10 +1,10 @@
 # Support
 
-## Common problems
+## Install problems
 
 Far and away the most common problem is library mismatches -- some of the libraries that PyWEED uses (ObsPy and Qt most notably) bring in a wide mix of their own dependencies, resulting in a complex mix of library versions.
 
-This can be addressed by specifying PyWEED's direct dependencies in more granularity (eg. require matplotlib=3.1 rather than matplotlib=3) but this increases the likelihood that something will be entirely unavailable on some platform (or at some point in time, since the 
+This can be addressed by specifying PyWEED's direct dependencies in more granularity (eg. require matplotlib=3.1 rather than matplotlib=3) but this increases the likelihood that something will be entirely unavailable on some platform (or at some point in time; all the packages are moving targets)
 
 ### matplotlib / basemap
 
