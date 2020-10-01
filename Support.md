@@ -10,7 +10,7 @@ This can be addressed by specifying PyWEED's direct dependencies in more granula
 
 #### ImportError: cannot import name 'dedent' from 'matplotlib.cbook'
 
-See #119, in an existing environment running
+See https://github.com/iris-edu/pyweed/issues/119, in an existing environment running
 ```
 conda install matplotlib=3.2
 ```
