@@ -1,4 +1,4 @@
-# PyWEED
+## About PyWEED
 
 PyWEED is an application for retrieving event-based seismic data.
 
@@ -9,15 +9,17 @@ PyWEED works on Windows, Mac, and Linux (64-bit). It is built on [ObsPy](https:/
 
 ![Waveforms Window](WaveformsWindow.png)
 
-## [Installation](Installation.md)
+[Demo Screencast](https://vimeo.com/246357529) on Vimeo 
 
-## Support
+## Documentation
 
-[Demo Screencast](https://vimeo.com/246357529) on Vimeo.
+__[Installation Guide](Installation.md)__
 
-[User Guide](UserGuide/index.md)
+__[User Guide](UserGuide/index.md)__
 
-Send comments/problems to adam@iris.washington.edu.
+__[Support](Support.md)__
+
+Please send comments/problems to pyweed@iris.washington.edu.
 
 ---
 
