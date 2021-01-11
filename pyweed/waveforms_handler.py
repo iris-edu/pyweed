@@ -211,6 +211,8 @@ def load_waveform(client, waveform):
         # Most common error is "no data" TODO: see https://github.com/obspy/obspy/issues/1656
         if str(e).startswith("No data"):
             waveform.error = "No data available"
+            # Deselect when no data available
+            waveform.keep = False
         else:
             waveform.error = str(e)
         # Reraise the exception to signal an error to the caller
@@ -459,6 +461,10 @@ class WaveformsHandler(SignalingObject):
                 tr.evlo = origin.longitude
                 tr.evdp = origin.depth / 1000
                 tr.o = origin.time - waveform.start_time
+                # Use event time as the reftime?
+                if self.preferences.Waveforms.useEventTime:
+                    tr.reftime = origin.time  # ObsPy does a lot of work here!
+                    tr.iztype = 'io'
             magnitude = get_preferred_magnitude(waveform.event_ref())
             if magnitude:
                 tr.mag = magnitude.mag

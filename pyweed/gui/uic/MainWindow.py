@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'pyweed/gui/uic/MainWindow.ui'
+# Form implementation generated from reading ui file 'MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -119,6 +119,9 @@ class Ui_MainWindow(object):
         self.eventSelectionLabel.setText("")
         self.eventSelectionLabel.setObjectName("eventSelectionLabel")
         self.horizontalLayout.addWidget(self.eventSelectionLabel)
+        self.allEventSelectionButton = QtWidgets.QToolButton(self.eventsWidget)
+        self.allEventSelectionButton.setObjectName("allEventSelectionButton")
+        self.horizontalLayout.addWidget(self.allEventSelectionButton)
         self.clearEventSelectionButton = QtWidgets.QToolButton(self.eventsWidget)
         self.clearEventSelectionButton.setObjectName("clearEventSelectionButton")
         self.horizontalLayout.addWidget(self.clearEventSelectionButton)
@@ -166,6 +169,9 @@ class Ui_MainWindow(object):
         self.stationSelectionLabel.setText("")
         self.stationSelectionLabel.setObjectName("stationSelectionLabel")
         self.horizontalLayout_2.addWidget(self.stationSelectionLabel)
+        self.allStationSelectionButton = QtWidgets.QToolButton(self.stationsWidget)
+        self.allStationSelectionButton.setObjectName("allStationSelectionButton")
+        self.horizontalLayout_2.addWidget(self.allStationSelectionButton)
         self.clearStationSelectionButton = QtWidgets.QToolButton(self.stationsWidget)
         self.clearStationSelectionButton.setObjectName("clearStationSelectionButton")
         self.horizontalLayout_2.addWidget(self.clearStationSelectionButton)
@@ -226,10 +232,12 @@ class Ui_MainWindow(object):
         self.toggleEventOptions.setText(_translate("MainWindow", "< Options"))
         self.getEventsButton.setText(_translate("MainWindow", "Get Events"))
         self.eventsTable.setSortingEnabled(True)
+        self.allEventSelectionButton.setText(_translate("MainWindow", "Select All"))
         self.clearEventSelectionButton.setText(_translate("MainWindow", "Clear Selection"))
         self.getStationsButton.setText(_translate("MainWindow", "Get Stations"))
         self.toggleStationOptions.setText(_translate("MainWindow", "Options >"))
         self.stationsTable.setSortingEnabled(True)
+        self.allStationSelectionButton.setText(_translate("MainWindow", "Select All"))
         self.clearStationSelectionButton.setText(_translate("MainWindow", "Clear Selection"))
         self.getWaveformsButton.setText(_translate("MainWindow", "Get Waveforms"))
         self.eventOptionsDockWidget.setWindowTitle(_translate("MainWindow", "Event Options"))

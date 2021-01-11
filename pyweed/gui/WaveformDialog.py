@@ -562,6 +562,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         waveform = self.waveforms_handler.waveforms_by_id.get(waveform_id)
         self.selectionTable.item(row, WAVEFORM_IMAGE_COLUMN).setWaveform(waveform)
+        self.selectionTable.item(row, WAVEFORM_KEEP_COLUMN).setKeep(waveform.keep)
 
         LOGGER.debug("Displayed waveform %s", waveform_id)
 

@@ -23,7 +23,14 @@ class BaseOptionsWidget(QtWidgets.QDialog):
 
     # We want to watch for changes in the widget inputs, but every type of input has a different one so
     # we need to try a bunch of options
-    INPUT_CHANGE_SIGNALS = ('valueChanged', 'textChanged', 'dateTimeChanged', 'clicked',)
+    INPUT_CHANGE_SIGNALS = (
+        'valueChanged',
+        'textChanged',
+        'dateTimeChanged',
+        'clicked',
+        'location_choice',
+        'time_choice',
+    )
 
     # Signal to indicate that the options have changed
     changed = QtCore.pyqtSignal(object)
@@ -215,7 +222,7 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Copy the time options from event_options/station_options
         """
-        LOGGER.info("Copying time to %s" % self.__class__)
+        LOGGER.info("Copying time")
         time_options = self.otherOptions.get_time_options()
         time_options.update(self.otherOptions.get_options(['time_choice']))
         self.options.set_options(time_options)
@@ -226,7 +233,7 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Copy the location options from event_options/station_options
         """
-        LOGGER.info("Copying location to %s" % self.__class__)
+        LOGGER.info("Copying location")
         loc_options = self.otherOptions.get_location_options()
         loc_options.update(self.otherOptions.get_options(['location_choice']))
         self.options.set_options(loc_options)

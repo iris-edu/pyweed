@@ -248,6 +248,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QToolButton" name="allEventSelectionButton">
+                <property name="text">
+                 <string>Select All</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QToolButton" name="clearEventSelectionButton">
                 <property name="text">
                  <string>Clear Selection</string>
@@ -345,6 +352,13 @@
                <widget class="QLabel" name="stationSelectionLabel">
                 <property name="text">
                  <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="allStationSelectionButton">
+                <property name="text">
+                 <string>Select All</string>
                 </property>
                </widget>
               </item>

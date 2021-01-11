@@ -102,6 +102,7 @@ class Preferences(object):
         self.Waveforms.timeWindowAfter = "600"  # seconds
         self.Waveforms.timeWindowAfterPhase = "P"  # P|S|Event
         self.Waveforms.saveFormat = "MSEED"
+        self.Waveforms.useEventTime = "n"
 
         self.Logging = Section.create("Logging")
         self.Logging.level = "INFO"
@@ -140,7 +141,10 @@ class Preferences(object):
             try:
                 os.makedirs(user_config_path(), 0o700)
             except Exception as e:
-                print("Creation of user configuration directory failed with" + " error: \"%s\'""" % e)
+                print(
+                    "Creation of user configuration directory failed with"
+                    " error: %s" % e
+                )
                 return
         f = open(os.path.join(user_config_path(), "pyweed.ini"), "w")
         config.write(f)
