@@ -14,6 +14,10 @@ from pyweed.gui.uic import PreferencesDialog
 from logging import getLogger
 from obspy.clients.fdsn.header import URL_MAPPINGS
 from obspy.clients.fdsn.client import Client
+from pyweed.pyweed_utils import OUTPUT_FORMATS
+from pyweed.preferences import safe_int, safe_bool
+from pyweed.gui.Adapters import ComboBoxAdapter
+
 
 LOGGER = getLogger(__name__)
 
@@ -29,13 +33,22 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
         self.pyweed = pyweed
 
         # Ordered list of all available data centers
-        self.data_centers = sorted(URL_MAPPINGS.keys())
+        dcs = sorted(URL_MAPPINGS.keys())
 
-        # Put these in the comboboxes
-        for data_center in self.data_centers:
-            label = "%s: %s" % (data_center, URL_MAPPINGS[data_center])
-            self.eventDataCenterComboBox.addItem(label, data_center)
-            self.stationDataCenterComboBox.addItem(label, data_center)
+        self.eventDataCenterAdapter = ComboBoxAdapter(
+            self.eventDataCenterComboBox,
+            [(dc, URL_MAPPINGS[dc]) for dc in dcs]
+        )
+
+        self.stationDataCenterAdapter = ComboBoxAdapter(
+            self.stationDataCenterComboBox,
+            [(dc, URL_MAPPINGS[dc]) for dc in dcs]
+        )
+
+        self.waveformSaveFormatAdapter = ComboBoxAdapter(
+            self.waveformSaveFormatComboBox,
+            [(f.value, f.label) for f in OUTPUT_FORMATS]
+        )
 
         self.okButton.pressed.connect(self.accept)
         self.cancelButton.pressed.connect(self.reject)
@@ -46,9 +59,21 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
         """
         super(PreferencesDialog, self).showEvent(*args, **kwargs)
         # Indicate the currently selected data centers
-        self.eventDataCenterComboBox.setCurrentIndex(self.data_centers.index(self.pyweed.event_data_center))
-        self.stationDataCenterComboBox.setCurrentIndex(self.data_centers.index(self.pyweed.station_data_center))
-        self.cacheSizeSpinBox.setValue(int(self.pyweed.preferences.Waveforms.cacheSize))
+        self.eventDataCenterAdapter.setValue(
+            self.pyweed.event_data_center
+        )
+        self.stationDataCenterAdapter.setValue(
+            self.pyweed.station_data_center
+        )
+        self.cacheSizeSpinBox.setValue(
+            safe_int(self.pyweed.preferences.Waveforms.cacheSize, 10)
+        )
+        self.waveformSaveFormatAdapter.setValue(
+            self.pyweed.preferences.Waveforms.saveFormat
+        )
+        self.waveformUseEventTimeCheckBox.setChecked(
+            safe_bool(self.pyweed.preferences.Waveforms.useEventTime)
+        )
 
     def accept(self):
         """
@@ -56,9 +81,11 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
         """
         try:
             self.pyweed.set_event_data_center(
-                self.data_centers[self.eventDataCenterComboBox.currentIndex()])
+                self.eventDataCenterAdapter.getValue()
+            )
             self.pyweed.set_station_data_center(
-                self.data_centers[self.stationDataCenterComboBox.currentIndex()])
+                self.stationDataCenterAdapter.getValue()
+            )
         except Exception as e:
             # Error usually means that the user selected a data center that doesn't provide the given service
             QtWidgets.QMessageBox.critical(
@@ -70,5 +97,7 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
             return
 
         self.pyweed.preferences.Waveforms.cacheSize = self.cacheSizeSpinBox.value()
+        self.pyweed.preferences.Waveforms.saveFormat = self.waveformSaveFormatAdapter.getValue()
+        self.pyweed.preferences.Waveforms.useEventTime = self.waveformUseEventTimeCheckBox.isChecked()
 
         return super(PreferencesDialog, self).accept()
