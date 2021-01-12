@@ -172,7 +172,9 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         # Table selection
         self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
         self.stationsTable.itemSelectionChanged.connect(self.onStationSelectionChanged)
+        self.allEventSelectionButton.clicked.connect(self.selectAllEvents)
         self.clearEventSelectionButton.clicked.connect(self.eventsTable.clearSelection)
+        self.allStationSelectionButton.clicked.connect(self.selectAllStations)
         self.clearStationSelectionButton.clicked.connect(self.stationsTable.clearSelection)
 
         # Main window buttons

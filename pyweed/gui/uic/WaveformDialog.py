@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'pyweed/gui/uic/WaveformDialog.ui'
+# Form implementation generated from reading ui file 'WaveformDialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_WaveformDialog(object):
     def setupUi(self, WaveformDialog):
         WaveformDialog.setObjectName("WaveformDialog")
-        WaveformDialog.resize(1212, 724)
+        WaveformDialog.resize(1284, 724)
         self.verticalLayout = QtWidgets.QVBoxLayout(WaveformDialog)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -95,9 +95,13 @@ class Ui_WaveformDialog(object):
         self.saveFormatComboBox = QtWidgets.QComboBox(self.saveGroupBox)
         self.saveFormatComboBox.setObjectName("saveFormatComboBox")
         self.horizontalLayout_4.addWidget(self.saveFormatComboBox)
+        self.sacUseEventTimeCheckBox = QtWidgets.QCheckBox(self.saveGroupBox)
+        self.sacUseEventTimeCheckBox.setWhatsThis("")
+        self.sacUseEventTimeCheckBox.setObjectName("sacUseEventTimeCheckBox")
+        self.horizontalLayout_4.addWidget(self.sacUseEventTimeCheckBox)
         spacerItem1 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_4.addItem(spacerItem1)
-        self.horizontalLayout_4.setStretch(1, 1)
+        self.horizontalLayout_4.setStretch(2, 1)
         self.gridLayout_2.addLayout(self.horizontalLayout_4, 1, 1, 1, 1)
         self.saveDirectoryLabel = QtWidgets.QLabel(self.saveGroupBox)
         self.saveDirectoryLabel.setObjectName("saveDirectoryLabel")
@@ -154,6 +158,11 @@ class Ui_WaveformDialog(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.filterGroupBox)
         self.horizontalLayout_2.setContentsMargins(2, 2, 2, 2)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.hideNoDataCheckBox = QtWidgets.QCheckBox(self.filterGroupBox)
+        self.hideNoDataCheckBox.setObjectName("hideNoDataCheckBox")
+        self.horizontalLayout_2.addWidget(self.hideNoDataCheckBox)
+        spacerItem3 = QtWidgets.QSpacerItem(20, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem3)
         self.eventComboBox = QtWidgets.QComboBox(self.filterGroupBox)
         self.eventComboBox.setObjectName("eventComboBox")
         self.horizontalLayout_2.addWidget(self.eventComboBox)
@@ -163,9 +172,9 @@ class Ui_WaveformDialog(object):
         self.stationComboBox = QtWidgets.QComboBox(self.filterGroupBox)
         self.stationComboBox.setObjectName("stationComboBox")
         self.horizontalLayout_2.addWidget(self.stationComboBox)
-        self.horizontalLayout_2.setStretch(0, 3)
-        self.horizontalLayout_2.setStretch(1, 1)
-        self.horizontalLayout_2.setStretch(2, 1)
+        self.horizontalLayout_2.setStretch(2, 3)
+        self.horizontalLayout_2.setStretch(3, 1)
+        self.horizontalLayout_2.setStretch(4, 1)
         self.verticalLayout_2.addWidget(self.filterGroupBox)
         self.selectionTable = QtWidgets.QTableWidget(self.selectionTableFrame)
         self.selectionTable.setMinimumSize(QtCore.QSize(500, 100))
@@ -198,6 +207,8 @@ class Ui_WaveformDialog(object):
         self.downloadPushButton.setText(_translate("WaveformDialog", "Download"))
         self.downloadStatusLabel.setText(_translate("WaveformDialog", "Download status"))
         self.saveGroupBox.setTitle(_translate("WaveformDialog", "Save Waveforms"))
+        self.sacUseEventTimeCheckBox.setToolTip(_translate("WaveformDialog", "For SAC output, use the event time as the origin (iztype=\"io\")"))
+        self.sacUseEventTimeCheckBox.setText(_translate("WaveformDialog", "Use event time"))
         self.saveDirectoryLabel.setText(_translate("WaveformDialog", "To:"))
         self.saveFormatLabel.setText(_translate("WaveformDialog", "As:"))
         self.saveDirectoryPushButton.setText(_translate("WaveformDialog", "Directory"))
@@ -205,5 +216,7 @@ class Ui_WaveformDialog(object):
         self.savePushButton.setText(_translate("WaveformDialog", "Save"))
         self.saveStatusLabel.setText(_translate("WaveformDialog", "Save status"))
         self.filterGroupBox.setTitle(_translate("WaveformDialog", "Table Filters"))
+        self.hideNoDataCheckBox.setToolTip(_translate("WaveformDialog", "Hide rows when no data is found"))
+        self.hideNoDataCheckBox.setText(_translate("WaveformDialog", "Hide no data"))
         self.selectionTable.setSortingEnabled(True)
 

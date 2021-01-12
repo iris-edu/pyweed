@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>352</width>
-    <height>383</height>
+    <width>287</width>
+    <height>241</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
    <item>
     <widget class="QGroupBox" name="dataCentersGroupBox">
      <property name="title">
@@ -50,42 +50,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="outputGroupBox">
-     <property name="title">
-      <string>Output Options</string>
-     </property>
-     <layout class="QFormLayout" name="formLayout_5">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Format</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="waveformSaveFormatComboBox"/>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="waveformUseEventTimeCheckBox">
-        <property name="toolTip">
-         <string>For SAC output, use the event time as the origin (iztype=&quot;io&quot;)</string>
-        </property>
-        <property name="whatsThis">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Use event time</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="groupBox">
-     <property name="toolTip">
-      <string>Local storage for downloaded data files</string>
-     </property>
      <property name="title">
       <string>Advanced</string>
      </property>
@@ -93,14 +58,14 @@
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
      </property>
      <layout class="QFormLayout" name="formLayout_3">
-      <item row="1" column="0">
+      <item row="0" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>Cache</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QSpinBox" name="cacheSizeSpinBox">
         <property name="suffix">
          <string> Mbytes</string>

@@ -32,6 +32,9 @@ LOGGER = getLogger(__name__)
 
 THREAD_POOL_SIZE = 10
 
+# We don't have a rigorous test for no data available, we have to match the error text
+NO_DATA_ERROR = "No data available"
+
 
 class WaveformEntry(AttribDict):
     """
@@ -210,7 +213,7 @@ def load_waveform(client, waveform):
     except Exception as e:
         # Most common error is "no data" TODO: see https://github.com/obspy/obspy/issues/1656
         if str(e).startswith("No data"):
-            waveform.error = "No data available"
+            waveform.error = NO_DATA_ERROR
             # Deselect when no data available
             waveform.keep = False
         else:

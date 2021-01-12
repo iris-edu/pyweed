@@ -13,9 +13,7 @@ from PyQt5 import QtWidgets
 from pyweed.gui.uic import PreferencesDialog
 from logging import getLogger
 from obspy.clients.fdsn.header import URL_MAPPINGS
-from obspy.clients.fdsn.client import Client
-from pyweed.pyweed_utils import OUTPUT_FORMATS
-from pyweed.preferences import safe_int, safe_bool
+from pyweed.preferences import safe_int
 from pyweed.gui.Adapters import ComboBoxAdapter
 
 
@@ -45,11 +43,6 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
             [(dc, URL_MAPPINGS[dc]) for dc in dcs]
         )
 
-        self.waveformSaveFormatAdapter = ComboBoxAdapter(
-            self.waveformSaveFormatComboBox,
-            [(f.value, f.label) for f in OUTPUT_FORMATS]
-        )
-
         self.okButton.pressed.connect(self.accept)
         self.cancelButton.pressed.connect(self.reject)
 
@@ -67,12 +60,6 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
         )
         self.cacheSizeSpinBox.setValue(
             safe_int(self.pyweed.preferences.Waveforms.cacheSize, 10)
-        )
-        self.waveformSaveFormatAdapter.setValue(
-            self.pyweed.preferences.Waveforms.saveFormat
-        )
-        self.waveformUseEventTimeCheckBox.setChecked(
-            safe_bool(self.pyweed.preferences.Waveforms.useEventTime)
         )
 
     def accept(self):
@@ -97,7 +84,5 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
             return
 
         self.pyweed.preferences.Waveforms.cacheSize = self.cacheSizeSpinBox.value()
-        self.pyweed.preferences.Waveforms.saveFormat = self.waveformSaveFormatAdapter.getValue()
-        self.pyweed.preferences.Waveforms.useEventTime = self.waveformUseEventTimeCheckBox.isChecked()
 
         return super(PreferencesDialog, self).accept()

@@ -20,7 +20,8 @@ from configparser import ConfigParser
 
 def safe_bool(s, default=False):
     try:
-        return s.startswith('y')
+        # 'yes' or 'true'
+        return s[0].lower() in 'yt'
     except:
         return default
 
@@ -103,6 +104,7 @@ class Preferences(object):
         self.Waveforms.timeWindowAfterPhase = "P"  # P|S|Event
         self.Waveforms.saveFormat = "MSEED"
         self.Waveforms.useEventTime = "n"
+        self.Waveforms.hideNoData = "n"
 
         self.Logging = Section.create("Logging")
         self.Logging.level = "INFO"

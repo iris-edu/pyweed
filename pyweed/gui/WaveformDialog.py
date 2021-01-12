@@ -11,11 +11,11 @@ Dialog for selecting and downloading waveform data
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from pyweed.gui.uic import WaveformDialog
-from pyweed.waveforms_handler import WaveformsHandler
+from pyweed.waveforms_handler import WaveformsHandler, NO_DATA_ERROR
 from logging import getLogger
 from pyweed.gui.TableItems import TableItems, Column
 from pyweed.pyweed_utils import get_event_name, TimeWindow, OUTPUT_FORMATS, PHASES
-from pyweed.preferences import safe_int
+from pyweed.preferences import safe_int, safe_bool
 from pyweed.gui.Adapters import ComboBoxAdapter
 from pyweed.gui.BaseDialog import BaseDialog
 from pyweed.gui.SpinnerWidget import SpinnerWidget
@@ -114,7 +114,7 @@ class WaveformTableItems(TableItems):
 
     columns = [
         Column('Id'),
-        Column('Keep'),
+        Column('Keep', width=40),
         Column('Event Time', width=100),
         Column('Location', width=100),
         Column('Magnitude'),
@@ -286,6 +286,8 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.eventComboBox.activated.connect(self.onFilterChanged)
         self.networkComboBox.activated.connect(self.onFilterChanged)
         self.stationComboBox.activated.connect(self.onFilterChanged)
+        # Checkbox for showing/hiding empty rows
+        self.hideNoDataCheckBox.stateChanged.connect(self.onFilterChanged)
 
         # Connect the timewindow signals
         self.timeWindowAdapter.changed.connect(self.resetDownload)
@@ -296,6 +298,10 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         # Information about download progress
         self.downloadCount = 0
         self.downloadCompleted = 0
+
+        # Initialize the status messages to be blank
+        self.downloadStatusLabel.setText("")
+        self.saveStatusLabel.setText("")
 
         LOGGER.debug('Finished initializing waveform dialog')
 
@@ -426,6 +432,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         Apply self.filters to the given waveform
         @return True iff the waveform should be included
         """
+        # Possibly hide rows with no data
+        if waveform.error == NO_DATA_ERROR and self.hideNoDataCheckBox.isChecked():
+            return False
         # Get the values from the waveform to match against the filter value
         sncl_parts = waveform.sncl.split('.')
         net_code = sncl_parts[0]
@@ -459,7 +468,12 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         """
         Update the UI elements to reflect the current status
         """
+        # Download button enabled if we are ready
         self.downloadPushButton.setEnabled(self.waveformsDownloadStatus == STATUS_READY)
+        # SAC options shown if SAC format chosed
+        self.sacUseEventTimeCheckBox.setVisible(
+            (self.saveFormatAdapter.getValue() or '').startswith('SAC')
+        )
 
     @QtCore.pyqtSlot()
     def onSavePushButton(self):
@@ -564,7 +578,11 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.selectionTable.item(row, WAVEFORM_IMAGE_COLUMN).setWaveform(waveform)
         self.selectionTable.item(row, WAVEFORM_KEEP_COLUMN).setKeep(waveform.keep)
 
-        LOGGER.debug("Displayed waveform %s", waveform_id)
+        # If hiding empty rows, do that here
+        if waveform.error == NO_DATA_ERROR and self.hideNoDataCheckBox.isChecked():
+            self.selectionTable.hideRow(row)
+
+        LOGGER.debug("Downloaded waveform %s", waveform_id)
 
     @QtCore.pyqtSlot(object)
     def onAllDownloaded(self, result):
@@ -690,6 +708,12 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         )
 
         self.saveFormatAdapter.setValue(prefs.Waveforms.saveFormat)
+        self.sacUseEventTimeCheckBox.setChecked(
+            safe_bool(prefs.Waveforms.useEventTime)
+        )
+        self.hideNoDataCheckBox.setChecked(
+            safe_bool(prefs.Waveforms.hideNoData)
+        )
 
     def savePreferences(self):
         """
@@ -705,3 +729,5 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         prefs.Waveforms.timeWindowAfterPhase = timeWindow.end_phase
 
         prefs.Waveforms.saveFormat = self.saveFormatAdapter.getValue()
+        prefs.Waveforms.useEventTime = self.sacUseEventTimeCheckBox.isChecked()
+        prefs.Waveforms.hideNoData = self.hideNoDataCheckBox.isChecked()
