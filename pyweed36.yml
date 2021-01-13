@@ -4,9 +4,8 @@ channels:
 - defaults
 dependencies:
 - python=3.6
+- basemap
 - matplotlib
 - obspy
-- basemap
-# - pillow
 - pyqt=5.9
 - pyproj

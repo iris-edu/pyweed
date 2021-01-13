@@ -1,11 +1,12 @@
-name: pyweed37
+name: pyweed36
 channels:
 - conda-forge
 - defaults
 dependencies:
-- python=3.7
+- python=3.6
 - basemap
-- matplotlib
+- matplotlib=3.2
 - obspy
+- pillow
 - pyqt=5.9
 - pyproj
