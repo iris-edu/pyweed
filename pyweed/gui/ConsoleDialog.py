@@ -37,9 +37,12 @@ except Exception as e:
 
 
 class ConsoleDialog(BaseDialog):
+    # Enabled if ipython is there
+    enabled = bool(EmbedIPython)
+
     def __init__(self, pyweed, parent=None):
         super(ConsoleDialog, self).__init__(parent=parent)
-        if EmbedIPython:
+        if self.enabled:
             self.widget = EmbedIPython(pyweed=pyweed)
             layout = QtWidgets.QVBoxLayout(self)
             layout.addWidget(self.widget)
