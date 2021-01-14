@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>265</width>
+    <width>266</width>
     <height>641</height>
    </rect>
   </property>
@@ -63,7 +63,7 @@
           <item row="0" column="0">
            <widget class="QLabel" name="starttimeLabel">
             <property name="text">
-             <string>min</string>
+             <string>start</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -89,7 +89,7 @@
           <item row="1" column="0">
            <widget class="QLabel" name="endtimeLabel">
             <property name="text">
-             <string>max</string>
+             <string>end</string>
             </property>
            </widget>
           </item>
@@ -719,7 +719,7 @@
              <bool>true</bool>
             </property>
             <property name="text">
-             <string>Distance from point</string>
+             <string>Degrees from point</string>
             </property>
            </widget>
           </item>

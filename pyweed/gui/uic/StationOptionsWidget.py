@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_StationOptionsWidget(object):
     def setupUi(self, StationOptionsWidget):
         StationOptionsWidget.setObjectName("StationOptionsWidget")
-        StationOptionsWidget.resize(265, 671)
+        StationOptionsWidget.resize(266, 671)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -382,9 +382,9 @@ class Ui_StationOptionsWidget(object):
     def retranslateUi(self, StationOptionsWidget):
         _translate = QtCore.QCoreApplication.translate
         self.timeGroupBox.setTitle(_translate("StationOptionsWidget", "Time"))
-        self.starttimeLabel.setText(_translate("StationOptionsWidget", "min"))
+        self.starttimeLabel.setText(_translate("StationOptionsWidget", "start"))
         self.starttimeDateTimeEdit.setDisplayFormat(_translate("StationOptionsWidget", "yyyy-MM-dd hh:mm:ss"))
-        self.endtimeLabel.setText(_translate("StationOptionsWidget", "max"))
+        self.endtimeLabel.setText(_translate("StationOptionsWidget", "end"))
         self.endtimeDateTimeEdit.setDisplayFormat(_translate("StationOptionsWidget", "yyyy-MM-dd hh:mm:ss"))
         self.time30DaysToolButton.setText(_translate("StationOptionsWidget", "Last 30 days"))
         self.time1YearToolButton.setText(_translate("StationOptionsWidget", "Last year"))
@@ -402,13 +402,13 @@ class Ui_StationOptionsWidget(object):
         self.locationGlobalRadioButton.setText(_translate("StationOptionsWidget", "Global"))
         self.locationRangeRadioButton.setText(_translate("StationOptionsWidget", "Within lat/lon box"))
         self.drawLocationRangeToolButton.setText(_translate("StationOptionsWidget", "Draw on map"))
-        self.locationDistanceFromPointRadioButton.setText(_translate("StationOptionsWidget", "Distance from point"))
+        self.locationDistanceFromPointRadioButton.setText(_translate("StationOptionsWidget", "Degrees from point"))
         self.label_2.setText(_translate("StationOptionsWidget", "min"))
         self.label_5.setText(_translate("StationOptionsWidget", "max"))
         self.label_6.setText(_translate("StationOptionsWidget", "lat"))
         self.label_12.setText(_translate("StationOptionsWidget", "lon"))
         self.drawDistanceFromPointToolButton.setText(_translate("StationOptionsWidget", "Draw on map"))
-        self.locationDistanceFromEventsRadioButton.setText(_translate("StationOptionsWidget", "Distance from selected events"))
+        self.locationDistanceFromEventsRadioButton.setText(_translate("StationOptionsWidget", "Degrees from selected events"))
         self.label_3.setText(_translate("StationOptionsWidget", "min"))
         self.label_14.setText(_translate("StationOptionsWidget", "max"))
         self.locationFromEventsToolButton.setText(_translate("StationOptionsWidget", ">> Copy from Event Options"))

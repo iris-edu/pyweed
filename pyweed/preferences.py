@@ -112,8 +112,14 @@ class Preferences(object):
         self.Map = Section.create("Map")
 
         self.MainWindow = Section.create("MainWindow")
+        # Window geometry
+        self.MainWindow.x = "0"
+        self.MainWindow.y = "0"
         self.MainWindow.width = "1000"
         self.MainWindow.height = "800"
+        # Height for the map by the main splitter
+        self.MainWindow.mapHeight = "300"
+        # Floating window states
         self.MainWindow.eventOptionsFloat = "n"
         self.MainWindow.stationOptionsFloat = "n"
 
@@ -184,6 +190,16 @@ class Preferences(object):
 # Helper functions
 # ------------------------------------------------------------------------------
 
+# NOTE: The "correct" way to get a path for user data is something like as follows,
+# but this is not very easy/obvious for the user to get to (as they likely will want to):
+#     if platform.system() == "Darwin":
+#         return os.path.join(os.path.expanduser("~"), "Library", "Preferences")
+#     elif platform.system() == "Windows":
+#         return os.path.join(os.path.expanduser("~"), "AppData", "Local")
+#     else:
+#         return os.path.join(os.path.expanduser("~"), ".config")
+
+
 def user_config_path(safe=True):
     """
     @param safe: If set, auto-create the path if it doesn't exist
@@ -194,13 +210,6 @@ def user_config_path(safe=True):
     if safe:
         os.makedirs(p, exist_ok=True)
     return p
-#     if platform.system() == "Darwin":
-#         return os.path.join(os.path.expanduser("~"), "Library", "Preferences")
-#     elif platform.system() == "Windows":
-#         return os.path.join(os.path.expanduser("~"), "AppData", "Local")
-#     else:
-#         # Assume a Linux-like system
-#         return os.path.join(os.path.expanduser("~"), ".config")
 
 
 def user_download_path(safe=True):
@@ -213,13 +222,6 @@ def user_download_path(safe=True):
     if safe:
         os.makedirs(p, exist_ok=True)
     return p
-#     if platform.system() == "Darwin":
-#         return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "pyweed_data")
-#     elif platform.system() == "Windows":
-#         return os.path.join(os.path.expanduser("~"), "AppData", "Local", "pyweed_data")
-#     else:
-#         # Assume a Linux-like system
-#         return os.path.join(os.path.expanduser("~"), ".config", "pyweed_data")
 
 
 def user_save_path(safe=False):
@@ -232,13 +234,6 @@ def user_save_path(safe=False):
     if safe:
         os.makedirs(p, exist_ok=True)
     return p
-#     if platform.system() == "Darwin":
-#         return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
-#     elif platform.system() == "Windows":
-#         return os.path.join(os.path.expanduser("~"), "Documents", "pyweed")
-#     else:
-#         # Assume a Linux-like system
-#         return os.path.join(os.path.expanduser("~"), "Downloads", "pyweed")
 
 
 # ------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_EventOptionsWidget(object):
     def setupUi(self, EventOptionsWidget):
         EventOptionsWidget.setObjectName("EventOptionsWidget")
-        EventOptionsWidget.resize(265, 641)
+        EventOptionsWidget.resize(266, 641)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -366,9 +366,9 @@ class Ui_EventOptionsWidget(object):
     def retranslateUi(self, EventOptionsWidget):
         _translate = QtCore.QCoreApplication.translate
         self.timeGroupBox.setTitle(_translate("EventOptionsWidget", "Time"))
-        self.starttimeLabel.setText(_translate("EventOptionsWidget", "min"))
+        self.starttimeLabel.setText(_translate("EventOptionsWidget", "start"))
         self.starttimeDateTimeEdit.setDisplayFormat(_translate("EventOptionsWidget", "yyyy-MM-dd hh:mm:ss"))
-        self.endtimeLabel.setText(_translate("EventOptionsWidget", "max"))
+        self.endtimeLabel.setText(_translate("EventOptionsWidget", "end"))
         self.endtimeDateTimeEdit.setDisplayFormat(_translate("EventOptionsWidget", "yyyy-MM-dd hh:mm:ss"))
         self.time30DaysToolButton.setText(_translate("EventOptionsWidget", "Last 30 days"))
         self.time1YearToolButton.setText(_translate("EventOptionsWidget", "Last year"))
@@ -390,7 +390,7 @@ class Ui_EventOptionsWidget(object):
         self.locationGlobalRadioButton.setText(_translate("EventOptionsWidget", "Global"))
         self.locationRangeRadioButton.setText(_translate("EventOptionsWidget", "Within lat/lon box"))
         self.drawLocationRangeToolButton.setText(_translate("EventOptionsWidget", "Draw on map"))
-        self.locationDistanceFromPointRadioButton.setText(_translate("EventOptionsWidget", "Distance from point"))
+        self.locationDistanceFromPointRadioButton.setText(_translate("EventOptionsWidget", "Degrees from point"))
         self.label_10.setText(_translate("EventOptionsWidget", "min"))
         self.label_17.setText(_translate("EventOptionsWidget", "max"))
         self.label_21.setText(_translate("EventOptionsWidget", "lat"))
