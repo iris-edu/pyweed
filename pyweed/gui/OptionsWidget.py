@@ -19,6 +19,13 @@ LOGGER = logging.getLogger(__name__)
 class BaseOptionsWidget(QtWidgets.QDialog):
     """
     Base functionality for the EventOptionsWidget and StationOptionsWidget.
+
+    Note that much of this is a (terribly misguided?) attempt to manage the
+    Qt widget states in a systematic way.
+
+    In particular, this attempts to manage an options object held by PyWeedCore,
+    which is not only Pythonic but has its own peculiar semantics, so we are
+    translating through like 5 layers of interface here.
     """
 
     # We want to watch for changes in the widget inputs, but every type of input has a different one so
@@ -190,6 +197,7 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Put the current set of options into the mapped inputs
         """
+        # Prevent the individual inputs from signaling a change
         self.updating = True
         # Get a dictionary of stringified options values
         for key, value in self.optionsToInputs(self.options.get_options(stringify=True)).items():
@@ -197,7 +205,10 @@ class BaseOptionsWidget(QtWidgets.QDialog):
                 self.setInputValue(key, value)
             except Exception as e:
                 LOGGER.warning("Unable to set input value for %s: %s", key, e)
+        # Restore signaling
         self.updating = False
+        # Make one signal for the whole update
+        self.changed.emit('options')
 
     def optionsToInputs(self, values):
         """
@@ -228,10 +239,15 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         Copy the time options from event_options/station_options
         """
         LOGGER.info("Copying time")
+        # Get the options from the other widget
         time_options = self.otherOptions.get_time_options()
+        # Add the radio choice state
         time_options.update(self.otherOptions.get_options(['time_choice']))
+        # Set the options
         self.options.set_options(time_options)
+        # Update the widgets
         self.setOptions()
+        # Send notifications
         self.changed.emit('time_choice')
 
     def copyLocationOptions(self):
@@ -239,12 +255,17 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         Copy the location options from event_options/station_options
         """
         LOGGER.info("Copying location")
+        # Get the options from the other widget
         loc_options = self.otherOptions.get_location_options()
+        # Add the radio choice state
         loc_options.update(self.otherOptions.get_options(['location_choice']))
+        # Set the options
         self.options.set_options(loc_options)
         LOGGER.debug("Settings options: %s", loc_options)
+        # Update the widgets
         self.setOptions()
         LOGGER.debug("New options: %s", self.options)
+        # Send notifications
         self.changed.emit('location_choice')
         self.changedCoords.emit('location_choice')
 

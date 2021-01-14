@@ -270,11 +270,13 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
                     'longitude': lon,
                     'maxradius': dist
                 }
-            # Set event or station options
+            # Set event or station options (and ugly event emitter)
             if 'events' in event.mode:
                 self.pyweed.set_event_options(options)
+                self.eventOptionsWidget.changedCoords.emit(event.mode)
             elif 'stations' in event.mode:
                 self.pyweed.set_station_options(options)
+                self.stationOptionsWidget.changedCoords.emit(event.mode)
 
     def getEvents(self):
         """
