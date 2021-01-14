@@ -139,6 +139,7 @@ class Options(object, metaclass=OptionsMeta):
         """
         Set all the options in the given dictionary
         """
+        LOGGER.debug("Set options: %s", options)
         for k, v in options.items():
             if k in self._options:
                 setattr(self, k, v)
@@ -162,6 +163,7 @@ class Options(object, metaclass=OptionsMeta):
                         options[attr] = option.to_string(value)
                     else:
                         options[attr] = value
+        LOGGER.debug("get_options: %s", options)
         return options
 
     def keys(self, hidden=True):

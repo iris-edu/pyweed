@@ -38,6 +38,8 @@ class BaseOptionsWidget(QtWidgets.QDialog):
     changedCoords = QtCore.pyqtSignal(object)
     # Map of the individual inputs by name
     inputs = None
+    # Flag indicating we are batch updating (ie. don't do per-input events)
+    updating = False
 
     def __init__(self, parent, options, otherOptions, dockWidget, toggleButton):
         super(BaseOptionsWidget, self).__init__(parent=parent)
@@ -66,8 +68,8 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         self.connectInputs()
 
         # Hook up the shortcut buttons
-        self.time30DaysPushButton.clicked.connect(self.setTime30Days)
-        self.time1YearPushButton.clicked.connect(self.setTime1Year)
+        self.time30DaysToolButton.clicked.connect(self.setTime30Days)
+        self.time1YearToolButton.clicked.connect(self.setTime1Year)
 
         # Hook up the copy buttons
         self.get_timeFromOtherButton().clicked.connect(self.copyTimeOptions)
@@ -115,14 +117,15 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Called when any input is changed
         """
-        LOGGER.debug("Input changed: %s" % key)
-        # Update the core options object
-        self.options.set_options(self.getOptions())
-        # Emit a change event
-        self.changed.emit(key)
-        # Emit a coordinate change event if appropriate
-        if self.isCoordinateInput(key):
-            self.changedCoords.emit(key)
+        LOGGER.info("Input changed: %s (%s)", key, self.updating)
+        if not self.updating:
+            # Update the core options object
+            self.options.set_options(self.getOptions())
+            # Emit a change event
+            self.changed.emit(key)
+            # Emit a coordinate change event if appropriate
+            if self.isCoordinateInput(key):
+                self.changedCoords.emit(key)
 
     def isCoordinateInput(self, key):
         """
@@ -187,12 +190,14 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Put the current set of options into the mapped inputs
         """
+        self.updating = True
         # Get a dictionary of stringified options values
         for key, value in self.optionsToInputs(self.options.get_options(stringify=True)).items():
             try:
                 self.setInputValue(key, value)
             except Exception as e:
                 LOGGER.warning("Unable to set input value for %s: %s", key, e)
+        self.updating = False
 
     def optionsToInputs(self, values):
         """
@@ -237,7 +242,9 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         loc_options = self.otherOptions.get_location_options()
         loc_options.update(self.otherOptions.get_options(['location_choice']))
         self.options.set_options(loc_options)
+        LOGGER.debug("Settings options: %s", loc_options)
         self.setOptions()
+        LOGGER.debug("New options: %s", self.options)
         self.changed.emit('location_choice')
         self.changedCoords.emit('location_choice')
 
