@@ -107,7 +107,7 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
         self.waveformsDialog.loadWaveformChoices()
 
     ###############
-    # Summary
+    # Load/Save Summary
     ###############
 
     def saveSummary(self):
@@ -179,9 +179,10 @@ class PyWeedGUI(PyWeedCore, QtCore.QObject):
 
         viewMenu = mainMenu.addMenu('View')
 
-        showConsoleAction = QtWidgets.QAction("Show Python Console", self)
-        showConsoleAction.triggered.connect(self.console.show)
-        viewMenu.addAction(showConsoleAction)
+        if ConsoleDialog.enabled:
+            showConsoleAction = QtWidgets.QAction("Show Python Console", self)
+            showConsoleAction.triggered.connect(self.console.show)
+            viewMenu.addAction(showConsoleAction)
 
         showLogsAction = QtWidgets.QAction("Show Logs", self)
         showLogsAction.triggered.connect(self.loggingDialog.show)

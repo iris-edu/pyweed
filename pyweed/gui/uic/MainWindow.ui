@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1037</width>
-    <height>594</height>
+    <width>523</width>
+    <height>336</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QSplitter" name="splitter">
+     <widget class="QSplitter" name="centralSplitter">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
@@ -53,7 +53,14 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="MyQt4MplCanvas" name="mapCanvas" native="true"/>
+         <widget class="MyQt4MplCanvas" name="mapCanvas" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>50</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -147,7 +154,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QSplitter" name="splitter_2">
+         <widget class="QSplitter" name="eventStationSplitter">
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
           </property>
@@ -244,6 +251,13 @@
                <widget class="QLabel" name="eventSelectionLabel">
                 <property name="text">
                  <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="allEventSelectionButton">
+                <property name="text">
+                 <string>Select All</string>
                 </property>
                </widget>
               </item>
@@ -345,6 +359,13 @@
                <widget class="QLabel" name="stationSelectionLabel">
                 <property name="text">
                  <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="allStationSelectionButton">
+                <property name="text">
+                 <string>Select All</string>
                 </property>
                </widget>
               </item>

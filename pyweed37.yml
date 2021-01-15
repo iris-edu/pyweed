@@ -1,0 +1,12 @@
+name: pyweed37
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.7
+- basemap
+- matplotlib
+- obspy=1.2
+- pillow
+- pyqt=5.9
+- pyproj

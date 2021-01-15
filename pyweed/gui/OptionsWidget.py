@@ -19,11 +19,25 @@ LOGGER = logging.getLogger(__name__)
 class BaseOptionsWidget(QtWidgets.QDialog):
     """
     Base functionality for the EventOptionsWidget and StationOptionsWidget.
+
+    Note that much of this is a (terribly misguided?) attempt to manage the
+    Qt widget states in a systematic way.
+
+    In particular, this attempts to manage an options object held by PyWeedCore,
+    which is not only Pythonic but has its own peculiar semantics, so we are
+    translating through like 5 layers of interface here.
     """
 
     # We want to watch for changes in the widget inputs, but every type of input has a different one so
     # we need to try a bunch of options
-    INPUT_CHANGE_SIGNALS = ('valueChanged', 'textChanged', 'dateTimeChanged', 'clicked',)
+    INPUT_CHANGE_SIGNALS = (
+        'valueChanged',
+        'textChanged',
+        'dateTimeChanged',
+        'clicked',
+        'location_choice',
+        'time_choice',
+    )
 
     # Signal to indicate that the options have changed
     changed = QtCore.pyqtSignal(object)
@@ -31,6 +45,8 @@ class BaseOptionsWidget(QtWidgets.QDialog):
     changedCoords = QtCore.pyqtSignal(object)
     # Map of the individual inputs by name
     inputs = None
+    # Flag indicating we are batch updating (ie. don't do per-input events)
+    updating = False
 
     def __init__(self, parent, options, otherOptions, dockWidget, toggleButton):
         super(BaseOptionsWidget, self).__init__(parent=parent)
@@ -59,8 +75,8 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         self.connectInputs()
 
         # Hook up the shortcut buttons
-        self.time30DaysPushButton.clicked.connect(self.setTime30Days)
-        self.time1YearPushButton.clicked.connect(self.setTime1Year)
+        self.time30DaysToolButton.clicked.connect(self.setTime30Days)
+        self.time1YearToolButton.clicked.connect(self.setTime1Year)
 
         # Hook up the copy buttons
         self.get_timeFromOtherButton().clicked.connect(self.copyTimeOptions)
@@ -108,14 +124,15 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Called when any input is changed
         """
-        LOGGER.debug("Input changed: %s" % key)
-        # Update the core options object
-        self.options.set_options(self.getOptions())
-        # Emit a change event
-        self.changed.emit(key)
-        # Emit a coordinate change event if appropriate
-        if self.isCoordinateInput(key):
-            self.changedCoords.emit(key)
+        LOGGER.info("Input changed: %s (%s)", key, self.updating)
+        if not self.updating:
+            # Update the core options object
+            self.options.set_options(self.getOptions())
+            # Emit a change event
+            self.changed.emit(key)
+            # Emit a coordinate change event if appropriate
+            if self.isCoordinateInput(key):
+                self.changedCoords.emit(key)
 
     def isCoordinateInput(self, key):
         """
@@ -180,12 +197,18 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Put the current set of options into the mapped inputs
         """
+        # Prevent the individual inputs from signaling a change
+        self.updating = True
         # Get a dictionary of stringified options values
         for key, value in self.optionsToInputs(self.options.get_options(stringify=True)).items():
             try:
                 self.setInputValue(key, value)
             except Exception as e:
                 LOGGER.warning("Unable to set input value for %s: %s", key, e)
+        # Restore signaling
+        self.updating = False
+        # Make one signal for the whole update
+        self.changed.emit('options')
 
     def optionsToInputs(self, values):
         """
@@ -215,22 +238,34 @@ class BaseOptionsWidget(QtWidgets.QDialog):
         """
         Copy the time options from event_options/station_options
         """
-        LOGGER.info("Copying time to %s" % self.__class__)
+        LOGGER.info("Copying time")
+        # Get the options from the other widget
         time_options = self.otherOptions.get_time_options()
+        # Add the radio choice state
         time_options.update(self.otherOptions.get_options(['time_choice']))
+        # Set the options
         self.options.set_options(time_options)
+        # Update the widgets
         self.setOptions()
+        # Send notifications
         self.changed.emit('time_choice')
 
     def copyLocationOptions(self):
         """
         Copy the location options from event_options/station_options
         """
-        LOGGER.info("Copying location to %s" % self.__class__)
+        LOGGER.info("Copying location")
+        # Get the options from the other widget
         loc_options = self.otherOptions.get_location_options()
+        # Add the radio choice state
         loc_options.update(self.otherOptions.get_options(['location_choice']))
+        # Set the options
         self.options.set_options(loc_options)
+        LOGGER.debug("Settings options: %s", loc_options)
+        # Update the widgets
         self.setOptions()
+        LOGGER.debug("New options: %s", self.options)
+        # Send notifications
         self.changed.emit('location_choice')
         self.changedCoords.emit('location_choice')
 

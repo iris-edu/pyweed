@@ -172,7 +172,9 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         # Table selection
         self.eventsTable.itemSelectionChanged.connect(self.onEventSelectionChanged)
         self.stationsTable.itemSelectionChanged.connect(self.onStationSelectionChanged)
+        self.allEventSelectionButton.clicked.connect(self.selectAllEvents)
         self.clearEventSelectionButton.clicked.connect(self.eventsTable.clearSelection)
+        self.allStationSelectionButton.clicked.connect(self.selectAllStations)
         self.clearStationSelectionButton.clicked.connect(self.stationsTable.clearSelection)
 
         # Main window buttons
@@ -181,9 +183,18 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.getWaveformsButton.clicked.connect(self.getWaveforms)
 
         # Size and placement according to preferences
-        self.resize(
+        self.setGeometry(
+            safe_int(prefs.MainWindow.x, 50),
+            safe_int(prefs.MainWindow.y, 50),
             safe_int(prefs.MainWindow.width, 1000),
-            safe_int(prefs.MainWindow.height, 800))
+            safe_int(prefs.MainWindow.height, 800),
+        )
+        map_height = safe_int(prefs.MainWindow.mapHeight, 300)
+        # We can't actually set this for various reasons, it's just a scaled value for the splitter
+        self.centralSplitter.setSizes([
+            map_height,
+            800 - map_height,
+        ])
         self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
         self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
 
@@ -259,11 +270,13 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
                     'longitude': lon,
                     'maxradius': dist
                 }
-            # Set event or station options
+            # Set event or station options (and ugly event emitter)
             if 'events' in event.mode:
                 self.pyweed.set_event_options(options)
+                self.eventOptionsWidget.changedCoords.emit(event.mode)
             elif 'stations' in event.mode:
                 self.pyweed.set_station_options(options)
+                self.stationOptionsWidget.changedCoords.emit(event.mode)
 
     def getEvents(self):
         """
@@ -479,7 +492,19 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
     def savePreferences(self):
         prefs = self.pyweed.preferences
 
-        prefs.MainWindow.width = self.width()
-        prefs.MainWindow.height = self.height()
+        geometry = self.geometry()
+        if geometry:
+            prefs.MainWindow.x = geometry.x()
+            prefs.MainWindow.y = geometry.y()
+            prefs.MainWindow.width = geometry.width()
+            prefs.MainWindow.height = geometry.height()
+
+        # We can't actually set the splitter size, just do it as scaled value
+        splitterSizes = self.centralSplitter.sizes()
+        if len(splitterSizes) > 1:
+            prefs.MainWindow.mapHeight = int(
+                (splitterSizes[0] * 800) / (splitterSizes[0] + splitterSizes[1])
+            )
+
         prefs.MainWindow.eventOptionsFloat = bool_to_str(self.eventOptionsDockWidget.isFloating())
         prefs.MainWindow.stationOptionsFloat = bool_to_str(self.stationOptionsDockWidget.isFloating())

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>302</width>
-    <height>682</height>
+    <width>266</width>
+    <height>671</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,96 +21,21 @@
     <number>4</number>
    </property>
    <item>
-    <widget class="QGroupBox" name="SNCLGroupBox">
-     <property name="title">
-      <string>SNCL</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
-      <item>
-       <layout class="QFormLayout" name="formLayout">
-        <property name="fieldGrowthPolicy">
-         <enum>QFormLayout::FieldsStayAtSizeHint</enum>
-        </property>
-        <property name="formAlignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-        </property>
-        <property name="horizontalSpacing">
-         <number>4</number>
-        </property>
-        <property name="verticalSpacing">
-         <number>1</number>
-        </property>
-        <item row="0" column="0">
-         <widget class="QLabel" name="networkLabel">
-          <property name="text">
-           <string>Networks</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="networkLineEdit">
-          <property name="text">
-           <string>_GSN</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="stationLineEdit">
-          <property name="text">
-           <string>*</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="locationLabel">
-          <property name="text">
-           <string>Locations</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLineEdit" name="locationLineEdit">
-          <property name="text">
-           <string>*</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="channelLabel">
-          <property name="text">
-           <string>Channels</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLineEdit" name="channelLineEdit">
-          <property name="text">
-           <string>?HZ</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="stationLabel">
-          <property name="text">
-           <string>Stations</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="timeGroupBox">
      <property name="title">
       <string>Time</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="leftMargin">
+       <number>4</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
        <number>4</number>
       </property>
       <property name="bottomMargin">
@@ -138,7 +63,7 @@
           <item row="0" column="0">
            <widget class="QLabel" name="starttimeLabel">
             <property name="text">
-             <string>Start</string>
+             <string>start</string>
             </property>
            </widget>
           </item>
@@ -167,7 +92,7 @@
           <item row="1" column="0">
            <widget class="QLabel" name="endtimeLabel">
             <property name="text">
-             <string>End</string>
+             <string>end</string>
             </property>
            </widget>
           </item>
@@ -198,18 +123,34 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
           <item>
-           <widget class="QPushButton" name="time30DaysPushButton">
+           <widget class="QToolButton" name="time30DaysToolButton">
             <property name="text">
              <string>Last 30 days</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="time1YearPushButton">
+           <widget class="QToolButton" name="time1YearToolButton">
             <property name="text">
              <string>Last year</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Expanding</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -231,9 +172,111 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>&gt;&gt; Copy Time Range from Event Options</string>
+         <string>&gt;&gt; Copy from Event Options</string>
         </property>
        </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="SNCLGroupBox">
+     <property name="title">
+      <string>SNCL</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <property name="leftMargin">
+       <number>4</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
+       <number>4</number>
+      </property>
+      <property name="bottomMargin">
+       <number>4</number>
+      </property>
+      <item>
+       <layout class="QFormLayout" name="formLayout">
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::ExpandingFieldsGrow</enum>
+        </property>
+        <property name="formAlignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="horizontalSpacing">
+         <number>4</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>1</number>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="networkLabel">
+          <property name="text">
+           <string>net</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="networkLineEdit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>_GSN</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="stationLineEdit">
+          <property name="text">
+           <string>*</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="locationLabel">
+          <property name="text">
+           <string>loc</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="locationLineEdit">
+          <property name="text">
+           <string>*</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="channelLabel">
+          <property name="text">
+           <string>cha</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="channelLineEdit">
+          <property name="text">
+           <string>?HZ</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="stationLabel">
+          <property name="text">
+           <string>sta</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -245,6 +288,15 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="leftMargin">
+       <number>4</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
        <number>4</number>
       </property>
       <property name="bottomMargin">
@@ -310,26 +362,29 @@
             </property>
            </spacer>
           </item>
-          <item>
-           <widget class="QToolButton" name="drawLocationRangeToolButton">
-            <property name="text">
-             <string>Draw on map</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0">
           <property name="spacing">
            <number>0</number>
           </property>
           <property name="leftMargin">
-           <number>24</number>
+           <number>12</number>
           </property>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_7">
             <property name="spacing">
@@ -451,6 +506,16 @@
               </item>
              </layout>
             </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="drawLocationRangeToolButton">
+              <property name="text">
+               <string>Draw on map</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -493,7 +558,7 @@
              <bool>true</bool>
             </property>
             <property name="text">
-             <string>Distance from point</string>
+             <string>Degrees from point</string>
             </property>
            </widget>
           </item>
@@ -513,16 +578,6 @@
             </property>
            </spacer>
           </item>
-          <item>
-           <widget class="QToolButton" name="drawDistanceFromPointToolButton">
-            <property name="text">
-             <string>Draw on map</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
         <item>
@@ -531,7 +586,7 @@
            <number>0</number>
           </property>
           <property name="leftMargin">
-           <number>24</number>
+           <number>12</number>
           </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -542,13 +597,20 @@
              <enum>QLayout::SetDefaultConstraint</enum>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_14">
+             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,0,0,0">
               <property name="spacing">
                <number>4</number>
               </property>
               <property name="sizeConstraint">
                <enum>QLayout::SetDefaultConstraint</enum>
               </property>
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>min</string>
+                </property>
+               </widget>
+              </item>
               <item>
                <widget class="QDoubleSpinBox" name="distanceFromPointMinRadiusDoubleSpinBox">
                 <property name="minimum">
@@ -560,9 +622,9 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_2">
+               <widget class="QLabel" name="label_5">
                 <property name="text">
-                 <string>-</string>
+                 <string>max</string>
                 </property>
                </widget>
               </item>
@@ -576,50 +638,17 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QLabel" name="label_8">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>degrees</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_15">
+             <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="1,0,0,0">
               <property name="spacing">
                <number>4</number>
               </property>
               <item>
                <widget class="QLabel" name="label_6">
                 <property name="text">
-                 <string>from</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QDoubleSpinBox" name="distanceFromPointEastDoubleSpinBox">
-                <property name="minimum">
-                 <double>-180.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>180.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_14">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>E</string>
+                 <string>lat</string>
                 </property>
                </widget>
               </item>
@@ -634,13 +663,33 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_7">
+               <widget class="QLabel" name="label_12">
                 <property name="text">
-                 <string>N</string>
+                 <string>lon</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="distanceFromPointEastDoubleSpinBox">
+                <property name="minimum">
+                 <double>-180.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>180.000000000000000</double>
                 </property>
                </widget>
               </item>
              </layout>
+            </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="drawDistanceFromPointToolButton">
+              <property name="text">
+               <string>Draw on map</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -687,7 +736,7 @@
              <bool>true</bool>
             </property>
             <property name="text">
-             <string>Distance from selected events</string>
+             <string>Degrees from selected events</string>
             </property>
            </widget>
           </item>
@@ -699,7 +748,7 @@
            <number>0</number>
           </property>
           <property name="leftMargin">
-           <number>24</number>
+           <number>12</number>
           </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -707,13 +756,20 @@
              <number>1</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_16">
+             <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,0,0,0">
               <property name="spacing">
                <number>4</number>
               </property>
               <property name="sizeConstraint">
                <enum>QLayout::SetDefaultConstraint</enum>
               </property>
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>min</string>
+                </property>
+               </widget>
+              </item>
               <item>
                <widget class="QDoubleSpinBox" name="distanceFromEventsMinDoubleSpinBox">
                 <property name="minimum">
@@ -725,9 +781,9 @@
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_3">
+               <widget class="QLabel" name="label_14">
                 <property name="text">
-                 <string>-</string>
+                 <string>max</string>
                 </property>
                </widget>
               </item>
@@ -738,19 +794,6 @@
                 </property>
                 <property name="maximum">
                  <double>180.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_9">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>degrees</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
                 </property>
                </widget>
               </item>
@@ -778,30 +821,30 @@
         </item>
        </layout>
       </item>
-      <item>
-       <widget class="Line" name="line_5">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QToolButton" name="locationFromEventsToolButton">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>&gt;&gt; Copy Location from Event Options</string>
-        </property>
-       </widget>
-      </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_5">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="locationFromEventsToolButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>&gt;&gt; Copy from Event Options</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -826,8 +869,6 @@
   <tabstop>channelLineEdit</tabstop>
   <tabstop>starttimeDateTimeEdit</tabstop>
   <tabstop>endtimeDateTimeEdit</tabstop>
-  <tabstop>timeFromEventsToolButton</tabstop>
-  <tabstop>locationFromEventsToolButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>
