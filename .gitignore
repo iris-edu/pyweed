@@ -5,7 +5,10 @@
 # wingIDE files
 *.wpr
 *.wpu
+
+# build products
 obspy
 build
 dist
 *.app
+pyweed.egg-info

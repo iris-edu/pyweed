@@ -7,5 +7,6 @@ dependencies:
 - basemap
 - matplotlib
 - obspy=1.2
+- pillow
 - pyqt=5.9
 - pyproj
