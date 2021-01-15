@@ -4,6 +4,7 @@ These are instructions for releasing a new version of PyWEED to [conda-forge](ht
 
 Some helpful links:
 
+* <https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html>
 * <https://packaging.python.org/tutorials/distributing-packages/>
 * <https://enterprise-docs.anaconda.com/en/latest/data-science-workflows/packages/build.html>
 
