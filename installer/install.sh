@@ -30,7 +30,7 @@ echo "Looking for Anaconda installation"
 export PATH="$PATH:$CONDA_INSTALL_PATH/bin"
 hash -r
 
-conda info > /dev/null 2>&1
+CONDA_VER=`conda -V` 2>/dev/null
 if (( $? )); then
   echo "
 Anaconda Python not found, do you want to install it? [yes|no]
@@ -51,8 +51,18 @@ Anaconda Python not found, do you want to install it? [yes|no]
 
   # Useful for debugging any issues with conda
   conda info -a
+
+  # Update the version
+  CONDA_VER=`conda -V` 2>/dev/null
 else
   echo "Found Anaconda at" `conda info --root`
+fi
+
+# Environment activation command changed in 4.4
+if [[ $CONDA_VER > 'conda 4.4' ]]; then
+  ACTIVATE_CMD='conda'
+else
+  ACTIVATE_CMD='source'
 fi
 
 ###
@@ -80,7 +90,7 @@ Install PyWEED to /Applications folder? [yes|no]
     echo "Skipping application bundle"
   else
     echo "Creating Mac app bundle"
-    source activate pyweed
+    $ACTIVATE_CMD activate pyweed
     hash -r
     pyweed_build_launcher
     # Move the old version out of the way if necessary
@@ -90,15 +100,18 @@ Install PyWEED to /Applications folder? [yes|no]
     fi
     mv -f $PWD/PyWEED.app /Applications/
     echo "Installed to /Applications/PyWEED.app"
+    # We need to deactivate the environment, or we may get an error
+    # later when we try to activate it again.
+    $ACTIVATE_CMD deactivate
   fi
 fi
 
 ###
 # User instructions
 
-source activate pyweed
+$ACTIVATE_CMD activate pyweed
 BIN=`command -v pyweed`
-if [[ $BIN != '' ]]; then 
+if [[ $BIN != '' ]]; then
   echo "
 You can launch PyWEED from the command line by calling:
 
