@@ -35,12 +35,12 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
 
         self.eventDataCenterAdapter = ComboBoxAdapter(
             self.eventDataCenterComboBox,
-            [(dc, URL_MAPPINGS[dc]) for dc in dcs]
+            [(dc, f"{dc} - {URL_MAPPINGS[dc]}") for dc in dcs]
         )
 
         self.stationDataCenterAdapter = ComboBoxAdapter(
             self.stationDataCenterComboBox,
-            [(dc, URL_MAPPINGS[dc]) for dc in dcs]
+            [(dc, f"{dc} - {URL_MAPPINGS[dc]}") for dc in dcs]
         )
 
         self.okButton.pressed.connect(self.accept)
