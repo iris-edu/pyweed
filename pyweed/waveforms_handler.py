@@ -455,6 +455,7 @@ class WaveformsHandler(SignalingObject):
         tr = SACTrace.from_obspy_trace(st[0])
         tr.kevnm = waveform.event_description[:16]
         event = waveform.event_ref()
+        origin = None
         if not event:
             LOGGER.warn("Lost reference to event %s", waveform.event_description)
         else:
@@ -482,6 +483,9 @@ class WaveformsHandler(SignalingObject):
             tr.cmpaz = channel.azimuth
             tr.cmpinc = channel.dip + 90
             tr.kinst = channel.sensor.description[:8]
+        if origin and channel:
+            # Calculate distances/azimuths
+            tr.lcalda = True
         return Stream([tr.to_obspy_trace()])
 
 
