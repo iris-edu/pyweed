@@ -19,6 +19,9 @@ __[User Guide](UserGuide/index.md)__
 
 __[Support](Support.md)__
 
+
+Please send comments/problems to [data-help@earthscope.org](data-help@earthscope.org).
+
 ---
 
 [Developer Docs](Developer.md)
