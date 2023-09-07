@@ -31,7 +31,7 @@ and all associated dependencies from [conda-forge](https://github.com/conda-forg
 __Mac/Linux__
 
 ```
-source activate pyweed
+conda activate pyweed
 pyweed
 ```
 
@@ -66,7 +66,7 @@ or launch bar.
 __Mac__
 
 ```
-source activate pyweed
+conda activate pyweed
 pyweed_build_launcher
 mv PyWEED.app /Applications/
 ```
@@ -78,3 +78,21 @@ activate pyweed
 pyweed_build_launcher
 move PyWEED.bat Desktop
 ```
+
+## Source Code
+
+Clone the PyWEED repository with:
+
+```
+git clone https://github.com/iris-edu/pyweed.git
+```
+
+or [download as a zip file](https://github.com/iris-edu/pyweed/archive/master.zip) and unzip into a `pyweed` directory.
+
+```
+conda activate pyweed
+cd pyweed
+python run_pyweed.py
+```
+
+
