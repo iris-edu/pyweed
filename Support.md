@@ -18,4 +18,4 @@ should install the correct package.
 
 ## Contact
 
-If you see a problem, please email [pyweed@iris.washington.edu](pyweed@iris.washington.edu) or [file a ticket](https://github.com/iris-edu/pyweed/issues).
+If you see a problem, please email [data-help@earthscope.org](data-help@earthscope.org) or [file a ticket](https://github.com/iris-edu/pyweed/issues).
