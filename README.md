@@ -19,8 +19,6 @@ __[User Guide](UserGuide/index.md)__
 
 __[Support](Support.md)__
 
-Please send comments/problems to [pyweed-help@lists.ds.iris.edu](pyweed-help@lists.ds.iris.edu).
-
 ---
 
 [Developer Docs](Developer.md)
