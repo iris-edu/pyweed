@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyweed"
+dynamic = ["version"]
+authors = [{ name = "Adam Clark", email = "adam.clark@earthscope.org" }]
+description = "A GUI application for discovering and downloading seismic data"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Environment :: MacOS X",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy",
+    "basemap",
+    "matplotlib",
+    "obspy<1.4",
+    "pillow",
+    "pyqt5",
+    "pyproj",
+]
+keywords = ["FDSN", "EarthScope", "miniSEED", "earthquake", "seismic data"]
+
+[project.scripts]
+pyweed_build_launcher = "pyweed.build_launcher:build"
+
+[project.gui-scripts]
+pyweed = "pyweed.pyweed_launcher:launch"
+
+[tool.setuptools.dynamic]
+version = { attr = "pyweed.__version__" }
