@@ -1,5 +1,9 @@
 # Support
 
+## PyWEED crashes on startup
+
+The most common reason is a problem in the configuration file. This is located at `~/.pyweed/pyweed.ini`. If you move or delete it, PyWEED will recreate a fresh version the next time it starts.
+
 ## Install problems
 
 Far and away the most common problem is library mismatches -- some of the libraries that PyWEED uses (ObsPy and Qt most notably) bring in a wide mix of their own dependencies, resulting in a complex mix of library versions.
@@ -11,9 +15,11 @@ This can be addressed by specifying PyWEED's direct dependencies in more granula
 #### ImportError: cannot import name 'dedent' from 'matplotlib.cbook'
 
 See [#119](https://github.com/iris-edu/pyweed/issues/119) -- in an existing environment running
+
 ```
 conda install matplotlib=3.2
 ```
+
 should install the correct package.
 
 ## Contact
