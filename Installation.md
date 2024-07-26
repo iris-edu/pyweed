@@ -9,7 +9,7 @@ PyWEED is most reliably installed using [conda](https://conda.io/docs/):
 conda install -c conda-forge pyweed
 ```
 
-For best results, create a dedicated environment:
+For best results, create a dedicated environment (see [Miniconda](#miniconda) below):
 
 ```
 conda create -n pyweed -c conda-forge pyweed
@@ -40,23 +40,13 @@ pyweed
 This produces a small application that will launch PyWEED when clicked, suitable for adding to your Desktop
 or launch bar.
 
-**Mac**
-
 ```
-conda activate pyweed
 pyweed_build_launcher
-mv PyWEED.app /Applications/
 ```
 
-**Windows**
+This generates an application launcher -- `PyWEED.app` on Mac or `PyWEED.bat` on Windows -- that can be moved around and double-clicked.
 
-```
-activate pyweed
-pyweed_build_launcher
-move PyWEED.bat Desktop
-```
-
-### Installing Anaconda/Miniconda
+### Miniconda
 
 This is a Python package manager. Miniconda is a lighter version of Anaconda, and is recommended.
 
