@@ -58,11 +58,11 @@ move PyWEED.bat Desktop
 
 ### Installing Anaconda/Miniconda
 
-This is the conda package manager. Miniconda is a lighter version of Anaconda, and is recommended.
+This is a Python package manager. Miniconda is a lighter version of Anaconda, and is recommended.
 
 **[Miniconda Installers](https://conda.io/miniconda.html)**
 
-(PyWEED requires **Python 3.11** or below!)
+(**NOTE** PyWEED requires **Python 3.11** or below!)
 
 **Mac/Linux**: the installation process should put the `conda` command in your shell `PATH`.  
 **Windows**: launch the Anaconda Prompt application installed by Miniconda for the next steps.
