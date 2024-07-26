@@ -4,7 +4,7 @@
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyweed/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/pyweed)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyweed/badges/platforms.svg)](https://anaconda.org/conda-forge/pyweed)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyweed/badges/license.svg)](https://anaconda.org/conda-forge/pyweed)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyweed/badges/installer/conda.svg)](https://conda.anaconda.org/conda-forge)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyweed/badges/downloads.svg)](https://conda.anaconda.org/conda-forge)
 
 PyWEED is an application for retrieving event-based seismic data.
 
