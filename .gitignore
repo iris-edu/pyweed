@@ -1,0 +1,8 @@
+# source
+pyweed
+# build products
+obspy
+build
+dist
+*.app
+pyweed.egg-info
