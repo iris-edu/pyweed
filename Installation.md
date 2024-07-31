@@ -1,8 +1,5 @@
 # PyWEED Installation
 
-**Not compatible with Python 3.12**  
-Currently (2024-07-26) PyWEED cannot run under Python 3.12, due to unavailable dependencies.
-
 PyWEED is most reliably installed using [conda](https://conda.io/docs/):
 
 ```
@@ -12,7 +9,7 @@ conda install -c conda-forge pyweed
 For best results, create a dedicated environment (see [Miniconda](#miniconda) below):
 
 ```
-conda create -n pyweed -c conda-forge pyweed
+conda create -n pyweed -c conda-forge python=3.11 pyweed
 ```
 
 It can also be installed via pip, although you may need system libraries for some dependencies:
@@ -21,7 +18,25 @@ It can also be installed via pip, although you may need system libraries for som
 pip install pyweed
 ```
 
+## Issues
+
 Some troubleshooting information can be found in [Support](Support.md).
+
+### Not compatible with Python 3.12
+
+Currently (2024-07-26) PyWEED cannot run under Python 3.12, due to unavailable dependencies. You can create a Python 3.11 environment in `conda` with:
+
+```
+conda create -n pyweed -c conda-forge python=3.11
+```
+
+### Mac silicon (osx_arm64) requires intel compatible mode
+
+Currently (2024-07-26) PyWEED is not available in the conda-forge `osx-arm64` channel. You can create an environment tied to the (working) `osx-64` channel like:
+
+```
+conda create -n pyweed -c conda-forge --subdir osx-64 python=3.11
+```
 
 ## Running PyWEED
 
