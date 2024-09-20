@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function)
 
 import os
 from obspy import UTCDateTime
+from pyweed.preferences import safe_int
 from pyweed.signals import SignalingThread, SignalingObject
 import collections
 from PyQt5 import QtCore, QtGui
@@ -29,8 +30,6 @@ from obspy.core.stream import Stream
 import concurrent.futures
 
 LOGGER = getLogger(__name__)
-
-THREAD_POOL_SIZE = 10
 
 # We don't have a rigorous test for no data available, we have to match the error text
 NO_DATA_ERROR = "No data available"
@@ -234,13 +233,14 @@ class WaveformsLoader(SignalingThread):
     """
     progress = QtCore.pyqtSignal(object)
 
-    def __init__(self, client, waveforms):
+    def __init__(self, client, waveforms, thread_pool_size):
         """
         Initialization.
         """
         # Keep a reference to globally shared components
         self.client = client
         self.waveforms = waveforms
+        self.thread_pool_size = thread_pool_size
         self.futures = {}
         super(WaveformsLoader, self).__init__()
 
@@ -251,7 +251,7 @@ class WaveformsLoader(SignalingThread):
         self.setPriority(QtCore.QThread.LowestPriority)
         self.clearFutures()
         self.futures = {}
-        with concurrent.futures.ThreadPoolExecutor(THREAD_POOL_SIZE) as executor:
+        with concurrent.futures.ThreadPoolExecutor(self.thread_pool_size) as executor:
             for waveform in self.waveforms:
                 # Dictionary to look up the waveform id by Future
                 self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
@@ -378,8 +378,9 @@ class WaveformsHandler(SignalingObject):
         waveform_ids = list(priority_ids) + list(other_ids)
         waveforms = [self.get_waveform(waveform_id) for waveform_id in waveform_ids]
 
-        # Create a worker to load the data in a separate thread
-        self.waveforms_loader = WaveformsLoader(self.client, waveforms)
+        # Create a worker to load the data in separate threads
+        thread_pool_size = safe_int(self.preferences.Waveforms.threads, 5)
+        self.waveforms_loader = WaveformsLoader(self.client, waveforms, thread_pool_size)
         self.waveforms_loader.progress.connect(self.on_downloaded)
         self.waveforms_loader.done.connect(self.on_all_downloaded)
         self.waveforms_loader.start()
