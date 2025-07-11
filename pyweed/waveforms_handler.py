@@ -24,6 +24,7 @@ from logging import getLogger
 import matplotlib
 import weakref
 from pyweed.pyweed_utils import (
+    METADATA_FORMAT_EXTENSIONS,
     get_sncl,
     get_event_id,
     TimeWindow,
@@ -91,6 +92,9 @@ class WaveformEntry(AttribDict):
         mseed_exists=False,
         image_path=None,
         image_exists=False,
+        metadata_format="STATIONXML",
+        metadata_path=None,
+        metadata_exists=False,
         # Loading indicator
         loading=False,
         # Error message if unable to load
@@ -150,6 +154,12 @@ class WaveformEntry(AttribDict):
             self.download_dir, "%s.mseed" % self.base_filename
         )
         self.image_path = os.path.join(self.download_dir, "%s.png" % self.base_filename)
+        if self.metadata_format:
+            self.metadata_path = os.path.join(
+                self.download_dir, "%s.%s" % (self.base_filename, self.metadata_format)
+            )
+        else:
+            self.metadata_path = None
 
         self.check_files()
 
@@ -159,6 +169,7 @@ class WaveformEntry(AttribDict):
         """
         self.mseed_exists = os.path.exists(self.mseed_path)
         self.image_exists = os.path.exists(self.image_path)
+        self.metadata_exists = self.metadata_path and os.path.exists(self.metadata_path)
 
 
 class WaveformResult(object):
@@ -231,6 +242,25 @@ def load_waveform(client: Client, waveform: WaveformEntry):
             )
             # Write to file
             st.write(mseedFile, format="MSEED")
+
+        # Retrieve metadata or load cached version
+        metadata_path = waveform.metadata_path
+        if os.path.exists(metadata_path):
+            LOGGER.info("Loading metadata for %s from %s", waveform_id, metadata_path)
+            inventory = obspy.read_inventory(metadata_path)
+        else:
+            LOGGER.info("Retrieving metadata for %s", waveform_id)
+            inventory = client.get_stations(
+                network=network,
+                station=station,
+                location=location,
+                channel=channel,
+                starttime=waveform.start_time,
+                endtime=waveform.end_time,
+                level="response",
+            )
+            # Write to file
+            inventory.write(metadata_path, format="STATIONXML")
 
         # Generate image if necessary
         imageFile = waveform.image_path
@@ -473,6 +503,18 @@ class WaveformsHandler(SignalingObject):
         # Get the file extension to use
         extension = OUTPUT_FORMAT_EXTENSIONS[output_format]
 
+        # Get the metadata file format and extension
+        md_format = (
+            "SACPZ"
+            if output_format
+            in (
+                "SAC",
+                "SACXY",
+            )
+            else "STATIONXML"
+        )
+        md_extension = METADATA_FORMAT_EXTENSIONS[md_format]
+
         for waveform in waveforms:
             waveform_id = waveform.waveform_id
             try:
@@ -484,6 +526,13 @@ class WaveformsHandler(SignalingObject):
                     LOGGER.debug("reading %s", waveform.mseed_path)
                     st = obspy.read(waveform.mseed_path)
                     self.save_waveform(st, output_path, output_format, waveform)
+                # Do the metadata as well
+                md_file = os.path.extsep.join((waveform.base_filename, md_extension))
+                md_path = os.path.join(base_output_path, md_file)
+                save_md = not os.path.exists(md_path)
+                if save_md:
+                    inventory = obspy.read_inventory(waveform.metadata_path)
+                    inventory.write(md_path, format=md_format)
 
                 yield WaveformResult(waveform_id, save_file)
             except Exception as e:

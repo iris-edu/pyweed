@@ -58,6 +58,15 @@ OUTPUT_FORMATS = [
 OUTPUT_FORMAT_EXTENSIONS = dict(((f.value, f.extension) for f in OUTPUT_FORMATS))
 
 
+# List of the metadata formats we support
+METADATA_FORMATS = [
+    OutputFormat("STATIONXML", "StationXML", "sxml"),
+    OutputFormat("SACPZ"),
+]
+# Map of a format to the file extension to use
+METADATA_FORMAT_EXTENSIONS = dict(((f.value, f.extension) for f in METADATA_FORMATS))
+
+
 class Phase(object):
     """
     Simple phase definition
