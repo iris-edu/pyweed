@@ -9,25 +9,26 @@ Container for events.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 from pyweed.signals import SignalingThread, SignalingObject
 import logging
 from obspy.core.event.catalog import Catalog
-from pyweed.pyweed_utils import get_service_url, CancelledException
+from obspy.clients.fdsn import Client
+from pyweed.pyweed_utils import DataRequest, get_service_url, CancelledException
 from PyQt5 import QtCore
 import concurrent.futures
 
 LOGGER = logging.getLogger(__name__)
 
 
-def load_events(client, parameters):
+def load_events(client: Client, parameters):
     """
     Execute one query for event data. This is a standalone function so we can
     run it in a separate thread.
     """
     try:
-        LOGGER.info('Loading events: %s', get_service_url(client, 'event', parameters))
+        LOGGER.info("Loading events: %s", get_service_url(client, "event", parameters))
         return client.get_events(**parameters)
     except Exception as e:
         # If no results found, the client will raise an exception, we need to trap this
@@ -43,9 +44,10 @@ class EventsLoader(SignalingThread):
     """
     Thread to handle event requests
     """
+
     progress = QtCore.pyqtSignal()
 
-    def __init__(self, request):
+    def __init__(self, request: DataRequest):
         """
         Initialization.
         """
@@ -67,7 +69,9 @@ class EventsLoader(SignalingThread):
         with concurrent.futures.ThreadPoolExecutor(5) as executor:
             for sub_request in self.request.sub_requests:
                 # Dictionary lets us look up argument by result later
-                self.futures[executor.submit(load_events, self.request.client, sub_request)] = sub_request
+                self.futures[
+                    executor.submit(load_events, self.request.client, sub_request)
+                ] = sub_request
             # Iterate through Futures as they complete
             for result in concurrent.futures.as_completed(self.futures):
                 LOGGER.debug("Events loaded")
@@ -108,7 +112,7 @@ class EventsLoader(SignalingThread):
 
 class EventsHandler(SignalingObject):
     """
-    This is the handler that the application works with. 
+    This is the handler that the application works with.
     Most of the work is pushed off into the thread, this handler mainly acts as a bridge.
     """
 
@@ -120,7 +124,7 @@ class EventsHandler(SignalingObject):
         self.pyweed = pyweed
         self.catalog_loader = None
 
-    def load_catalog(self, request):
+    def load_catalog(self, request: DataRequest):
         self.catalog_loader = EventsLoader(request)
         self.catalog_loader.done.connect(self.on_catalog_loaded)
         self.catalog_loader.start()
@@ -138,6 +142,7 @@ class EventsHandler(SignalingObject):
 # Main
 # ------------------------------------------------------------------------------
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod(exclude_empty=True)

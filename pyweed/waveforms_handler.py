@@ -9,21 +9,34 @@ Container for waveforms.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 import os
+from typing import List
 from obspy import UTCDateTime
 from pyweed.preferences import safe_int
 from pyweed.signals import SignalingThread, SignalingObject
 import collections
 from PyQt5 import QtCore, QtGui
 import obspy
+from obspy.clients.fdsn import Client
 from logging import getLogger
 import matplotlib
 import weakref
-from pyweed.pyweed_utils import get_sncl, get_event_id, TimeWindow,\
-    get_preferred_origin, get_preferred_magnitude, OUTPUT_FORMAT_EXTENSIONS,\
-    get_event_description, get_arrivals, format_time_str, get_distance, get_service_url, CancelledException
+from pyweed.pyweed_utils import (
+    get_sncl,
+    get_event_id,
+    TimeWindow,
+    get_preferred_origin,
+    get_preferred_magnitude,
+    OUTPUT_FORMAT_EXTENSIONS,
+    get_event_description,
+    get_arrivals,
+    format_time_str,
+    get_distance,
+    get_service_url,
+    CancelledException,
+)
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.sac.sactrace import SACTrace
 from obspy.core.stream import Stream
@@ -39,6 +52,7 @@ class WaveformEntry(AttribDict):
     """
     Class representing an event/channel combination and the relevant waveform request
     """
+
     defaults = dict(
         # Weak refs to ObsPy event/channel
         event_ref=None,
@@ -101,13 +115,13 @@ class WaveformEntry(AttribDict):
         mag = get_preferred_magnitude(event)
         self.event_mag = "%s%s" % (mag.mag, mag.magnitude_type)
         self.event_mag_value = mag.mag
-        self.waveform_id = '%s_%s' % (self.sncl, get_event_id(event))
+        self.waveform_id = "%s_%s" % (self.sncl, get_event_id(event))
 
         self.distance = get_distance(
-            origin.latitude, origin.longitude,
-            station.latitude, station.longitude)
+            origin.latitude, origin.longitude, station.latitude, station.longitude
+        )
 
-    def update_handler_values(self, waveform_handler):
+    def update_handler_values(self, waveform_handler: "WaveformsHandler"):
         """
         Update any values that come from the WaveformHander
         """
@@ -122,12 +136,19 @@ class WaveformEntry(AttribDict):
             self.arrivals = get_arrivals(self.distance, self.event_depth)
 
         (self.start_time, self.end_time) = self.time_window.calculate_window(
-            self.event_time, self.arrivals)
-        self.start_string = self.start_time.format_iris_web_service().replace(':', '_')
-        self.end_string = self.end_time.format_iris_web_service().replace(':', '_')
+            self.event_time, self.arrivals
+        )
+        self.start_string = self.start_time.format_iris_web_service().replace(":", "_")
+        self.end_string = self.end_time.format_iris_web_service().replace(":", "_")
 
-        self.base_filename = "%s_%s_%s" % (self.sncl, self.start_string, self.end_string)
-        self.mseed_path = os.path.join(self.download_dir, "%s.mseed" % self.base_filename)
+        self.base_filename = "%s_%s_%s" % (
+            self.sncl,
+            self.start_string,
+            self.end_string,
+        )
+        self.mseed_path = os.path.join(
+            self.download_dir, "%s.mseed" % self.base_filename
+        )
         self.image_path = os.path.join(self.download_dir, "%s.png" % self.base_filename)
 
         self.check_files()
@@ -145,12 +166,13 @@ class WaveformResult(object):
     Container for a waveform result to be passed as a signal, includes the waveform ID so that
     the result can be correctly handled.
     """
-    def __init__(self, waveform_id, result):
+
+    def __init__(self, waveform_id: str, result):
         self.waveform_id = waveform_id
         self.result = result
 
 
-def load_waveform(client, waveform):
+def load_waveform(client: Client, waveform: WaveformEntry):
     """
     Download the given waveform data and generate an image. This is a standalone function so we can
     run it in a separate thread. This modifies the waveform entry and returns a dummy value, or
@@ -160,9 +182,11 @@ def load_waveform(client, waveform):
     plot_height = 120
 
     waveform_id = waveform.waveform_id
-    LOGGER.debug("Loading waveform: %s (%s)", waveform_id, QtCore.QThread.currentThreadId())
-#     LOGGER.debug("Adding slowness")
-#     QtCore.QThread.currentThread().sleep(2)
+    LOGGER.debug(
+        "Loading waveform: %s (%s)", waveform_id, QtCore.QThread.currentThreadId()
+    )
+    #     LOGGER.debug("Adding slowness")
+    #     QtCore.QThread.currentThread().sleep(2)
 
     try:
         waveform.prepare()
@@ -175,30 +199,47 @@ def load_waveform(client, waveform):
         mseedFile = waveform.mseed_path
         LOGGER.debug("%s save as MiniSEED", waveform_id)
 
+        (network, station, location, channel) = waveform.sncl.split(".")
+
         # Load data from disk or network as appropriate
         if os.path.exists(mseedFile):
             LOGGER.info("Loading waveform data for %s from %s", waveform_id, mseedFile)
             st = obspy.read(mseedFile)
         else:
-            (network, station, location, channel) = waveform.sncl.split('.')
-            service_url = get_service_url(client, 'dataselect', {
-                "network": network, "station": station, "location": location, "channel": channel,
-                "starttime": waveform.start_time, "endtime": waveform.end_time,
-            })
-            LOGGER.info("Retrieving waveform data for %s from %s", waveform_id, service_url)
+            service_url = get_service_url(
+                client,
+                "dataselect",
+                {
+                    "network": network,
+                    "station": station,
+                    "location": location,
+                    "channel": channel,
+                    "starttime": waveform.start_time,
+                    "endtime": waveform.end_time,
+                },
+            )
+            LOGGER.info(
+                "Retrieving waveform data for %s from %s", waveform_id, service_url
+            )
             st = client.get_waveforms(
-                network, station, location, channel, waveform.start_time, waveform.end_time)
+                network,
+                station,
+                location,
+                channel,
+                waveform.start_time,
+                waveform.end_time,
+            )
             # Write to file
             st.write(mseedFile, format="MSEED")
 
         # Generate image if necessary
         imageFile = waveform.image_path
         if not os.path.exists(imageFile):
-            LOGGER.debug('Plotting waveform image to %s', imageFile)
+            LOGGER.debug("Plotting waveform image to %s", imageFile)
             # In order to really customize the plotting, we need to return the figure and modify it
             h = st.plot(size=(plot_width, plot_height), handle=True)
             # Resize the subplot to a hard size, because otherwise it will do it inconsistently
-            h.subplots_adjust(bottom=.2, left=.1, right=.95, top=.95)
+            h.subplots_adjust(bottom=0.2, left=0.1, right=0.95, top=0.95)
             # Remove the title
             for c in h.get_children():
                 if isinstance(c, matplotlib.text.Text):
@@ -231,9 +272,12 @@ class WaveformsLoader(SignalingThread):
     """
     Thread to download waveform data and generate an image
     """
+
     progress = QtCore.pyqtSignal(object)
 
-    def __init__(self, client, waveforms, thread_pool_size):
+    def __init__(
+        self, client: Client, waveforms: List[WaveformEntry], thread_pool_size: int
+    ):
         """
         Initialization.
         """
@@ -246,7 +290,7 @@ class WaveformsLoader(SignalingThread):
 
     def run(self):
         """
-        Make a webservice request for events using the passed in options.
+        Make a webservice request for waveform data using the passed in options.
         """
         self.setPriority(QtCore.QThread.LowestPriority)
         self.clearFutures()
@@ -254,7 +298,9 @@ class WaveformsLoader(SignalingThread):
         with concurrent.futures.ThreadPoolExecutor(self.thread_pool_size) as executor:
             for waveform in self.waveforms:
                 # Dictionary to look up the waveform id by Future
-                self.futures[executor.submit(load_waveform, self.client, waveform)] = waveform.waveform_id
+                self.futures[executor.submit(load_waveform, self.client, waveform)] = (
+                    waveform.waveform_id
+                )
             # Iterate through Futures as they complete
             for result in concurrent.futures.as_completed(self.futures):
                 waveform_id = self.futures.get(result)
@@ -332,21 +378,23 @@ class WaveformsHandler(SignalingObject):
         Create a list of waveform entries based on the current event/station selections
         """
         self.waveforms = [
-            WaveformEntry(
-                event, network, station, channel
-            )
-            for (event, network, station, channel) in pyweed.iter_selected_events_stations()
+            WaveformEntry(event, network, station, channel)
+            for (
+                event,
+                network,
+                station,
+                channel,
+            ) in pyweed.iter_selected_events_stations()
         ]
         self.waveforms_by_id = dict(
-            (waveform.waveform_id, waveform)
-            for waveform in self.waveforms
+            (waveform.waveform_id, waveform) for waveform in self.waveforms
         )
 
     def cancel_download(self):
         """
         Cancel the loader if it's running
         """
-        LOGGER.debug('Cancelling existing downloads')
+        LOGGER.debug("Cancelling existing downloads")
         if self.waveforms_loader:
             self.waveforms_loader.cancel()
         # Mark all the waveforms that are still marked as loading
@@ -362,7 +410,7 @@ class WaveformsHandler(SignalingObject):
         """
         Initiate a download of all the given waveforms
         """
-        LOGGER.info('Downloading waveforms')
+        LOGGER.info("Downloading waveforms")
         LOGGER.debug("Priority IDs: %s" % (priority_ids,))
         LOGGER.debug("Other IDs: %s" % (other_ids,))
 
@@ -380,7 +428,9 @@ class WaveformsHandler(SignalingObject):
 
         # Create a worker to load the data in separate threads
         thread_pool_size = safe_int(self.preferences.Waveforms.threads, 5)
-        self.waveforms_loader = WaveformsLoader(self.client, waveforms, thread_pool_size)
+        self.waveforms_loader = WaveformsLoader(
+            self.client, waveforms, thread_pool_size
+        )
         self.waveforms_loader.progress.connect(self.on_downloaded)
         self.waveforms_loader.done.connect(self.on_all_downloaded)
         self.waveforms_loader.start()
@@ -429,13 +479,13 @@ class WaveformsHandler(SignalingObject):
                 output_file = os.path.extsep.join((waveform.base_filename, extension))
                 output_path = os.path.join(base_output_path, output_file)
                 # Don't repeat any work that has already been done
-                if not os.path.exists(output_path):
-                    LOGGER.debug('reading %s', waveform.mseed_path)
+                save_file = not os.path.exists(output_path)
+                if save_file:
+                    LOGGER.debug("reading %s", waveform.mseed_path)
                     st = obspy.read(waveform.mseed_path)
                     self.save_waveform(st, output_path, output_format, waveform)
-                    yield WaveformResult(waveform_id, True)
-                else:
-                    yield WaveformResult(waveform_id, False)
+
+                yield WaveformResult(waveform_id, save_file)
             except Exception as e:
                 yield WaveformResult(waveform_id, e)
 
@@ -443,8 +493,11 @@ class WaveformsHandler(SignalingObject):
         """
         Save a single waveform. This should handle any special output features (eg. SAC metadata)
         """
-        LOGGER.debug('writing %s', output_path)
-        if output_format in ('SAC', 'SACXY',):
+        LOGGER.debug("writing %s", output_path)
+        if output_format in (
+            "SAC",
+            "SACXY",
+        ):
             # For SAC output, we need to pull header data from the waveform record
             st = self.to_sac_stream(st, waveform)
         st.write(output_path, format=output_format)
@@ -469,7 +522,7 @@ class WaveformsHandler(SignalingObject):
                 # Use event time as the reftime?
                 if self.preferences.Waveforms.useEventTime:
                     tr.reftime = origin.time  # ObsPy does a lot of work here!
-                    tr.iztype = 'io'
+                    tr.iztype = "io"
             magnitude = get_preferred_magnitude(waveform.event_ref())
             if magnitude:
                 tr.mag = magnitude.mag
@@ -499,6 +552,7 @@ class WaveformsHandler(SignalingObject):
 # Main
 # ------------------------------------------------------------------------------
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod(exclude_empty=True)
