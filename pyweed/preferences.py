@@ -105,6 +105,7 @@ class Preferences(object):
         self.Waveforms.saveFormat = "MSEED"
         self.Waveforms.useEventTime = "n"
         self.Waveforms.hideNoData = "n"
+        self.Waveforms.downloadMetadata = "y"
         self.Waveforms.threads = "5"
 
         self.Logging = Section.create("Logging")

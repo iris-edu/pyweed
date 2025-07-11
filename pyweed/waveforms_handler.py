@@ -13,11 +13,9 @@ from __future__ import absolute_import, division, print_function
 
 import os
 from typing import List
-from obspy import UTCDateTime
-from pyweed.preferences import safe_int
+from pyweed.preferences import Preferences, safe_int
 from pyweed.signals import SignalingThread, SignalingObject
-import collections
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 import obspy
 from obspy.clients.fdsn import Client
 from logging import getLogger
@@ -92,7 +90,7 @@ class WaveformEntry(AttribDict):
         mseed_exists=False,
         image_path=None,
         image_exists=False,
-        metadata_format="STATIONXML",
+        download_metadata=True,
         metadata_path=None,
         metadata_exists=False,
         # Loading indicator
@@ -131,6 +129,7 @@ class WaveformEntry(AttribDict):
         """
         self.download_dir = waveform_handler.downloadDir
         self.time_window = waveform_handler.time_window
+        self.download_metadata = waveform_handler.download_metadata
 
     def prepare(self):
         """
@@ -154,9 +153,11 @@ class WaveformEntry(AttribDict):
             self.download_dir, "%s.mseed" % self.base_filename
         )
         self.image_path = os.path.join(self.download_dir, "%s.png" % self.base_filename)
-        if self.metadata_format:
+        if self.download_metadata:
             self.metadata_path = os.path.join(
-                self.download_dir, "%s.%s" % (self.base_filename, self.metadata_format)
+                self.download_dir,
+                "%s.%s"
+                % (self.base_filename, METADATA_FORMAT_EXTENSIONS["STATIONXML"]),
             )
         else:
             self.metadata_path = None
@@ -202,9 +203,11 @@ def load_waveform(client: Client, waveform: WaveformEntry):
     try:
         waveform.prepare()
 
-        if waveform.image_exists:
+        if waveform.image_exists and (
+            not waveform.download_metadata or waveform.metadata_exists
+        ):
             # No download needed
-            LOGGER.info("Waveform %s already has an image" % waveform_id)
+            LOGGER.info("Waveform %s already complete" % waveform_id)
             return True
 
         mseedFile = waveform.mseed_path
@@ -244,23 +247,21 @@ def load_waveform(client: Client, waveform: WaveformEntry):
             st.write(mseedFile, format="MSEED")
 
         # Retrieve metadata or load cached version
-        metadata_path = waveform.metadata_path
-        if os.path.exists(metadata_path):
-            LOGGER.info("Loading metadata for %s from %s", waveform_id, metadata_path)
-            inventory = obspy.read_inventory(metadata_path)
-        else:
-            LOGGER.info("Retrieving metadata for %s", waveform_id)
-            inventory = client.get_stations(
-                network=network,
-                station=station,
-                location=location,
-                channel=channel,
-                starttime=waveform.start_time,
-                endtime=waveform.end_time,
-                level="response",
-            )
-            # Write to file
-            inventory.write(metadata_path, format="STATIONXML")
+        if waveform.download_metadata:
+            metadata_path = waveform.metadata_path
+            if not os.path.exists(metadata_path):
+                LOGGER.info("Retrieving metadata for %s", waveform_id)
+                inventory = client.get_stations(
+                    network=network,
+                    station=station,
+                    location=location,
+                    channel=channel,
+                    starttime=waveform.start_time,
+                    endtime=waveform.end_time,
+                    level="response",
+                )
+                # Write to file
+                inventory.write(metadata_path, format="STATIONXML")
 
         # Generate image if necessary
         imageFile = waveform.image_path
@@ -375,7 +376,7 @@ class WaveformsHandler(SignalingObject):
 
     progress = QtCore.pyqtSignal(object)
 
-    def __init__(self, logger, preferences, client):
+    def __init__(self, logger, preferences: Preferences, client: Client):
         """
         Initialization.
         """
@@ -387,6 +388,7 @@ class WaveformsHandler(SignalingObject):
 
         # Important preferences
         self.downloadDir = self.preferences.Waveforms.downloadDir
+        self.download_metadata = self.preferences.Waveforms.downloadMetadata
 
         # Loader component
         self.waveforms_loader = None
@@ -436,7 +438,9 @@ class WaveformsHandler(SignalingObject):
                 self.progress.emit(WaveformResult(waveform.waveform_id, None))
         self.done.emit(CancelledException())
 
-    def download_waveforms(self, priority_ids, other_ids, time_window):
+    def download_waveforms(
+        self, priority_ids, other_ids, time_window, download_metadata
+    ):
         """
         Initiate a download of all the given waveforms
         """
@@ -446,6 +450,7 @@ class WaveformsHandler(SignalingObject):
 
         # Prepare the waveform entries
         self.time_window = time_window
+        self.download_metadata = download_metadata
         for waveform in self.waveforms:
             waveform.update_handler_values(self)
             # Clear error flag and set loading flag
@@ -526,16 +531,21 @@ class WaveformsHandler(SignalingObject):
                     LOGGER.debug("reading %s", waveform.mseed_path)
                     st = obspy.read(waveform.mseed_path)
                     self.save_waveform(st, output_path, output_format, waveform)
-                # Do the metadata as well
-                md_file = os.path.extsep.join((waveform.base_filename, md_extension))
-                md_path = os.path.join(base_output_path, md_file)
-                save_md = not os.path.exists(md_path)
-                if save_md:
-                    inventory = obspy.read_inventory(waveform.metadata_path)
-                    inventory.write(md_path, format=md_format)
+                # Do the metadata if needed
+                if waveform.metadata_exists:
+                    md_file = os.path.extsep.join(
+                        (waveform.base_filename, md_extension)
+                    )
+                    md_path = os.path.join(base_output_path, md_file)
+                    save_md = not os.path.exists(md_path)
+                    if save_md:
+                        LOGGER.debug("reading %s", waveform.metadata_path)
+                        inventory = obspy.read_inventory(waveform.metadata_path)
+                        inventory.write(md_path, format=md_format)
 
                 yield WaveformResult(waveform_id, save_file)
             except Exception as e:
+                LOGGER.error("Failed to save waveform %s", e, exc_info=True)
                 yield WaveformResult(waveform_id, e)
 
     def save_waveform(self, st, output_path, output_format, waveform):
@@ -585,7 +595,7 @@ class WaveformsHandler(SignalingObject):
             tr.stel = channel.elevation
             tr.cmpaz = channel.azimuth
             tr.cmpinc = channel.dip + 90
-            tr.kinst = channel.sensor.description[:8]
+            tr.kinst = channel.sensor.description[:8] if channel.sensor else "Unknown"
         if origin and channel:
             # Calculate distances/azimuths
             tr.lcalda = True

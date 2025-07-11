@@ -311,6 +311,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         # Connect the timewindow signals
         self.timeWindowAdapter.changed.connect(self.resetDownload)
 
+        # Toggle download of metadata
+        self.downloadMetadataCheckBox.stateChanged.connect(self.resetDownload)
+
         # Dictionary of filter values
         self.filters = {}
 
@@ -562,6 +565,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             priority_ids,
             other_ids,
             self.timeWindowAdapter.timeWindow,
+            self.downloadMetadataCheckBox.isChecked(),
         )
 
         # Update the table rows
@@ -662,19 +666,14 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                 outputDir, outputFormat, waveforms
             ):
                 if isinstance(result.result, Exception):
-                    LOGGER.error(
-                        "Failed to save waveform %s: %s",
-                        result.waveform_id,
-                        result.result,
-                    )
                     errors.append("%s: %s" % (result.waveform_id, result.result))
                 elif result.result:
                     savedCount += 1
-                    self.saveSpinner.setLabel("Saved %d waveforms" % savedCount)
+                    self.saveSpinner.setLabel("Saved %d new waveforms" % savedCount)
                     QtWidgets.QApplication.processEvents()  # update GUI
                 else:
                     skippedCount += 1
-            self.saveStatusLabel.setText("Saved %d waveforms" % savedCount)
+            self.saveStatusLabel.setText("Saved %d new waveforms" % savedCount)
             self.saveStatusLabel.repaint()
 
             LOGGER.info(
@@ -750,11 +749,10 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         )
 
         self.saveFormatAdapter.setValue(prefs.Waveforms.saveFormat)
-        self.sacUseEventTimeCheckBox.setChecked(
-            safe_bool(prefs.Waveforms.useEventTime)
-        )
-        self.hideNoDataCheckBox.setChecked(
-            safe_bool(prefs.Waveforms.hideNoData)
+        self.sacUseEventTimeCheckBox.setChecked(safe_bool(prefs.Waveforms.useEventTime))
+        self.hideNoDataCheckBox.setChecked(safe_bool(prefs.Waveforms.hideNoData))
+        self.downloadMetadataCheckBox.setChecked(
+            safe_bool(prefs.Waveforms.downloadMetadata)
         )
 
     def savePreferences(self):
@@ -773,3 +771,4 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         prefs.Waveforms.saveFormat = self.saveFormatAdapter.getValue()
         prefs.Waveforms.useEventTime = self.sacUseEventTimeCheckBox.isChecked()
         prefs.Waveforms.hideNoData = self.hideNoDataCheckBox.isChecked()
+        prefs.Waveforms.downloadMetadata = self.downloadMetadataCheckBox.isChecked()

@@ -63,43 +63,10 @@
           <number>2</number>
          </property>
          <item>
-          <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0,0,0">
+          <layout class="QGridLayout" name="gridLayout">
            <property name="verticalSpacing">
-            <number>2</number>
+            <number>7</number>
            </property>
-           <item row="0" column="0">
-            <widget class="QLabel" name="secondsBeforeLabel">
-             <property name="text">
-              <string>Start:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>secs before</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QComboBox" name="secondsAfterPhaseComboBox"/>
-           </item>
-           <item row="0" column="3">
-            <widget class="QComboBox" name="secondsBeforePhaseComboBox"/>
-           </item>
-           <item row="0" column="4">
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
            <item row="1" column="1">
             <widget class="QSpinBox" name="secondsAfterSpinBox">
              <property name="maximum">
@@ -112,6 +79,57 @@
               <number>600</number>
              </property>
             </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QComboBox" name="secondsAfterPhaseComboBox"/>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>secs after</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="secondsBeforeLabel">
+             <property name="text">
+              <string>Start:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QCheckBox" name="downloadMetadataCheckBox">
+               <property name="text">
+                <string>Download metadata</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="secondsAfterLabel">
+             <property name="text">
+              <string>End:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QComboBox" name="secondsBeforePhaseComboBox"/>
            </item>
            <item row="0" column="1">
             <widget class="QSpinBox" name="secondsBeforeSpinBox">
@@ -126,17 +144,23 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>secs after</string>
+           <item row="0" column="4">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
              </property>
-            </widget>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>13</width>
+               <height>13</height>
+              </size>
+             </property>
+            </spacer>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="secondsAfterLabel">
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
              <property name="text">
-              <string>End:</string>
+              <string>secs before</string>
              </property>
             </widget>
            </item>
@@ -144,6 +168,12 @@
          </item>
          <item>
           <widget class="QWidget" name="widget_5" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
             <property name="leftMargin">
              <number>2</number>
@@ -175,6 +205,12 @@
             </item>
             <item alignment="Qt::AlignLeft">
              <widget class="QLabel" name="downloadStatusLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>Download status</string>
               </property>
@@ -213,10 +249,10 @@
          <item>
           <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0">
            <property name="verticalSpacing">
-            <number>2</number>
+            <number>0</number>
            </property>
            <item row="1" column="1">
-            <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0,1">
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
              <item>
               <widget class="QComboBox" name="saveFormatComboBox"/>
              </item>
@@ -315,6 +351,12 @@
          </item>
          <item>
           <widget class="QWidget" name="widget_6" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <layout class="QHBoxLayout" name="horizontalLayout_8">
             <property name="leftMargin">
              <number>2</number>
@@ -382,6 +424,12 @@
        <widget class="QGroupBox" name="filterGroupBox">
         <property name="enabled">
          <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
         <property name="title">
          <string>Table Filters</string>
