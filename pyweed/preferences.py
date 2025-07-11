@@ -11,7 +11,7 @@ Adapted from: https://github.com/claysmith/oldArcD/blob/master/tools/arctographe
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 import os
 import platform
@@ -21,7 +21,7 @@ from configparser import ConfigParser
 def safe_bool(s, default=False):
     try:
         # 'yes' or 'true'
-        return s[0].lower() in 'yt'
+        return s[0].lower() in "yt"
     except:
         return default
 
@@ -87,8 +87,8 @@ class Preferences(object):
         Initialization with default settings.
         """
 
-#         for (section, prefs) in DEFAULTS.items():
-#             setattr(self, section, Section.create(section, **prefs))
+        #         for (section, prefs) in DEFAULTS.items():
+        #             setattr(self, section, Section.create(section, **prefs))
 
         self.Data = Section.create("Data")
         self.Data.eventDataCenter = "IRIS"
@@ -151,8 +151,7 @@ class Preferences(object):
                 os.makedirs(user_config_path(), 0o700)
             except Exception as e:
                 print(
-                    "Creation of user configuration directory failed with"
-                    " error: %s" % e
+                    "Creation of user configuration directory failed with error: %s" % e
                 )
                 return
         f = open(os.path.join(user_config_path(), "pyweed.ini"), "w")
@@ -241,6 +240,7 @@ def user_save_path(safe=False):
 # Main
 # ------------------------------------------------------------------------------
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod(exclude_empty=True)
