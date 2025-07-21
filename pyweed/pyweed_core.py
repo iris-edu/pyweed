@@ -10,15 +10,24 @@ Main PyWEED application
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 # Basic packages
 import os
 import logging
+from typing import Dict
 
 # Pyweed UI components
+from pyweed.clients import ClientManager
 from pyweed.preferences import Preferences, user_config_path
-from pyweed.pyweed_utils import manage_cache, iter_channels, get_sncl, get_preferred_origin, DataRequest, get_distance
+from pyweed.pyweed_utils import (
+    manage_cache,
+    iter_channels,
+    get_sncl,
+    get_preferred_origin,
+    DataRequest,
+    get_distance,
+)
 from obspy.clients.fdsn import Client
 from pyweed.event_options import EventOptions
 from pyweed.station_options import StationOptions
@@ -33,7 +42,11 @@ class NoConsoleLoggingFilter(logging.Filter):
     """
     Logging filter that excludes the (very noisy) output from the attached Python console
     """
-    exclude = ('ipykernel', 'traitlets',)
+
+    exclude = (
+        "ipykernel",
+        "traitlets",
+    )
 
     def filter(self, record):
         for exclude in self.exclude:
@@ -48,27 +61,26 @@ class PyWeedCore(QObject):
     The original intent was to allow this to run independently, eg. from a script or interactive shell.
     """
 
-    preferences = None
+    preferences: Preferences = None
 
-    event_client = None
-    event_data_center = None
-    event_options = None
-    events_handler = None
+    client_manager: ClientManager = None
+
+    event_options: EventOptions = None
+    events_handler: EventsHandler = None
     events = None
     selected_event_ids = None
 
-    station_client = None
-    station_data_center = None
-    station_options = None
-    stations_handler = None
+    station_options: StationOptions = None
+    stations_handler: StationsHandler = None
     stations = None
     selected_station_ids = None
-    
+
     def __init__(self):
         super(PyWeedCore, self).__init__()
         self.configure_logging()
         self.event_options = EventOptions()
         self.station_options = StationOptions()
+        self.client_manager = ClientManager()
         self.load_preferences()
         self.manage_cache()
 
@@ -78,44 +90,17 @@ class PyWeedCore(QObject):
         self.stations_handler = StationsHandler(self)
         self.stations_handler.done.connect(self.on_stations_loaded)
 
-    def set_event_data_center(self, data_center):
+    def initialize_clients(self):
         """
-        Set the data center used for events
+        Set up the client(s) based on preferences
         """
-        if data_center != self.event_data_center or not self.event_client:
-            # Use the station client if they're the same, otherwise create a client
-            if data_center == self.station_data_center and self.station_client:
-                client = self.station_client
-            else:
-                LOGGER.info("Creating ObsPy client for %s", data_center)
-                client = Client(data_center)
-            # Verify that this client supports events
-            if 'event' not in client.services:
-                LOGGER.error("The %s data center does not provide an event service" % data_center)
-                return
-            # Update settings
-            self.event_data_center = data_center
-            self.event_client = client
-
-    def set_station_data_center(self, data_center):
-        """
-        Set the data center used for stations
-        """
-        if data_center != self.station_data_center or not self.station_client:
-            # Use the event client if they're the same, otherwise create a client
-            if data_center == self.event_data_center and self.event_client:
-                client = self.event_client
-            else:
-                LOGGER.info("Creating ObsPy client for %s", data_center)
-                client = Client(data_center)
-            # Verify that this client supports station and dataselect
-            for service in ('station', 'dataselect',):
-                if service not in client.services:
-                    LOGGER.error("The %s data center does not provide a %s service" % (data_center, service))
-                    return
-            # Update settings
-            self.station_data_center = data_center
-            self.station_client = client
+        self.client_manager.initialize(
+            self.preferences.Data.eventDataCenter,
+            self.preferences.Data.stationDataCenter,
+            self.preferences.Data.stationDataCenter,
+            self.preferences.Data.username,
+            self.preferences.Data.password,
+        )
 
     def load_preferences(self):
         """
@@ -126,11 +111,19 @@ class PyWeedCore(QObject):
         try:
             self.preferences.load()
         except Exception as e:
-            LOGGER.error("Unable to load configuration preferences -- using defaults.\n%s", e)
+            LOGGER.error(
+                "Unable to load configuration preferences -- using defaults.\n%s", e
+            )
         self.set_event_options(self.preferences.EventOptions)
-        self.set_event_data_center(self.preferences.Data.eventDataCenter)
         self.set_station_options(self.preferences.StationOptions)
-        self.set_station_data_center(self.preferences.Data.stationDataCenter)
+        # Client initialization may fail, in which case try resetting the preferences
+        try:
+            self.initialize_clients()
+        except Exception as e:
+            LOGGER.error("Unable to initialize clients -- using defaults.\n%s", e)
+            self.preferences.Data.eventDataCenter = "IRIS"
+            self.preferences.Data.stationDataCenter = "IRIS"
+            self.initialize_clients()
 
     def save_preferences(self):
         """
@@ -138,10 +131,16 @@ class PyWeedCore(QObject):
         """
         LOGGER.info("Saving preferences")
         try:
-            self.preferences.EventOptions.update(self.event_options.get_options(stringify=True))
-            self.preferences.Data.eventDataCenter = self.event_data_center
-            self.preferences.StationOptions.update(self.station_options.get_options(stringify=True))
-            self.preferences.Data.stationDataCenter = self.station_data_center
+            self.preferences.EventOptions.update(
+                self.event_options.get_options(stringify=True)
+            )
+            if self.event_data_center:
+                self.preferences.Data.eventDataCenter = self.event_data_center
+            self.preferences.StationOptions.update(
+                self.station_options.get_options(stringify=True)
+            )
+            if self.station_data_center:
+                self.preferences.Data.stationDataCenter = self.station_data_center
             self.preferences.save()
         except Exception as e:
             LOGGER.error("Unable to save configuration preferences: %s", e)
@@ -161,11 +160,11 @@ class PyWeedCore(QObject):
             # Log to stderr
             handler = logging.StreamHandler()
         else:
-            log_file = os.path.join(user_config_path(), 'pyweed.log')
-            handler = logging.FileHandler(log_file, mode='w')
+            log_file = os.path.join(user_config_path(), "pyweed.log")
+            handler = logging.FileHandler(log_file, mode="w")
         formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
         handler.setFormatter(formatter)
         handler.addFilter(NoConsoleLoggingFilter())
@@ -178,14 +177,16 @@ class PyWeedCore(QObject):
         """
         download_path = self.preferences.Waveforms.downloadDir
         cache_size = int(self.preferences.Waveforms.cacheSize)
-        LOGGER.info('Checking on download directory...')
+        LOGGER.info("Checking on download directory...")
         if os.path.exists(download_path):
             manage_cache(download_path, cache_size)
         elif init:
             try:
                 os.makedirs(download_path, 0o700)
             except Exception as e:
-                LOGGER.error("Creation of download directory failed with" + " error: \"%s\'""" % e)
+                LOGGER.error(
+                    "Creation of download directory failed with" + " error: \"%s'" % e
+                )
                 raise
 
     ###############
@@ -205,19 +206,14 @@ class PyWeedCore(QObject):
         """
         return self.event_options.get_obspy_options()
 
-    def fetch_events(self, options=None):
+    def fetch_events(self):
         """
         Launch a fetch operation for events
         """
-        if options:
-            # Simple request
-            request = DataRequest(self.event_client, options)
-        else:
-            # Potentially complex request
-            request = DataRequest(
-                self.event_client,
-                self.event_options.get_obspy_options()
-            )
+        # Potentially complex request
+        request = DataRequest(
+            self.client_manager.event_client, self.event_options.get_obspy_options()
+        )
         self.events_handler.load_catalog(request)
 
     def on_events_loaded(self, events):
@@ -256,7 +252,10 @@ class PyWeedCore(QObject):
         for event in self.iter_selected_events():
             origin = get_preferred_origin(event)
             if origin:
-                yield (event.resource_id.id, (origin.latitude, origin.longitude),)
+                yield (
+                    event.resource_id.id,
+                    (origin.latitude, origin.longitude),
+                )
 
     ###############
     # Stations
@@ -266,21 +265,16 @@ class PyWeedCore(QObject):
         LOGGER.debug("Set station options: %s", repr(options))
         self.station_options.set_options(options)
 
-    def fetch_stations(self, options=None):
+    def fetch_stations(self):
         """
         Load stations
         """
-        if options:
-            # Simple request
-            request = DataRequest(self.station_client, options)
-        else:
-            # Potentially complex request
-            request = StationsDataRequest(
-                self.station_client,
-                self.station_options.get_obspy_options(),
-                self.station_options.get_event_distances(),
-                self.iter_selected_event_locations()
-            )
+        request = StationsDataRequest(
+            self.client_manager.station_client,
+            self.station_options.get_obspy_options(),
+            self.station_options.get_event_distances(),
+            self.iter_selected_event_locations(),
+        )
         self.stations_handler.load_inventory(request)
 
     def on_stations_loaded(self, stations):
@@ -305,7 +299,7 @@ class PyWeedCore(QObject):
         Yields (network, station, channel) for each selected channel
         """
         if self.stations:
-            for (network, station, channel) in iter_channels(self.stations):
+            for network, station, channel in iter_channels(self.stations):
                 sncl = get_sncl(network, station, channel)
                 if sncl in self.selected_station_ids:
                     yield (network, station, channel)
@@ -338,21 +332,29 @@ class PyWeedCore(QObject):
             event_locations = {}
 
         # Iterate through the stations
-        for (network, station, channel) in self.iter_selected_stations():
+        for network, station, channel in self.iter_selected_stations():
             for event in events:
                 if distance_range:
                     event_location = event_locations.get(event.resource_id.id)
                     if event_location:
                         distance = get_distance(
-                            event_location[0], event_location[1],
-                            station.latitude, station.longitude)
+                            event_location[0],
+                            event_location[1],
+                            station.latitude,
+                            station.longitude,
+                        )
                         LOGGER.debug(
                             "Distance from (%s, %s) to (%s, %s): %s",
-                            event_location[0], event_location[1],
-                            station.latitude, station.longitude,
-                            distance
+                            event_location[0],
+                            event_location[1],
+                            station.latitude,
+                            station.longitude,
+                            distance,
                         )
-                        if distance < distance_range['mindistance'] or distance > distance_range['maxdistance']:
+                        if (
+                            distance < distance_range["mindistance"]
+                            or distance > distance_range["maxdistance"]
+                        ):
                             continue
                 # If we reach here, include this event/station pair
                 yield (event, network, station, channel)

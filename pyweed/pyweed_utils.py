@@ -9,30 +9,34 @@ Pyweed utility functions.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 # Basic packages
 import os
 import logging
 import re
+from typing import Dict
 from pyproj import Geod
 from obspy import UTCDateTime
+from obspy.core.event import Event
+from obspy.core.inventory import Inventory, Network, Station, Channel
+from obspy.clients.fdsn import Client
 from obspy.taup.tau import TauPyModel
 from urllib.parse import urlencode
 
 LOGGER = logging.getLogger(__name__)
-GEOD = Geod(ellps='WGS84')
+GEOD = Geod(ellps="WGS84")
 TAUP = TauPyModel()
 
 # Rough meters/degree calculation
 M_PER_DEG = (GEOD.inv(0, 0, 0, 1)[2] + GEOD.inv(0, 0, 1, 0)[2]) / 2
 
 
-
 class OutputFormat(object):
     """
     Simple output format definition.
     """
+
     def __init__(self, value, label=None, extension=None):
         #: This is the name used by ObsPy, which we treat as the "real" value
         self.value = value
@@ -41,35 +45,47 @@ class OutputFormat(object):
         #: This is the file extension, it defaults to lowercased value
         self.extension = extension or value.lower()
 
+
 # List of the output formats we support
 OUTPUT_FORMATS = [
-    OutputFormat('MSEED', 'MiniSEED'),
-    OutputFormat('SAC'),
-    OutputFormat('SACXY', 'SAC ASCII', 'sac.txt'),
-    OutputFormat('SLIST', 'ASCII (1 column)', 'ascii1.txt'),
-    OutputFormat('TSPAIR', 'ASCII (2 column)', 'ascii2.txt'),
+    OutputFormat("MSEED", "MiniSEED"),
+    OutputFormat("SAC"),
+    OutputFormat("SACXY", "SAC ASCII", "sac.txt"),
+    OutputFormat("SLIST", "ASCII (1 column)", "ascii1.txt"),
+    OutputFormat("TSPAIR", "ASCII (2 column)", "ascii2.txt"),
 ]
 # Map of a format to the file extension to use
 OUTPUT_FORMAT_EXTENSIONS = dict(((f.value, f.extension) for f in OUTPUT_FORMATS))
+
+
+# List of the metadata formats we support
+METADATA_FORMATS = [
+    OutputFormat("STATIONXML", "StationXML", "sxml"),
+    OutputFormat("SACPZ"),
+]
+# Map of a format to the file extension to use
+METADATA_FORMAT_EXTENSIONS = dict(((f.value, f.extension) for f in METADATA_FORMATS))
 
 
 class Phase(object):
     """
     Simple phase definition
     """
+
     def __init__(self, name, label):
         self.name = name
         self.label = label
 
+
 # List of phases we can use for time windows
-EVENT_TIME_PHASE = 'Event'
+EVENT_TIME_PHASE = "Event"
 PHASES = [
-    Phase('P', 'P wave arrival'),
-    Phase('S', 'S wave arrival'),
-    Phase(EVENT_TIME_PHASE, 'Event time')
+    Phase("P", "P wave arrival"),
+    Phase("S", "S wave arrival"),
+    Phase(EVENT_TIME_PHASE, "Event time"),
 ]
 # Actual phase values retrieved from TauP, this should give us a good P and S value for any input (I hope!)
-TAUP_PHASES = ['P', 'PKIKP', 'Pdiff', 'S', 'SKIKS', 'SKS', 'p', 's']
+TAUP_PHASES = ["P", "PKIKP", "Pdiff", "S", "SKIKS", "SKS", "p", "s"]
 
 
 def manage_cache(download_dir, cache_size):
@@ -89,7 +105,7 @@ def manage_cache(download_dir, cache_size):
                 new_stat_list = [path, stat_list.st_size, stat_list.st_atime]
                 total_size = total_size + stat_list.st_size
                 # don't want hidden files like .htaccess so don't add stuff that starts with .
-                if not file.startswith('.'):
+                if not file.startswith("."):
                     stats.append(new_stat_list)
 
         # Sort file stats by last access time
@@ -108,13 +124,16 @@ def manage_cache(download_dir, cache_size):
             stats.pop(0)
             deletion_count = deletion_count + 1
 
-        LOGGER.debug('Removed %d files to keep %s below %.0f megabytes' % (deletion_count, download_dir, cache_size))
+        LOGGER.debug(
+            "Removed %d files to keep %s below %.0f megabytes"
+            % (deletion_count, download_dir, cache_size)
+        )
 
     except Exception as e:
         LOGGER.error(str(e))
 
 
-def iter_channels(inventory, dedupe=True):
+def iter_channels(inventory: Inventory, dedupe=True):
     """
     Iterate over every channel in an inventory.
     For each channel, yields (network, station, channel)
@@ -135,14 +154,14 @@ def iter_channels(inventory, dedupe=True):
                     yield (network, station, channel)
 
 
-def get_sncl(network, station, channel):
+def get_sncl(network: Network, station: Station, channel: Channel):
     """
     Generate the SNCL for the given network/station/channel
     """
-    return '.'.join((network.code, station.code, channel.location_code, channel.code))
+    return ".".join((network.code, station.code, channel.location_code, channel.code))
 
 
-def get_event_id(event):
+def get_event_id(event: Event):
     """
     Get a unique ID for a given event
 
@@ -178,39 +197,39 @@ def get_event_id(event):
     <event publicID="smi:ISC/evid=600516598">
     """
     # Look for "eventid=" as a URL query parameter
-    m = re.search(r'eventid=([^\&]+)', event.resource_id.id, re.IGNORECASE)
+    m = re.search(r"eventid=([^\&]+)", event.resource_id.id, re.IGNORECASE)
     if m:
         return m.group(1)
     # Otherwise, return the trailing segment of alphanumerics
-    return re.sub(r'^.*?(\w+)\W*$', r'\1', event.resource_id.id)
+    return re.sub(r"^.*?(\w+)\W*$", r"\1", event.resource_id.id)
 
 
-def get_event_name(event):
+def get_event_name(event: Event):
     time_str = get_event_time_str(event)
     mag_str = get_event_mag_str(event)
     description = get_event_description(event)
     return "%s | %s | %s" % (time_str, mag_str, description)
 
 
-def format_time_str(time):
-    return time.isoformat(sep=' ').split('.')[0]
+def format_time_str(time: UTCDateTime):
+    return time.isoformat(sep=" ").split(".")[0]
 
 
-def get_event_time_str(event):
+def get_event_time_str(event: Event):
     origin = get_preferred_origin(event)
     return format_time_str(origin.time)
 
 
-def get_event_mag_str(event):
+def get_event_mag_str(event: Event):
     mag = get_preferred_magnitude(event)
     return "%s%s" % (mag.mag, mag.magnitude_type)
 
 
-def get_event_description(event):
+def get_event_description(event: Event):
     return str(event.event_descriptions[0].text).title()
 
 
-def get_preferred_origin(event):
+def get_preferred_origin(event: Event):
     """
     Get the preferred origin for the event, or None if not defined
     """
@@ -222,7 +241,7 @@ def get_preferred_origin(event):
     return origin
 
 
-def get_preferred_magnitude(event):
+def get_preferred_magnitude(event: Event):
     """
     Get the preferred magnitude for the event, or None if not defined
     """
@@ -238,12 +257,19 @@ class TimeWindow(object):
     """
     Represents a time window for data based on phase arrivals at a particular location
     """
+
     start_offset = 0
     end_offset = 0
-    start_phase = None
-    end_phase = None
+    start_phase: str = None
+    end_phase: str = None
 
-    def __init__(self, start_offset=0, end_offset=0, start_phase=PHASES[0].name, end_phase=PHASES[0].name):
+    def __init__(
+        self,
+        start_offset=0,
+        end_offset=0,
+        start_phase=PHASES[0].name,
+        end_phase=PHASES[0].name,
+    ):
         self.update(start_offset, end_offset, start_phase, end_phase)
 
     def update(self, start_offset, end_offset, start_phase, end_phase):
@@ -275,10 +301,12 @@ class TimeWindow(object):
         """
         if not isinstance(other, TimeWindow):
             return False
-        return (other.start_offset == self.start_offset and
-                other.end_offset == self.end_offset and
-                other.start_phase == self.start_phase and
-                other.end_phase == self.end_phase)
+        return (
+            other.start_offset == self.start_offset
+            and other.end_offset == self.end_offset
+            and other.start_phase == self.start_phase
+            and other.end_phase == self.end_phase
+        )
 
 
 def get_distance(lat1, lon1, lat2, lon2):
@@ -297,11 +325,7 @@ def get_arrivals(distance, event_depth):
     :param distance: distance in degrees
     :param event_depth: event depth in km
     """
-    arrivals = TAUP.get_travel_times(
-        event_depth,
-        distance,
-        TAUP_PHASES
-    )
+    arrivals = TAUP.get_travel_times(event_depth, distance, TAUP_PHASES)
 
     # From the travel time and origin, calculate the actual first arrival time for each basic phase type
     first_arrivals = {}
@@ -325,7 +349,7 @@ def get_bounding_circle(lat, lon, radius, num_points=36):
         [lon] * num_points,
         [lat] * num_points,
         list(((i * 360) / num_points) for i in range(num_points)),
-        [radius_meters] * num_points
+        [radius_meters] * num_points,
     )
     points = list(zip(trans[1], trans[0]))
     # We need to complete the circle by adding the first point again as the last point
@@ -333,7 +357,7 @@ def get_bounding_circle(lat, lon, radius, num_points=36):
     return points
 
 
-def get_service_url(client, service, parameters):
+def get_service_url(client: Client, service: str, parameters: Dict):
     """
     Figure out the URL for the given service call. This isn't publicly available from the ObsPy client,
     we need to use internal APIs, so those messy details are encapsulated here.
@@ -341,9 +365,7 @@ def get_service_url(client, service, parameters):
     try:
         return client._create_url_from_parameters(service, {}, parameters)
     except:
-        return "%s %s %s" % (
-            client.base_url, service, urlencode(parameters)
-        )
+        return "%s %s %s" % (client.base_url, service, urlencode(parameters))
 
 
 class CancelledException(Exception):
@@ -351,10 +373,11 @@ class CancelledException(Exception):
     An exception to return in an event notification indicating that an operation was cancelled.
     See `StationsHandler` for an example.
     """
+
     def __str__(self, *args, **kwargs):
         s = super(CancelledException, self).__str__(*args, **kwargs)
-        if s == '':
-            return 'Cancelled'
+        if s == "":
+            return "Cancelled"
         else:
             return s
 
@@ -363,12 +386,13 @@ class DataRequest(object):
     """
     Wrapper object for a data request, which may or may not be more than a single web service query.
     """
+
     # The client to use
     client = None
     # List of option dictionaries, one for each sub-request required
     sub_requests = None
 
-    def __init__(self, client, *requests):
+    def __init__(self, client: Client, *requests):
         self.client = client
         self.sub_requests = requests
 

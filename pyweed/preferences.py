@@ -11,17 +11,17 @@ Adapted from: https://github.com/claysmith/oldArcD/blob/master/tools/arctographe
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 import os
-import platform
 from configparser import ConfigParser
+from PyQt5 import QtCore
 
 
 def safe_bool(s, default=False):
     try:
         # 'yes' or 'true'
-        return s[0].lower() in 'yt'
+        return s[0].lower() in "yt"
     except:
         return default
 
@@ -77,22 +77,26 @@ class Section(object):
         return type(section_name, (cls,), {})(**initial)
 
 
-class Preferences(object):
+class Preferences(QtCore.QObject):
     """
     Container for application preferences.
     """
+
+    updated = QtCore.pyqtSignal()
 
     def __init__(self):
         """
         Initialization with default settings.
         """
-
-#         for (section, prefs) in DEFAULTS.items():
-#             setattr(self, section, Section.create(section, **prefs))
+        super().__init__()
+        #         for (section, prefs) in DEFAULTS.items():
+        #             setattr(self, section, Section.create(section, **prefs))
 
         self.Data = Section.create("Data")
         self.Data.eventDataCenter = "IRIS"
         self.Data.stationDataCenter = "IRIS"
+        self.Data.username = ""
+        self.Data.password = ""
 
         self.Waveforms = Section.create("Waveforms")
         self.Waveforms.downloadDir = user_download_path()
@@ -105,6 +109,7 @@ class Preferences(object):
         self.Waveforms.saveFormat = "MSEED"
         self.Waveforms.useEventTime = "n"
         self.Waveforms.hideNoData = "n"
+        self.Waveforms.downloadMetadata = "y"
         self.Waveforms.threads = "5"
 
         self.Logging = Section.create("Logging")
@@ -151,8 +156,7 @@ class Preferences(object):
                 os.makedirs(user_config_path(), 0o700)
             except Exception as e:
                 print(
-                    "Creation of user configuration directory failed with"
-                    " error: %s" % e
+                    "Creation of user configuration directory failed with error: %s" % e
                 )
                 return
         f = open(os.path.join(user_config_path(), "pyweed.ini"), "w")
@@ -241,6 +245,7 @@ def user_save_path(safe=False):
 # Main
 # ------------------------------------------------------------------------------
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod(exclude_empty=True)

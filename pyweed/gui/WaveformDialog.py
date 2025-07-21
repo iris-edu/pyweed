@@ -31,17 +31,20 @@ STATUS_DONE = "done"  # Finished
 STATUS_ERROR = "error"  # Something went wrong
 
 
-class KeepIndicatorTableWidgetItem(CustomTableWidgetItemMixin, QtWidgets.QTableWidgetItem):
+class KeepIndicatorTableWidgetItem(
+    CustomTableWidgetItemMixin, QtWidgets.QTableWidgetItem
+):
     """
     Custom QTableWidgetItem that indicates whether the row is included in the request
 
     Note that this uses Unicode characters for the checkboxes, this appears to be the easiest way to
     control the size, and we don't need an actual toggle widget here since that is done at the row level.
     """
-    checkedText = '☑'
-    checkedIcon = QtGui.QPixmap(':qrc/check-on.png')
-    uncheckedText = '☐'
-    uncheckedIcon = QtGui.QPixmap(':qrc/check-off.png')
+
+    checkedText = "☑"
+    checkedIcon = QtGui.QPixmap(":qrc/check-on.png")
+    uncheckedText = "☐"
+    uncheckedIcon = QtGui.QPixmap(":qrc/check-off.png")
     fontSize = 36
     checkedBackground = QtGui.QBrush(QtGui.QColor(220, 239, 223))
     uncheckedBackground = QtGui.QBrush(QtCore.Qt.NoBrush)
@@ -72,6 +75,7 @@ class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtWidgets.QTableWidget
     """
     Custom QTableWidgetItem that shows a waveform image (or a status message)
     """
+
     imagePath = None
     errorForeground = QtGui.QBrush(QtGui.QColor(255, 0, 0))
     defaultForeground = None
@@ -91,36 +95,35 @@ class WaveformTableWidgetItem(CustomTableWidgetItemMixin, QtWidgets.QTableWidget
                 self.imagePath = None
                 self.setData(QtCore.Qt.DecorationRole, None)
                 if waveform.loading:
-                    self.setText('Loading waveform data...')
+                    self.setText("Loading waveform data...")
                 elif waveform.error:
                     self.setText(waveform.error)
                 else:
-                    self.setText('')
+                    self.setText("")
             else:
                 if waveform.image_path != self.imagePath:
                     self.imagePath = waveform.image_path
                     pic = QtGui.QPixmap(waveform.image_path)
                     self.setData(QtCore.Qt.DecorationRole, pic)
-                    self.setText('')
+                    self.setText("")
         else:
             self.imagePath = None
-            self.setText('')
+            self.setText("")
 
 
 class WaveformTableItems(TableItems):
-
     #: Fixed row height based on the height of the waveform image
     rowHeight = 110
 
     columns = [
-        Column('Id'),
-        Column('Keep', width=40),
-        Column('Event Time', width=100),
-        Column('Location', width=100),
-        Column('Magnitude'),
-        Column('SNCL'),
-        Column('Distance'),
-        Column('Waveform', width=600),
+        Column("Id"),
+        Column("Keep", width=40),
+        Column("Event Time", width=100),
+        Column("Location", width=100),
+        Column("Magnitude"),
+        Column("SNCL"),
+        Column("Distance"),
+        Column("Waveform", width=600),
     ]
 
     def keepWidget(self, keep, **props):
@@ -137,25 +140,27 @@ class WaveformTableItems(TableItems):
             # Make the time and location wrap
             yield [
                 self.stringWidget(waveform.waveform_id),
-                self.keepWidget(waveform.keep,
-                                textAlignment=QtCore.Qt.AlignCenter),
+                self.keepWidget(waveform.keep, textAlignment=QtCore.Qt.AlignCenter),
                 self.stringWidget(waveform.event_time_str),
                 self.stringWidget(waveform.event_description),
-                self.numericWidget(waveform.event_mag_value, waveform.event_mag,
-                                   textAlignment=QtCore.Qt.AlignCenter),
-                self.stringWidget(waveform.sncl,
-                                  textAlignment=QtCore.Qt.AlignCenter),
-                self.numericWidget(waveform.distance, '%.02f°',
-                                   textAlignment=QtCore.Qt.AlignCenter),
+                self.numericWidget(
+                    waveform.event_mag_value,
+                    waveform.event_mag,
+                    textAlignment=QtCore.Qt.AlignCenter,
+                ),
+                self.stringWidget(waveform.sncl, textAlignment=QtCore.Qt.AlignCenter),
+                self.numericWidget(
+                    waveform.distance, "%.02f°", textAlignment=QtCore.Qt.AlignCenter
+                ),
                 self.waveformWidget(waveform),
             ]
 
 
 # Convenience values for some commonly used table column values
 _COLUMN_NAMES = [c.label for c in WaveformTableItems.columns]
-WAVEFORM_ID_COLUMN = _COLUMN_NAMES.index('Id')
-WAVEFORM_KEEP_COLUMN = _COLUMN_NAMES.index('Keep')
-WAVEFORM_IMAGE_COLUMN = _COLUMN_NAMES.index('Waveform')
+WAVEFORM_ID_COLUMN = _COLUMN_NAMES.index("Id")
+WAVEFORM_KEEP_COLUMN = _COLUMN_NAMES.index("Keep")
+WAVEFORM_IMAGE_COLUMN = _COLUMN_NAMES.index("Waveform")
 
 
 class TimeWindowAdapter(QtCore.QObject):
@@ -166,8 +171,13 @@ class TimeWindowAdapter(QtCore.QObject):
     # Signal indicating that the time window has changed
     changed = QtCore.pyqtSignal()
 
-    def __init__(self, secondsBeforeSpinBox, secondsAfterSpinBox,
-                 secondsBeforePhaseComboBox, secondsAfterPhaseComboBox):
+    def __init__(
+        self,
+        secondsBeforeSpinBox,
+        secondsAfterSpinBox,
+        secondsBeforePhaseComboBox,
+        secondsAfterPhaseComboBox,
+    ):
         super(TimeWindowAdapter, self).__init__()
 
         self.timeWindow = TimeWindow()
@@ -177,9 +187,11 @@ class TimeWindowAdapter(QtCore.QObject):
         self.secondsBeforeSpinBox = secondsBeforeSpinBox
         self.secondsAfterSpinBox = secondsAfterSpinBox
         self.secondsBeforePhaseAdapter = ComboBoxAdapter(
-            secondsBeforePhaseComboBox, phaseOptions)
+            secondsBeforePhaseComboBox, phaseOptions
+        )
         self.secondsAfterPhaseAdapter = ComboBoxAdapter(
-            secondsAfterPhaseComboBox, phaseOptions)
+            secondsAfterPhaseComboBox, phaseOptions
+        )
 
         # Connect input signals
         self.secondsBeforeSpinBox.valueChanged.connect(self.onTimeWindowChanged)
@@ -195,7 +207,7 @@ class TimeWindowAdapter(QtCore.QObject):
             self.secondsBeforeSpinBox.value(),
             self.secondsAfterSpinBox.value(),
             self.secondsBeforePhaseAdapter.getValue(),
-            self.secondsAfterPhaseAdapter.getValue()
+            self.secondsAfterPhaseAdapter.getValue(),
         )
         self.changed.emit()
 
@@ -203,9 +215,7 @@ class TimeWindowAdapter(QtCore.QObject):
         """
         This should be called on startup to set the initial values
         """
-        self.timeWindow.update(
-            start_offset, end_offset, start_phase, end_phase
-        )
+        self.timeWindow.update(start_offset, end_offset, start_phase, end_phase)
         self.updateInputs()
 
     def updateInputs(self):
@@ -219,19 +229,19 @@ class TimeWindowAdapter(QtCore.QObject):
 
 
 class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
-
     tableItems = None
 
     """
     Dialog window for selection and display of waveforms.
     """
+
     def __init__(self, pyweed, parent=None):
         super(WaveformDialog, self).__init__(parent=parent)
 
-        LOGGER.debug('Initializing waveform dialog...')
+        LOGGER.debug("Initializing waveform dialog...")
 
         self.setupUi(self)
-        self.setWindowTitle('Waveforms')
+        self.setWindowTitle("Waveforms")
 
         # Keep a reference to globally shared components
         self.pyweed = pyweed
@@ -241,12 +251,11 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             self.secondsBeforeSpinBox,
             self.secondsAfterSpinBox,
             self.secondsBeforePhaseComboBox,
-            self.secondsAfterPhaseComboBox
+            self.secondsAfterPhaseComboBox,
         )
 
         self.saveFormatAdapter = ComboBoxAdapter(
-            self.saveFormatComboBox,
-            [(f.value, f.label) for f in OUTPUT_FORMATS]
+            self.saveFormatComboBox, [(f.value, f.label) for f in OUTPUT_FORMATS]
         )
 
         # Initialize any preference-based settings
@@ -257,15 +266,25 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.saveDirectoryPushButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
         # Waveforms
-        self.waveforms_handler = WaveformsHandler(LOGGER, pyweed.preferences, pyweed.station_client)
+        self.waveforms_handler = WaveformsHandler(
+            LOGGER, pyweed.preferences, pyweed.client_manager.dataselect_client
+        )
         # The callbacks here are expensive, so use QueuedConnection to run them asynchronously
-        self.waveforms_handler.progress.connect(self.onWaveformDownloaded, QtCore.Qt.QueuedConnection)
-        self.waveforms_handler.done.connect(self.onAllDownloaded, QtCore.Qt.QueuedConnection)
+        self.waveforms_handler.progress.connect(
+            self.onWaveformDownloaded, QtCore.Qt.QueuedConnection
+        )
+        self.waveforms_handler.done.connect(
+            self.onAllDownloaded, QtCore.Qt.QueuedConnection
+        )
 
         # Spinner overlays for downloading and saving
-        self.downloadSpinner = SpinnerWidget("Downloading...", parent=self.downloadGroupBox)
+        self.downloadSpinner = SpinnerWidget(
+            "Downloading...", parent=self.downloadGroupBox
+        )
         self.downloadSpinner.cancelled.connect(self.onDownloadCancel)
-        self.saveSpinner = SpinnerWidget("Saving...", cancellable=False, parent=self.saveGroupBox)
+        self.saveSpinner = SpinnerWidget(
+            "Saving...", cancellable=False, parent=self.saveGroupBox
+        )
 
         # Connect signals associated with the main table
         # self.selectionTable.horizontalHeader().sortIndicatorChanged.connect(self.selectionTable.resizeRowsToContents)
@@ -292,6 +311,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         # Connect the timewindow signals
         self.timeWindowAdapter.changed.connect(self.resetDownload)
 
+        # Toggle download of metadata
+        self.downloadMetadataCheckBox.stateChanged.connect(self.resetDownload)
+
         # Dictionary of filter values
         self.filters = {}
 
@@ -303,7 +325,10 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadStatusLabel.setText("")
         self.saveStatusLabel.setText("")
 
-        LOGGER.debug('Finished initializing waveform dialog')
+        # Reset downloads when preference change
+        pyweed.preferences.updated.connect(self.resetDownload)
+
+        LOGGER.debug("Finished initializing waveform dialog")
 
     # NOTE:  http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget
     # NOTE:  http://stackoverflow.com/questions/30462078/using-a-checkbox-in-pyqt
@@ -330,7 +355,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         This function is triggered whenever the "Get Waveforms" button in the MainWindow is clicked.
         """
 
-        LOGGER.debug('Loading waveform choices...')
+        LOGGER.debug("Loading waveform choices...")
 
         self.resetDownload()
 
@@ -340,25 +365,25 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         self.eventComboBox.clear()
 
-        self.eventComboBox.addItem('All events')
+        self.eventComboBox.addItem("All events")
         for event in self.pyweed.iter_selected_events():
             self.eventComboBox.addItem(get_event_name(event))
 
         # Add networks/stations to the networkComboBox and stationsComboBox ---------------------------
 
         self.networkComboBox.clear()
-        self.networkComboBox.addItem('All networks')
+        self.networkComboBox.addItem("All networks")
 
         self.stationComboBox.clear()
-        self.stationComboBox.addItem('All stations')
+        self.stationComboBox.addItem("All stations")
 
         foundNetworks = set()
         foundStations = set()
-        for (network, station, _channel) in self.pyweed.iter_selected_stations():
+        for network, station, _channel in self.pyweed.iter_selected_stations():
             if network.code not in foundNetworks:
                 foundNetworks.add(network.code)
                 self.networkComboBox.addItem(network.code)
-            netstaCode = '.'.join((network.code, station.code))
+            netstaCode = ".".join((network.code, station.code))
             if netstaCode not in foundStations:
                 foundStations.add(netstaCode)
                 self.stationComboBox.addItem(netstaCode)
@@ -368,7 +393,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         # Start downloading data
         self.downloadWaveformData()
 
-        LOGGER.debug('Finished loading waveform choices')
+        LOGGER.debug("Finished loading waveform choices")
 
     @QtCore.pyqtSlot()
     def loadSelectionTable(self):
@@ -376,18 +401,16 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         Add event-SNCL combinations to the selection table
         """
 
-        LOGGER.debug('Loading waveform selection table...')
+        LOGGER.debug("Loading waveform selection table...")
 
         # Use WaveformTableItems to put the data into the table
         if not self.tableItems:
-            self.tableItems = WaveformTableItems(
-                self.selectionTable
-            )
+            self.tableItems = WaveformTableItems(self.selectionTable)
         self.tableItems.fill(self.iterWaveforms())
 
         self.filterSelectionTable()
 
-        LOGGER.debug('Finished loading waveform selection table')
+        LOGGER.debug("Finished loading waveform selection table")
 
     @QtCore.pyqtSlot(int)
     def onFilterChanged(self):
@@ -399,12 +422,11 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         Filter the selection table based on the currently defined filters
         """
         if self.tableItems:
-
             if not self.filters:
                 self.filters = {
-                    'event': self.eventComboBox.currentText(),
-                    'network': self.networkComboBox.currentText(),
-                    'station': self.stationComboBox.currentText(),
+                    "event": self.eventComboBox.currentText(),
+                    "network": self.networkComboBox.currentText(),
+                    "station": self.stationComboBox.currentText(),
                 }
 
             filterResults = dict(
@@ -413,7 +435,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             )
 
             def filterFn(row):
-                waveformID = str(self.selectionTable.item(row, WAVEFORM_ID_COLUMN).text())
+                waveformID = str(
+                    self.selectionTable.item(row, WAVEFORM_ID_COLUMN).text()
+                )
                 return filterResults.get(waveformID)
 
             self.tableItems.filter(filterFn)
@@ -436,16 +460,16 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         if waveform.error == NO_DATA_ERROR and self.hideNoDataCheckBox.isChecked():
             return False
         # Get the values from the waveform to match against the filter value
-        sncl_parts = waveform.sncl.split('.')
+        sncl_parts = waveform.sncl.split(".")
         net_code = sncl_parts[0]
-        netsta_code = '.'.join(sncl_parts[:2])
+        netsta_code = ".".join(sncl_parts[:2])
         filter_values = {
-            'event': get_event_name(waveform.event_ref()),
-            'network': net_code,
-            'station': netsta_code
+            "event": get_event_name(waveform.event_ref()),
+            "network": net_code,
+            "station": netsta_code,
         }
-        for (fname, fval) in self.filters.items():
-            if not fval.startswith('All') and fval != filter_values[fname]:
+        for fname, fval in self.filters.items():
+            if not fval.startswith("All") and fval != filter_values[fname]:
                 return False
         return True
 
@@ -472,7 +496,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadPushButton.setEnabled(self.waveformsDownloadStatus == STATUS_READY)
         # SAC options shown if SAC format chosed
         self.sacUseEventTimeCheckBox.setVisible(
-            (self.saveFormatAdapter.getValue() or '').startswith('SAC')
+            (self.saveFormatAdapter.getValue() or "").startswith("SAC")
         )
 
     @QtCore.pyqtSlot()
@@ -535,11 +559,17 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.updateToolbars()
 
         # Priority is given to waveforms shown on the screen
-        priority_ids = [waveform.waveform_id for waveform in self.waveforms_handler.waveforms]
+        priority_ids = [
+            waveform.waveform_id for waveform in self.waveforms_handler.waveforms
+        ]
         other_ids = []
 
         self.waveforms_handler.download_waveforms(
-            priority_ids, other_ids, self.timeWindowAdapter.timeWindow)
+            priority_ids,
+            other_ids,
+            self.timeWindowAdapter.timeWindow,
+            self.downloadMetadataCheckBox.isChecked(),
+        )
 
         # Update the table rows
         for row in range(self.selectionTable.rowCount()):
@@ -562,7 +592,11 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         Called each time a waveform request has completed
         """
         waveform_id = result.waveform_id
-        LOGGER.debug("Ready to display waveform %s (%s)", waveform_id, QtCore.QThread.currentThreadId())
+        LOGGER.debug(
+            "Ready to display waveform %s (%s)",
+            waveform_id,
+            QtCore.QThread.currentThreadId(),
+        )
 
         self.downloadCompleted += 1
         msg = "Downloaded %d of %d" % (self.downloadCompleted, self.downloadCount)
@@ -589,7 +623,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         """
         Called after all waveforms have been downloaded
         """
-        LOGGER.debug('COMPLETED all downloads')
+        LOGGER.debug("COMPLETED all downloads")
 
         if self.waveformsDownloadStatus == STATUS_WORKING:
             self.downloadSpinner.hide()
@@ -599,7 +633,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                 self.waveformsDownloadStatus = STATUS_READY
             else:
                 self.waveformsDownloadStatus = STATUS_DONE
-                self.downloadStatusLabel.setText("Downloaded %d waveforms" % len(self.waveforms_handler.waveforms))
+                self.downloadStatusLabel.setText(
+                    "Downloaded %d waveforms" % len(self.waveforms_handler.waveforms)
+                )
 
                 # Initiate save if that was queued
                 if self.waveformsSaveStatus == STATUS_WORKING:
@@ -629,20 +665,26 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             outputDir = self.waveformDirectory
             outputFormat = self.saveFormatAdapter.getValue()
 
-            for result in self.waveforms_handler.save_waveforms_iter(outputDir, outputFormat, waveforms):
+            for result in self.waveforms_handler.save_waveforms_iter(
+                outputDir, outputFormat, waveforms
+            ):
                 if isinstance(result.result, Exception):
-                    LOGGER.error("Failed to save waveform %s: %s", result.waveform_id, result.result)
                     errors.append("%s: %s" % (result.waveform_id, result.result))
                 elif result.result:
                     savedCount += 1
-                    self.saveSpinner.setLabel("Saved %d waveforms" % savedCount)
+                    self.saveSpinner.setLabel("Saved %d new waveforms" % savedCount)
                     QtWidgets.QApplication.processEvents()  # update GUI
                 else:
                     skippedCount += 1
-            self.saveStatusLabel.setText("Saved %d waveforms" % savedCount)
+            self.saveStatusLabel.setText("Saved %d new waveforms" % savedCount)
             self.saveStatusLabel.repaint()
 
-            LOGGER.info("Save complete: %d saved, %d already existed, %d errors", savedCount, skippedCount, len(errors))
+            LOGGER.info(
+                "Save complete: %d saved, %d already existed, %d errors",
+                savedCount,
+                skippedCount,
+                len(errors),
+            )
 
             if errors:
                 # Truncate the list of errors if it's very long
@@ -650,22 +692,21 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
                 if errorCount > 20:
                     errors = errors[:20]
                     errors.append("(see log for full list)")
-                raise Exception("%d waveforms couldn't be saved:\n%s" % (errorCount, "\n".join(errors)))
+                raise Exception(
+                    "%d waveforms couldn't be saved:\n%s"
+                    % (errorCount, "\n".join(errors))
+                )
 
             self.waveformsSaveStatus = STATUS_DONE
         except Exception as e:
             LOGGER.error(e)
             self.waveformsSaveStatus = STATUS_ERROR
-            QtWidgets.QMessageBox.critical(
-                self,
-                "Error",
-                str(e)
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", str(e))
         finally:
             self.updateToolbars()
 
         self.saveSpinner.hide()
-        LOGGER.debug('COMPLETED saving all waveforms')
+        LOGGER.debug("COMPLETED saving all waveforms")
 
     @QtCore.pyqtSlot()
     def getWaveformDirectory(self):
@@ -673,13 +714,16 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         This function is triggered whenever the user presses the "to <directory>" button.
         """
         # If the user quits or cancels this dialog, '' is returned
-        newDirectory = str(QtWidgets.QFileDialog.getExistingDirectory(
-            self,
-            "Waveform Directory",
-            self.waveformDirectory,
-            QtWidgets.QFileDialog.ShowDirsOnly))
+        newDirectory = str(
+            QtWidgets.QFileDialog.getExistingDirectory(
+                self,
+                "Waveform Directory",
+                self.waveformDirectory,
+                QtWidgets.QFileDialog.ShowDirsOnly,
+            )
+        )
 
-        if newDirectory != '':
+        if newDirectory != "":
             self.waveformDirectory = newDirectory
             self.saveDirectoryPushButton.setText(self.waveformDirectory)
             self.resetSave()
@@ -704,15 +748,14 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
             safe_int(prefs.Waveforms.timeWindowBefore, 60),
             safe_int(prefs.Waveforms.timeWindowAfter, 600),
             prefs.Waveforms.timeWindowBeforePhase,
-            prefs.Waveforms.timeWindowAfterPhase
+            prefs.Waveforms.timeWindowAfterPhase,
         )
 
         self.saveFormatAdapter.setValue(prefs.Waveforms.saveFormat)
-        self.sacUseEventTimeCheckBox.setChecked(
-            safe_bool(prefs.Waveforms.useEventTime)
-        )
-        self.hideNoDataCheckBox.setChecked(
-            safe_bool(prefs.Waveforms.hideNoData)
+        self.sacUseEventTimeCheckBox.setChecked(safe_bool(prefs.Waveforms.useEventTime))
+        self.hideNoDataCheckBox.setChecked(safe_bool(prefs.Waveforms.hideNoData))
+        self.downloadMetadataCheckBox.setChecked(
+            safe_bool(prefs.Waveforms.downloadMetadata)
         )
 
     def savePreferences(self):
@@ -731,3 +774,4 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         prefs.Waveforms.saveFormat = self.saveFormatAdapter.getValue()
         prefs.Waveforms.useEventTime = self.sacUseEventTimeCheckBox.isChecked()
         prefs.Waveforms.hideNoData = self.hideNoDataCheckBox.isChecked()
+        prefs.Waveforms.downloadMetadata = self.downloadMetadataCheckBox.isChecked()

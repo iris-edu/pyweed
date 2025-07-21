@@ -1,12 +1,12 @@
 name: pyweed
 channels:
-- conda-forge
-- defaults
+  - conda-forge
+  - defaults
 dependencies:
-- python<3.11
-- basemap=1.3
-- matplotlib-base
-- obspy=1.3
-- pillow
-- pyqt=5
-- pyproj
+  - python<3.12
+  - basemap=1.3
+  - matplotlib-base
+  - obspy=1.4
+  - pillow
+  - pyqt=5
+  - pyproj

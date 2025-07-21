@@ -19,11 +19,12 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
+requires-python = ">=3.9, <3.12"
 dependencies = [
     "numpy",
     "basemap",
     "matplotlib",
-    "obspy<1.4",
+    "obspy==1.4.*",
     "pillow",
     "pyqt5",
     "pyproj",
