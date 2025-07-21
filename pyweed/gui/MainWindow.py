@@ -173,9 +173,16 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
             self.toggleStationOptions,
         )
 
-        # When any options change, enable the relevant download button
-        self.eventOptionsWidget.changed.connect(lambda: self.getEventsButton.setEnabled(True))
-        self.stationOptionsWidget.changed.connect(lambda: self.getStationsButton.setEnabled(True))
+        # When any options change, enable the relevant fetch button
+        self.eventOptionsWidget.changed.connect(
+            lambda: self.onOptionsChanged(events=True)
+        )
+        self.stationOptionsWidget.changed.connect(
+            lambda: self.onOptionsChanged(staions=True)
+        )
+
+        # When preferences change, enable the fetch buttons
+        prefs.updated.connect(lambda: self.onOptionsChanged(events=True, stations=True))
 
         # Map
         self.initializeMap()
@@ -309,6 +316,15 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
             elif "stations" in event.mode:
                 self.pyweed.set_station_options(options)
                 self.stationOptionsWidget.changedCoords.emit(event.mode)
+
+    def onOptionsChanged(self, events=False, stations=False):
+        """
+        Called when options change -- reset the fetch buttons
+        """
+        if events:
+            self.getEventsButton.setEnabled(True)
+        if stations:
+            self.getStationsButton.setEnabled(True)
 
     def getEvents(self):
         """

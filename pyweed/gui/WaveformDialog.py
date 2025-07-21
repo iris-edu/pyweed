@@ -325,6 +325,9 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.downloadStatusLabel.setText("")
         self.saveStatusLabel.setText("")
 
+        # Reset downloads when preference change
+        pyweed.preferences.updated.connect(self.resetDownload)
+
         LOGGER.debug("Finished initializing waveform dialog")
 
     # NOTE:  http://stackoverflow.com/questions/12366521/pyqt-checkbox-in-qtablewidget

@@ -14,8 +14,8 @@ Adapted from: https://github.com/claysmith/oldArcD/blob/master/tools/arctographe
 from __future__ import absolute_import, division, print_function
 
 import os
-import platform
 from configparser import ConfigParser
+from PyQt5 import QtCore
 
 
 def safe_bool(s, default=False):
@@ -77,22 +77,26 @@ class Section(object):
         return type(section_name, (cls,), {})(**initial)
 
 
-class Preferences(object):
+class Preferences(QtCore.QObject):
     """
     Container for application preferences.
     """
+
+    updated = QtCore.pyqtSignal()
 
     def __init__(self):
         """
         Initialization with default settings.
         """
-
+        super().__init__()
         #         for (section, prefs) in DEFAULTS.items():
         #             setattr(self, section, Section.create(section, **prefs))
 
         self.Data = Section.create("Data")
         self.Data.eventDataCenter = "IRIS"
         self.Data.stationDataCenter = "IRIS"
+        self.Data.username = ""
+        self.Data.password = ""
 
         self.Waveforms = Section.create("Waveforms")
         self.Waveforms.downloadDir = user_download_path()
