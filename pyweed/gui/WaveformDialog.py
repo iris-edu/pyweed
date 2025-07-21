@@ -267,7 +267,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
 
         # Waveforms
         self.waveforms_handler = WaveformsHandler(
-            LOGGER, pyweed.preferences, pyweed.dataselect_client
+            LOGGER, pyweed.preferences, pyweed.client_manager.dataselect_client
         )
         # The callbacks here are expensive, so use QueuedConnection to run them asynchronously
         self.waveforms_handler.progress.connect(
