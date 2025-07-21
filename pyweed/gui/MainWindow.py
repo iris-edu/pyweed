@@ -9,7 +9,7 @@ Main window
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 from pyweed import __version__, __app_name__
 
@@ -17,7 +17,11 @@ from PyQt5 import QtWidgets
 from pyweed.gui.uic import MainWindow
 from pyweed.preferences import safe_int, safe_bool, bool_to_str
 import logging
-from pyweed.pyweed_utils import iter_channels, get_preferred_origin, get_preferred_magnitude
+from pyweed.pyweed_utils import (
+    iter_channels,
+    get_preferred_origin,
+    get_preferred_magnitude,
+)
 from pyweed.gui.Seismap import Seismap
 from pyweed.gui.EventOptionsWidget import EventOptionsWidget
 from pyweed.gui.StationOptionsWidget import StationOptionsWidget
@@ -34,10 +38,8 @@ def make_exclusive(widget1, widget2):
     """
     Make two widgets exclusive, so that if one is toggled the other is disabled and vice versa
     """
-    widget1.toggled.connect(
-        lambda b: widget2.setEnabled(not b))
-    widget2.toggled.connect(
-        lambda b: widget1.setEnabled(not b))
+    widget1.toggled.connect(lambda b: widget2.setEnabled(not b))
+    widget2.toggled.connect(lambda b: widget1.setEnabled(not b))
     widget2.setEnabled(not widget1.isChecked())
     widget1.setEnabled(not widget2.isChecked())
 
@@ -46,14 +48,15 @@ class EventTableItems(TableItems):
     """
     Defines the table for displaying events
     """
+
     columns = [
-        Column('Id'),
-        Column('Date/Time'),
-        Column('Magnitude'),
-        Column('Longitude'),
-        Column('Latitude'),
-        Column('Depth'),
-        Column('Location'),
+        Column("Id"),
+        Column("Date/Time"),
+        Column("Magnitude"),
+        Column("Longitude"),
+        Column("Latitude"),
+        Column("Depth"),
+        Column("Location"),
     ]
 
     def rows(self, data):
@@ -67,7 +70,9 @@ class EventTableItems(TableItems):
             magnitude = get_preferred_magnitude(event)
             if not magnitude:
                 continue
-            time = origin.time.strftime("%Y-%m-%d %H:%M:%S")  # use strftime to remove milliseconds
+            time = origin.time.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )  # use strftime to remove milliseconds
             event_description = "no description"
             if len(event.event_descriptions) > 0:
                 event_description = event.event_descriptions[0].text
@@ -75,10 +80,14 @@ class EventTableItems(TableItems):
             yield [
                 self.numericWidget(i),
                 self.stringWidget(time),
-                self.numericWidget(magnitude.mag, "%s %s" % (magnitude.mag, magnitude.magnitude_type)),
+                self.numericWidget(
+                    magnitude.mag, "%s %s" % (magnitude.mag, magnitude.magnitude_type)
+                ),
                 self.numericWidget(origin.longitude, "%.03f°"),
                 self.numericWidget(origin.latitude, "%.03f°"),
-                self.numericWidget(origin.depth / 1000, "%.02f km"),  # we wish to report in km
+                self.numericWidget(
+                    origin.depth / 1000, "%.02f km"
+                ),  # we wish to report in km
                 self.stringWidget(event_description.title()),
             ]
 
@@ -87,15 +96,16 @@ class StationTableItems(TableItems):
     """
     Defines the table for displaying stations
     """
+
     columns = [
-        Column('SNCL'),
-        Column('Network'),
-        Column('Station'),
-        Column('Location'),
-        Column('Channel'),
-        Column('Longitude'),
-        Column('Latitude'),
-        Column('Description'),
+        Column("SNCL"),
+        Column("Network"),
+        Column("Station"),
+        Column("Location"),
+        Column("Channel"),
+        Column("Longitude"),
+        Column("Latitude"),
+        Column("Description"),
     ]
 
     def rows(self, data):
@@ -103,8 +113,10 @@ class StationTableItems(TableItems):
         Turn the data into rows (an iterable of lists) of QTableWidgetItems
         """
         sncls = set()
-        for (network, station, channel) in iter_channels(data):
-            sncl = '.'.join((network.code, station.code, channel.location_code, channel.code))
+        for network, station, channel in iter_channels(data):
+            sncl = ".".join(
+                (network.code, station.code, channel.location_code, channel.code)
+            )
             if sncl in sncls:
                 LOGGER.debug("Found duplicate SNCL: %s", sncl)
             else:
@@ -122,7 +134,6 @@ class StationTableItems(TableItems):
 
 
 class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
-
     eventTableItems = None
     stationTableItems = None
     eventsSpinner = None
@@ -144,15 +155,23 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         prefs = self.pyweed.preferences
 
         # Set MainWindow properties
-        self.setWindowTitle('%s version %s' % (__app_name__, __version__))
+        self.setWindowTitle("%s version %s" % (__app_name__, __version__))
 
         # Options widgets
         self.eventOptionsWidget = EventOptionsWidget(
-            self, self.pyweed.event_options, self.pyweed.station_options,
-            self.eventOptionsDockWidget, self.toggleEventOptions)
+            self,
+            self.pyweed.event_options,
+            self.pyweed.station_options,
+            self.eventOptionsDockWidget,
+            self.toggleEventOptions,
+        )
         self.stationOptionsWidget = StationOptionsWidget(
-            self, self.pyweed.station_options, self.pyweed.event_options,
-            self.stationOptionsDockWidget, self.toggleStationOptions)
+            self,
+            self.pyweed.station_options,
+            self.pyweed.event_options,
+            self.stationOptionsDockWidget,
+            self.toggleStationOptions,
+        )
 
         # When any options change, enable the relevant download button
         self.eventOptionsWidget.changed.connect(lambda: self.getEventsButton.setEnabled(True))
@@ -175,7 +194,9 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.allEventSelectionButton.clicked.connect(self.selectAllEvents)
         self.clearEventSelectionButton.clicked.connect(self.eventsTable.clearSelection)
         self.allStationSelectionButton.clicked.connect(self.selectAllStations)
-        self.clearStationSelectionButton.clicked.connect(self.stationsTable.clearSelection)
+        self.clearStationSelectionButton.clicked.connect(
+            self.stationsTable.clearSelection
+        )
 
         # Main window buttons
         self.getEventsButton.clicked.connect(self.getEvents)
@@ -191,17 +212,27 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         )
         map_height = safe_int(prefs.MainWindow.mapHeight, 300)
         # We can't actually set this for various reasons, it's just a scaled value for the splitter
-        self.centralSplitter.setSizes([
-            map_height,
-            800 - map_height,
-        ])
-        self.eventOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.eventOptionsFloat, False))
-        self.stationOptionsDockWidget.setFloating(safe_bool(prefs.MainWindow.stationOptionsFloat, False))
+        self.centralSplitter.setSizes(
+            [
+                map_height,
+                800 - map_height,
+            ]
+        )
+        self.eventOptionsDockWidget.setFloating(
+            safe_bool(prefs.MainWindow.eventOptionsFloat, False)
+        )
+        self.stationOptionsDockWidget.setFloating(
+            safe_bool(prefs.MainWindow.stationOptionsFloat, False)
+        )
 
         # Add spinner overlays to the event/station widgets
-        self.eventsSpinner = SpinnerWidget("Loading events...", parent=self.eventsWidget)
+        self.eventsSpinner = SpinnerWidget(
+            "Loading events...", parent=self.eventsWidget
+        )
         self.eventsSpinner.cancelled.connect(self.pyweed.events_handler.cancel)
-        self.stationsSpinner = SpinnerWidget("Loading stations...", parent=self.stationsWidget)
+        self.stationsSpinner = SpinnerWidget(
+            "Loading stations...", parent=self.stationsWidget
+        )
         self.stationsSpinner.cancelled.connect(self.pyweed.stations_handler.cancel)
 
         # Do an initial update
@@ -211,21 +242,22 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.manageGetWaveformsButton()
 
     def initializeMap(self):
-        LOGGER.info('Setting up main map...')
+        LOGGER.info("Setting up main map...")
 
         self.seismap = Seismap(self.mapCanvas)
 
         # Map of buttons to the relevant draw modes
         self.drawButtons = {
-            'events.box': self.eventOptionsWidget.drawLocationRangeToolButton,
-            'events.toroid': self.eventOptionsWidget.drawDistanceFromPointToolButton,
-            'stations.box': self.stationOptionsWidget.drawLocationRangeToolButton,
-            'stations.toroid': self.stationOptionsWidget.drawDistanceFromPointToolButton,
+            "events.box": self.eventOptionsWidget.drawLocationRangeToolButton,
+            "events.toroid": self.eventOptionsWidget.drawDistanceFromPointToolButton,
+            "stations.box": self.stationOptionsWidget.drawLocationRangeToolButton,
+            "stations.toroid": self.stationOptionsWidget.drawDistanceFromPointToolButton,
         }
 
         # Generate a handler to toggle a given drawing mode
         def drawModeFn(mode):
             return lambda checked: self.seismap.toggleDrawMode(mode, checked)
+
         # Register draw mode toggle handlers
         for mode, button in self.drawButtons.items():
             button.clicked.connect(drawModeFn(mode))
@@ -237,7 +269,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.drawEnd.connect(self.onMapDrawFinished)
 
     def showMessage(self, message):
-        """ Display the given message in the status bar """
+        """Display the given message in the status bar"""
         self.statusBar.showMessage(message, 4000)
 
     @pyqtSlot(object)
@@ -253,28 +285,28 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         # For box/toroid bounds drawing, handle the returned geo data
         options = {}
         if event.points:
-            if 'box' in event.mode:
+            if "box" in event.mode:
                 (n, e, s, w) = event.points
                 options = {
-                    'location_choice': EventOptions.LOCATION_BOX,  # Assumes StationOptions.LOCATION_BOX is the same
-                    'maxlatitude': n,
-                    'maxlongitude': e,
-                    'minlatitude': s,
-                    'minlongitude': w,
+                    "location_choice": EventOptions.LOCATION_BOX,  # Assumes StationOptions.LOCATION_BOX is the same
+                    "maxlatitude": n,
+                    "maxlongitude": e,
+                    "minlatitude": s,
+                    "minlongitude": w,
                 }
-            elif 'toroid' in event.mode:
+            elif "toroid" in event.mode:
                 (lat, lon, dist) = event.points
                 options = {
-                    'location_choice': EventOptions.LOCATION_POINT,  # Assumes StationOptions.LOCATION_POINT is the same
-                    'latitude': lat,
-                    'longitude': lon,
-                    'maxradius': dist
+                    "location_choice": EventOptions.LOCATION_POINT,  # Assumes StationOptions.LOCATION_POINT is the same
+                    "latitude": lat,
+                    "longitude": lon,
+                    "maxradius": dist,
                 }
             # Set event or station options (and ugly event emitter)
-            if 'events' in event.mode:
+            if "events" in event.mode:
                 self.pyweed.set_event_options(options)
                 self.eventOptionsWidget.changedCoords.emit(event.mode)
-            elif 'stations' in event.mode:
+            elif "stations" in event.mode:
                 self.pyweed.set_station_options(options)
                 self.stationOptionsWidget.changedCoords.emit(event.mode)
 
@@ -282,7 +314,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Trigger the event retrieval from web services
         """
-        LOGGER.info('Loading events...')
+        LOGGER.info("Loading events...")
         self.eventsSpinner.show()
         self.getEventsButton.setEnabled(False)
         self.pyweed.fetch_events()
@@ -291,7 +323,9 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Update seismap when [event|station]OptionsWidget coordinates change
         """
-        LOGGER.debug("Updating map from widget: %s" % ((events and "events") or "stations"))
+        LOGGER.debug(
+            "Updating map from widget: %s" % ((events and "events") or "stations")
+        )
 
         if events:
             options = self.eventOptionsWidget.getOptions()
@@ -308,7 +342,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
                     float(options["maxlatitude"]),
                     float(options["maxlongitude"]),
                     float(options["minlatitude"]),
-                    float(options["minlongitude"])
+                    float(options["minlongitude"]),
                 )
             elif options["location_choice"] == EventOptions.LOCATION_POINT:
                 self.seismap.addMarkerToroid(
@@ -316,7 +350,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
                     float(options["latitude"]),
                     float(options["longitude"]),
                     float(options["minradius"]),
-                    float(options["maxradius"])
+                    float(options["maxradius"]),
                 )
             elif options["location_choice"] == StationOptions.LOCATION_EVENTS:
                 # Show distance markers around all events
@@ -328,7 +362,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
                             origin.latitude,
                             origin.longitude,
                             float(options["mindistance"]),
-                            float(options["maxdistance"])
+                            float(options["maxdistance"]),
                         )
         except Exception as e:
             LOGGER.error("Failed to update seismap! %s", e, exc_info=True)
@@ -340,7 +374,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.eventsSpinner.hide()
 
         if isinstance(events, Exception):
-            self.eventSelectionLabel.setText('Error! See log for details')
+            self.eventSelectionLabel.setText("Error! See log for details")
             msg = "Error loading events: %s" % events
             LOGGER.error(msg)
             self.showMessage(msg)
@@ -355,7 +389,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.addEvents(events)
 
         self.onEventSelectionChanged()
-        status = 'Finished loading events'
+        status = "Finished loading events"
         LOGGER.info(status)
         self.showMessage(status)
 
@@ -363,7 +397,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         """
         Trigger the channel metadata retrieval from web services
         """
-        LOGGER.info('Loading stations...')
+        LOGGER.info("Loading stations...")
         self.stationsSpinner.show()
         self.getStationsButton.setEnabled(False)
         self.pyweed.fetch_stations()
@@ -375,7 +409,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.stationsSpinner.hide()
 
         if isinstance(stations, Exception):
-            self.stationSelectionLabel.setText('Error! See log for details')
+            self.stationSelectionLabel.setText("Error! See log for details")
             msg = "Error loading stations: %s" % stations
             LOGGER.error(msg)
             self.showMessage(msg)
@@ -390,7 +424,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.addStations(stations)
 
         self.onStationSelectionChanged()
-        status = 'Finished loading stations'
+        status = "Finished loading stations"
         LOGGER.info(status)
         self.showMessage(status)
 
@@ -416,7 +450,8 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         numSelected = len(ids)
         numTotal = self.eventsTable.rowCount()
         self.eventSelectionLabel.setText(
-            "Selected %d of %d events" % (numSelected, numTotal))
+            "Selected %d of %d events" % (numSelected, numTotal)
+        )
 
         # Get locations and event IDs
         points = []
@@ -454,14 +489,15 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         numSelected = len(sncls)
         numTotal = self.stationsTable.rowCount()
         self.stationSelectionLabel.setText(
-            "Selected %d of %d channels" % (numSelected, numTotal))
+            "Selected %d of %d channels" % (numSelected, numTotal)
+        )
 
         # Get locations
         points = []
         for sncl in sncls:
             try:
                 coordinates = self.pyweed.stations.get_coordinates(sncl)
-                points.append((coordinates['latitude'], coordinates['longitude']))
+                points.append((coordinates["latitude"], coordinates["longitude"]))
             except:
                 pass
 
@@ -506,5 +542,9 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
                 (splitterSizes[0] * 800) / (splitterSizes[0] + splitterSizes[1])
             )
 
-        prefs.MainWindow.eventOptionsFloat = bool_to_str(self.eventOptionsDockWidget.isFloating())
-        prefs.MainWindow.stationOptionsFloat = bool_to_str(self.stationOptionsDockWidget.isFloating())
+        prefs.MainWindow.eventOptionsFloat = bool_to_str(
+            self.eventOptionsDockWidget.isFloating()
+        )
+        prefs.MainWindow.stationOptionsFloat = bool_to_str(
+            self.stationOptionsDockWidget.isFloating()
+        )
