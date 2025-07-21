@@ -24,6 +24,7 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
     """
     Dialog window for editing preferences.
     """
+
     def __init__(self, pyweed, parent=None):
         super(PreferencesDialog, self).__init__(parent=parent)
         self.setupUi(self)
@@ -35,12 +36,12 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
 
         self.eventDataCenterAdapter = ComboBoxAdapter(
             self.eventDataCenterComboBox,
-            [(dc, f"{dc} - {URL_MAPPINGS[dc]}") for dc in dcs]
+            [(dc, f"{dc} - {URL_MAPPINGS[dc]}") for dc in dcs],
         )
 
         self.stationDataCenterAdapter = ComboBoxAdapter(
             self.stationDataCenterComboBox,
-            [(dc, f"{dc} - {URL_MAPPINGS[dc]}") for dc in dcs]
+            [(dc, f"{dc} - {URL_MAPPINGS[dc]}") for dc in dcs],
         )
 
         self.okButton.pressed.connect(self.accept)
@@ -58,6 +59,8 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
         self.stationDataCenterAdapter.setValue(
             self.pyweed.preferences.Data.stationDataCenter
         )
+        self.usernameLineEdit.setText(self.pyweed.preferences.Data.username)
+        self.passwordLineEdit.setText(self.pyweed.preferences.Data.password)
         self.cacheSizeSpinBox.setValue(
             safe_int(self.pyweed.preferences.Waveforms.cacheSize, 10)
         )
@@ -66,6 +69,12 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
         """
         Validate and save preferences
         """
+
+        # Save auth information before setting data centers, since it may reset the client
+        self.pyweed.preferences.Data.username = self.usernameLineEdit.text()
+        self.pyweed.preferences.Data.password = self.passwordLineEdit.text()
+        self.pyweed.preferences.Waveforms.cacheSize = self.cacheSizeSpinBox.value()
+
         try:
             self.pyweed.preferences.Data.eventDataCenter = (
                 self.eventDataCenterAdapter.getValue()
@@ -80,6 +89,6 @@ class PreferencesDialog(QtWidgets.QDialog, PreferencesDialog.Ui_PreferencesDialo
             # Don't call super() which would close the preferences dialog
             return
 
-        self.pyweed.preferences.Waveforms.cacheSize = self.cacheSizeSpinBox.value()
+        self.pyweed.preferences.updated.emit()
 
         return super(PreferencesDialog, self).accept()

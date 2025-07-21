@@ -98,6 +98,8 @@ class PyWeedCore(QObject):
             self.preferences.Data.eventDataCenter,
             self.preferences.Data.stationDataCenter,
             self.preferences.Data.stationDataCenter,
+            self.preferences.Data.username,
+            self.preferences.Data.password,
         )
 
     def load_preferences(self):

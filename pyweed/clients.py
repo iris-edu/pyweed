@@ -27,16 +27,22 @@ class ClientManager(object):
 
     clients: Dict[FDSNService, Client] = None
     data_centers: Dict[FDSNService, str] = None
+    username: str = None
+    password: str = None
 
     def initialize(
         self,
         event_data_center: str,
         station_data_center: str,
         dataselect_data_center: str,
+        username: str,
+        password: str,
     ):
         LOGGER.info("Initializing ObsPy client(s)")
         self.data_centers = {}
         self.clients = {}
+        self.username = username
+        self.password = password
         self.set_data_center(FDSNService.EVENT, event_data_center)
         self.set_data_center(FDSNService.STATION, station_data_center)
         self.set_data_center(FDSNService.DATASELECT, dataselect_data_center)
@@ -100,6 +106,9 @@ class ClientManager(object):
         (eg. https://service.iris.edu/fdsnwsbeta/station/1/) and explicitly map it.
         """
         kwargs = {}
+        if self.username and self.password:
+            kwargs["user"] = self.username
+            kwargs["password"] = self.password
         if url_or_label.startswith("http"):
             service_mappings = {}
             service_mappings[service.value] = url_or_label
