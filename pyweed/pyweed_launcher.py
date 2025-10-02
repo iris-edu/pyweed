@@ -101,8 +101,8 @@ def launch():
     app = QtWidgets.QApplication(sys.argv)
     splashScreenHandler = SplashScreenHandler()
     app.processEvents()
-    pyweed = get_pyweed()
-    splashScreenHandler.finish(pyweed.mainWindow)
+    pyweed_gui = get_pyweed()
+    splashScreenHandler.finish(pyweed_gui.mainWindow)
     sys.exit(app.exec_())
 
 
