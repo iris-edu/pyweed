@@ -134,13 +134,17 @@ class PyWeedCore(QObject):
             self.preferences.EventOptions.update(
                 self.event_options.get_options(stringify=True)
             )
-            if self.event_data_center:
-                self.preferences.Data.eventDataCenter = self.event_data_center
+            if self.client_manager.event_data_center:
+                self.preferences.Data.eventDataCenter = (
+                    self.client_manager.event_data_center
+                )
             self.preferences.StationOptions.update(
                 self.station_options.get_options(stringify=True)
             )
-            if self.station_data_center:
-                self.preferences.Data.stationDataCenter = self.station_data_center
+            if self.client_manager.station_data_center:
+                self.preferences.Data.stationDataCenter = (
+                    self.client_manager.station_data_center
+                )
             self.preferences.save()
         except Exception as e:
             LOGGER.error("Unable to save configuration preferences: %s", e)
