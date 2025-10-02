@@ -376,19 +376,18 @@ class WaveformsHandler(SignalingObject):
 
     progress = QtCore.pyqtSignal(object)
 
-    def __init__(self, logger, preferences: Preferences, client: Client):
+    def __init__(self, logger, pyweed):
         """
         Initialization.
         """
         super(WaveformsHandler, self).__init__()
 
         # Keep a reference to globally shared components
-        self.preferences = preferences
-        self.client = client
+        self.pyweed = pyweed
 
         # Important preferences
-        self.downloadDir = self.preferences.Waveforms.downloadDir
-        self.download_metadata = self.preferences.Waveforms.downloadMetadata
+        self.downloadDir = self.pyweed.preferences.Waveforms.downloadDir
+        self.download_metadata = self.pyweed.preferences.Waveforms.downloadMetadata
 
         # Loader component
         self.waveforms_loader = None
@@ -405,7 +404,7 @@ class WaveformsHandler(SignalingObject):
         # Waveforms indexed by id
         self.waveforms_by_id = None
 
-    def create_waveforms(self, pyweed):
+    def create_waveforms(self):
         """
         Create a list of waveform entries based on the current event/station selections
         """
@@ -416,7 +415,7 @@ class WaveformsHandler(SignalingObject):
                 network,
                 station,
                 channel,
-            ) in pyweed.iter_selected_events_stations()
+            ) in self.pyweed.iter_selected_events_stations()
         ]
         self.waveforms_by_id = dict(
             (waveform.waveform_id, waveform) for waveform in self.waveforms
@@ -462,9 +461,9 @@ class WaveformsHandler(SignalingObject):
         waveforms = [self.get_waveform(waveform_id) for waveform_id in waveform_ids]
 
         # Create a worker to load the data in separate threads
-        thread_pool_size = safe_int(self.preferences.Waveforms.threads, 5)
+        thread_pool_size = safe_int(self.pyweed.preferences.Waveforms.threads, 5)
         self.waveforms_loader = WaveformsLoader(
-            self.client, waveforms, thread_pool_size
+            self.pyweed.client_manager.dataselect_client, waveforms, thread_pool_size
         )
         self.waveforms_loader.progress.connect(self.on_downloaded)
         self.waveforms_loader.done.connect(self.on_all_downloaded)
@@ -579,7 +578,7 @@ class WaveformsHandler(SignalingObject):
                 tr.evdp = origin.depth / 1000
                 tr.o = origin.time - waveform.start_time
                 # Use event time as the reftime?
-                if self.preferences.Waveforms.useEventTime:
+                if self.pyweed.preferences.Waveforms.useEventTime:
                     tr.reftime = origin.time  # ObsPy does a lot of work here!
                     tr.iztype = "io"
             magnitude = get_preferred_magnitude(waveform.event_ref())
