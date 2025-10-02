@@ -392,7 +392,7 @@ class WaveformDialog(BaseDialog, WaveformDialog.Ui_WaveformDialog):
         self.loadSelectionTable()
 
         # Start downloading data
-        self.downloadWaveformData()
+        # self.downloadWaveformData()
 
         LOGGER.debug("Finished loading waveform choices")
 
