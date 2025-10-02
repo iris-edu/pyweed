@@ -178,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
             lambda: self.onOptionsChanged(events=True)
         )
         self.stationOptionsWidget.changed.connect(
-            lambda: self.onOptionsChanged(staions=True)
+            lambda: self.onOptionsChanged(stations=True)
         )
 
         # When preferences change, enable the fetch buttons
