@@ -141,16 +141,16 @@ def iter_channels(inventory: Inventory, dedupe=True):
     If dedupe=True, repeated channels are filtered out -- this can occur if the inventory includes
     multiple epochs for a given channel. Only the first channel will be included in this case.
     """
-    last_sncl = None
+    dedupes = set()
     if inventory:
         for network in inventory.networks:
             for station in network.stations:
                 for channel in station.channels:
                     if dedupe:
                         sncl = get_sncl(network, station, channel)
-                        if sncl == last_sncl:
+                        if sncl in dedupes:
                             continue
-                        last_sncl = sncl
+                        dedupes.add(sncl)
                     yield (network, station, channel)
 
 
