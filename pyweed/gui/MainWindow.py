@@ -11,24 +11,25 @@ Main window
 
 from __future__ import absolute_import, division, print_function
 
-from pyweed import __version__, __app_name__
+import logging
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSlot
+
+from pyweed import __version__, __app_name__
+from pyweed.event_options import EventOptions
+from pyweed.gui.EventOptionsWidget import EventOptionsWidget
+from pyweed.gui.Seismap import Seismap
+from pyweed.gui.SpinnerWidget import SpinnerWidget
+from pyweed.gui.StationOptionsWidget import StationOptionsWidget
+from pyweed.gui.TableItems import TableItems, Column
 from pyweed.gui.uic import MainWindow
 from pyweed.preferences import safe_int, safe_bool, bool_to_str
-import logging
 from pyweed.pyweed_utils import (
     iter_channels,
     get_preferred_origin,
     get_preferred_magnitude,
 )
-from pyweed.gui.Seismap import Seismap
-from pyweed.gui.EventOptionsWidget import EventOptionsWidget
-from pyweed.gui.StationOptionsWidget import StationOptionsWidget
-from pyweed.gui.TableItems import TableItems, Column
-from pyweed.event_options import EventOptions
-from PyQt5.QtCore import pyqtSlot
-from pyweed.gui.SpinnerWidget import SpinnerWidget
 from pyweed.station_options import StationOptions
 
 LOGGER = logging.getLogger(__name__)
@@ -201,9 +202,10 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.allEventSelectionButton.clicked.connect(self.selectAllEvents)
         self.clearEventSelectionButton.clicked.connect(self.eventsTable.clearSelection)
         self.allStationSelectionButton.clicked.connect(self.selectAllStations)
-        self.clearStationSelectionButton.clicked.connect(
-            self.stationsTable.clearSelection
-        )
+        self.clearStationSelectionButton.clicked.connect(self.stationsTable.clearSelection)
+
+        for table in (self.eventsTable, self.stationsTable):
+            self.styleSelection(table)
 
         # Main window buttons
         self.getEventsButton.clicked.connect(self.getEvents)
@@ -274,6 +276,7 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.mapResetButton.clicked.connect(self.seismap.zoomReset)
 
         self.seismap.drawEnd.connect(self.onMapDrawFinished)
+        self.seismap.markerClicked.connect(self.onMapMarkerClicked)
 
     def showMessage(self, message):
         """Display the given message in the status bar"""
@@ -523,6 +526,78 @@ class MainWindow(QtWidgets.QMainWindow, MainWindow.Ui_MainWindow):
         self.seismap.addStationsHighlighting(points)
 
         self.manageGetWaveformsButton()
+
+    def onMapMarkerClicked(self, kind, key):
+        """
+        Select the table row(s) matching a marker clicked on the map.
+        Click replaces the selection, Ctrl+Click toggles.
+        """
+        table = self.eventsTable if kind == 'event' else self.stationsTable
+        if kind == 'event':
+            wanted = str(key)
+            rows = [r for r in range(table.rowCount())
+                    if table.item(r, 0) is not None and table.item(r, 0).text() == wanted]
+        else:
+            # A station marker covers every channel of that station
+            prefix = '%s.%s.' % key
+            rows = [r for r in range(table.rowCount())
+                    if table.item(r, 0) is not None and table.item(r, 0).text().startswith(prefix)]
+        if not rows:
+            return
+
+        toggle = bool(QtWidgets.QApplication.keyboardModifiers() & QtCore.Qt.ControlModifier)
+        model = table.model()
+        selection = QtCore.QItemSelection()
+        for r in rows:
+            selection.select(model.index(r, 0), model.index(r, model.columnCount() - 1))
+        op = (QtCore.QItemSelectionModel.Toggle if toggle
+              else QtCore.QItemSelectionModel.ClearAndSelect)
+        table.selectionModel().select(selection, op | QtCore.QItemSelectionModel.Rows)
+        self.centerTableRow(table, rows[len(rows) // 2])
+
+    def centerTableRow(self, table, row):
+        """
+        Scroll the table so that row sits in the middle of the viewport.
+        """
+
+        def apply():
+            # Right after fill() the scroll ranges may still be stale
+            try:
+                table.updateGeometries()
+            except Exception:
+                pass
+            sb = table.verticalScrollBar()
+            vh = table.viewport().height()
+            rh = max(1, table.rowHeight(row))
+            if table.verticalScrollMode() == QtWidgets.QAbstractItemView.ScrollPerItem:
+                target = row - max(1, vh // rh) // 2
+            else:
+                target = sb.value() + table.rowViewportPosition(row) - (vh - rh) // 2
+            sb.setValue(max(sb.minimum(), min(int(target), sb.maximum())))
+
+        apply()
+        QtCore.QTimer.singleShot(0, apply)
+
+    def styleSelection(self, table):
+        """
+        Keep selected rows clearly highlighted even when the table does not have focus.
+        """
+        palette = table.palette()
+        highlight = palette.color(QtGui.QPalette.Active, QtGui.QPalette.Highlight)
+        if not highlight.isValid() or highlight.lightness() > 200:
+            highlight = QtGui.QColor('#2f6fd0')
+        luminance = (0.299 * highlight.red() + 0.587 * highlight.green()
+                     + 0.114 * highlight.blue())
+        text = QtGui.QColor('#101418') if luminance > 150 else QtGui.QColor('#ffffff')
+        for group in (QtGui.QPalette.Active, QtGui.QPalette.Inactive, QtGui.QPalette.Disabled):
+            palette.setColor(group, QtGui.QPalette.Highlight, highlight)
+            palette.setColor(group, QtGui.QPalette.HighlightedText, text)
+        table.setPalette(palette)
+        table.setStyleSheet(table.styleSheet() + (
+                'QTableView::item:selected,'
+                ' QTableView::item:selected:active,'
+                ' QTableView::item:selected:!active {'
+                ' background-color: %s; color: %s; }' % (highlight.name(), text.name())))
 
     def manageGetWaveformsButton(self):
         """

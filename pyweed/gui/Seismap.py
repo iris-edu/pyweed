@@ -14,16 +14,62 @@ Ideas and code borrowed from:
 
 from __future__ import (absolute_import, division, print_function)
 
+import html
+
 import numpy as np
 
 from mpl_toolkits.basemap import Basemap
 from pyweed.pyweed_utils import get_bounding_circle, get_preferred_origin, get_distance
 from logging import getLogger
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
 LOGGER = getLogger(__name__)
 
+def _event_tooltip(event, origin):
+    """
+    Rich-text summary of an event for the map tooltip.
+    """
+    try:
+        mag = event.preferred_magnitude() or (event.magnitudes[0] if event.magnitudes else None)
+        head = "M ?"
+        if mag is not None and mag.mag is not None:
+            head = "M %.1f" % mag.mag
+            if mag.magnitude_type:
+                head += " %s" % mag.magnitude_type
+        lines = ["<b>%s</b>" % html.escape(head)]
+        if origin.time is not None:
+            lines.append(origin.time.strftime("%Y-%m-%d %H:%M:%S"))
+        lines.append("lat %.3f, lon %.3f" % (origin.latitude, origin.longitude))
+        if origin.depth is not None:
+            lines.append("depth %.1f km" % (origin.depth / 1000.0))
+        if event.event_descriptions:
+            lines.append(html.escape(event.event_descriptions[0].text or ""))
+        return "<br>".join(lines)
+    except Exception:
+        LOGGER.warning("Could not build event tooltip", exc_info=True)
+        return "?"
+
+
+def _station_tooltip(network, station):
+    """
+    Rich-text summary of a station for the map tooltip.
+    """
+    try:
+        lines = ["<b>%s.%s</b>" % (html.escape(network.code), html.escape(station.code))]
+        lines.append("lat %.3f, lon %.3f" % (station.latitude, station.longitude))
+        if station.elevation is not None:
+            lines.append("elev %.0f m" % station.elevation)
+        site = getattr(station, "site", None)
+        if site is not None and getattr(site, "name", None):
+            lines.append(html.escape(site.name))
+        n = len(station.channels or [])
+        if n:
+            lines.append("%d channel(s)" % n)
+        return "<br>".join(lines)
+    except Exception:
+        LOGGER.warning("Could not build station tooltip", exc_info=True)
+        return "?"
 
 class MapMarkers(object):
     """
@@ -86,10 +132,16 @@ class Seismap(QtCore.QObject):
     # Signals emitted when starting/ending a draw operation
     drawStart = pyqtSignal(object)
     drawEnd = pyqtSignal(object)
+    #: Emitted when a marker is clicked: (kind, key).
+    #: kind is 'event' or 'station'; key is a catalog index or (network, station) codes.
+    markerClicked = pyqtSignal(str, object)
 
     # Cursors for pan and draw modes
     panCursor = QtCore.Qt.PointingHandCursor
     drawCursor = QtCore.Qt.CrossCursor
+    # Tolerance for clicking / hovering markers
+    pickRadius = 8    # points
+    hoverRadius = 10  # pixels
 
     # Markers
     eventMarkers = None
@@ -283,13 +335,16 @@ class Seismap(QtCore.QObject):
         """
         Display event locations
         """
-        points = [
-            (o.latitude, o.longitude)
-            for o in
-            [get_preferred_origin(e) for e in catalog]
-            if o
-        ]
+        points, keys, tooltips = [], [], []
+        for i, event in enumerate(catalog):
+            origin = get_preferred_origin(event)
+            if not origin:
+                continue
+            points.append((origin.latitude, origin.longitude))
+            keys.append(i)
+            tooltips.append(_event_tooltip(event, origin))
         self.addMarkers(self.eventMarkers, points)
+        self.tagMarkers(self.eventMarkers, 'event', keys, tooltips)
 
     def addEventsHighlighting(self, points):
         """
@@ -319,12 +374,14 @@ class Seismap(QtCore.QObject):
         """
         Display station locations
         """
-        points = [
-            (s.latitude, s.longitude)
-            for n in inventory.networks
-            for s in n.stations
-        ]
+        points, keys, tooltips = [], [], []
+        for network in inventory.networks:
+            for station in network.stations:
+                points.append((station.latitude, station.longitude))
+                keys.append((network.code, station.code))
+                tooltips.append(_station_tooltip(network, station))
         self.addMarkers(self.stationMarkers, points)
+        self.tagMarkers(self.stationMarkers, 'station', keys, tooltips)
 
     def addStationsHighlighting(self, points):
         """
@@ -473,6 +530,10 @@ class Seismap(QtCore.QObject):
             'scroll_wheel': self.canvas.mpl_connect('scroll_event', self.onScrollWheel),
             'resize': self.canvas.mpl_connect('resize_event', self.fitCanvas),
         }
+        self.hover_marker = None
+        self.canvas.mpl_connect('pick_event', self.onMarkerPick)
+        self.canvas.mpl_connect('motion_notify_event', self.onMarkerHover)
+        self.canvas.mpl_connect('figure_leave_event', self.onFigureLeave)
         self.updateCursor()
 
     def setDrawMode(self, mode):
@@ -629,3 +690,85 @@ class Seismap(QtCore.QObject):
                 self.zoomIn()
             else:
                 self.zoomOut()
+
+    def tagMarkers(self, markers, kind, keys, tooltips):
+        """
+        Attach pick/hover metadata to freshly drawn marker artists.
+        """
+        artists = markers.markers
+        if not artists:
+            return
+        n = len(artists[0].get_xydata())
+        if n != len(keys):
+            LOGGER.warning("Marker/key count mismatch: %d vs %d", n, len(keys))
+            return
+        for artist in artists:
+            artist.set_picker(self.pickRadius)
+            artist._markerKind = kind
+            artist._markerKeys = keys
+            artist._markerTooltips = tooltips
+
+    def nearestMarker(self, artist, ind, mouse):
+        """
+        Pick the closest of several candidate points under the cursor.
+        """
+        if len(ind) == 1 or mouse.xdata is None:
+            return int(ind[0])
+        xy = artist.get_xydata()
+        d = (xy[ind, 0] - mouse.xdata) ** 2 + (xy[ind, 1] - mouse.ydata) ** 2
+        return int(ind[int(np.argmin(d))])
+
+    def onMarkerPick(self, event):
+        """
+        Emit markerClicked when a marker is clicked outside of a draw mode.
+        """
+        artist = event.artist
+        kind = getattr(artist, '_markerKind', None)
+        if kind is None or self.draw_mode or self.drawing:
+            return
+        mouse = event.mouseevent
+        if mouse.button != 1:
+            return
+        ind = getattr(event, 'ind', None)
+        if ind is None or len(ind) == 0:
+            return
+        i = self.nearestMarker(artist, ind, mouse)
+        self.markerClicked.emit(kind, artist._markerKeys[i])
+
+    def onMarkerHover(self, mouse):
+        """
+        Show a tooltip for the marker under the cursor. Uses QToolTip rather than a
+        canvas annotation to avoid redrawing the basemap background on every move.
+        """
+        if (self.draw_mode or self.drawing
+                or mouse.inaxes is not self.mapAxes or mouse.x is None):
+            self.hideMarkerTooltip()
+            return
+        best, best_d = None, self.hoverRadius ** 2
+        for markers in (self.eventMarkers, self.stationMarkers):
+            for artist in markers.markers:
+                tooltips = getattr(artist, '_markerTooltips', None)
+                if not tooltips:
+                    continue
+                xy = artist.get_transform().transform(artist.get_xydata())
+                d = (xy[:, 0] - mouse.x) ** 2 + (xy[:, 1] - mouse.y) ** 2
+                i = int(np.argmin(d))
+                if d[i] < best_d:
+                    best_d, best = d[i], (id(artist), i, tooltips[i])
+        if best is None:
+            self.hideMarkerTooltip()
+            return
+        key = (best[0], best[1])
+        if self.hover_marker == key and QtWidgets.QToolTip.isVisible():
+            return
+        self.hover_marker = key
+        QtWidgets.QToolTip.showText(QtGui.QCursor.pos() + QtCore.QPoint(14, 18),
+                                    best[2], self.canvas)
+
+    def hideMarkerTooltip(self):
+        if self.hover_marker is not None:
+            QtWidgets.QToolTip.hideText()
+            self.hover_marker = None
+
+    def onFigureLeave(self, event):
+        self.hideMarkerTooltip()
